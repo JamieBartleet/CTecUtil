@@ -12,9 +12,9 @@ namespace CTecUtil
     {
         private static readonly VersionInfo _versionInfo = ParseProductVersionString(Assembly.GetExecutingAssembly().Location);
 
-        public static string   BuildVersion { get { return _versionInfo.Version; } }
+        public static string   BuildVersion { get { return _versionInfo.Version;         } }
         public static DateTime BuildDate    { get { return _versionInfo.BuildDate.Value; } }
-        public static string   BuildYear    { get { return _versionInfo.BuildYear; } }
+        public static string   BuildYear    { get { return _versionInfo.BuildYear;       } }
 
 
         public class VersionInfo
