@@ -1,0 +1,157 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Controls;
+using System.Windows.Input;
+
+namespace CTecUtil
+{
+    public class TextProcessing
+    {
+        /// <summary>The digit characters 0-9 as an array</summary>
+        public static readonly char[] DigitChars = { '0','1','2','3','4','5','6','7','8','9' };
+
+        
+        public static bool IsNumericKey(Key k)
+            => k switch
+            {
+                Key.D0 or Key.D1 or Key.D2 or Key.D3 or Key.D4 or Key.D5 or Key.D6 or Key.D7 or Key.D8 or Key.D9 or 
+                Key.NumPad0 or Key.NumPad1 or Key.NumPad2 or Key.NumPad3 or Key.NumPad4 or Key.NumPad5 or Key.NumPad6 or Key.NumPad7 or Key.NumPad8 or Key.NumPad9 => true,
+                _ => false,
+            };
+
+
+        public static bool IsSpecialKey(Key k) => new Key[] { Key.Tab, Key.Enter, Key.LeftAlt, Key.LeftShift, Key.RightShift }.Contains(k);
+
+
+        /// <summary>
+        /// Converts digit input Key to a string.<br/>E.g. Key.D1  or Key.Numpad1 -> "1".
+        /// </summary>
+        public static string DigitKeyToString(Key k)
+            => k switch
+            {
+                Key.D0 or Key.NumPad0 => "0",
+                Key.D1 or Key.NumPad1 => "1",
+                Key.D2 or Key.NumPad2 => "2",
+                Key.D3 or Key.NumPad3 => "3",
+                Key.D4 or Key.NumPad4 => "4",
+                Key.D5 or Key.NumPad5 => "5",
+                Key.D6 or Key.NumPad6 => "6",
+                Key.D7 or Key.NumPad7 => "7",
+                Key.D8 or Key.NumPad8 => "8",
+                Key.D9 or Key.NumPad9 => "9",
+                _ => "",
+            };
+
+
+        /// <summary>
+        /// Returns the given string filtered whereby characters above ASCII #127 are converted to approximate equivalents, e.g. 'é' -> 'e'.<br/>
+        /// If a German keyboard is being used 'Ä' is converted to "AE", 'ö' to "oe", etc.
+        /// </summary>
+        public static string FilterAscii127(string s)
+        {
+            if (s is null)
+                return s;
+            var result = new StringBuilder();
+            foreach (var c in s)
+                result.Append(FilterAscii127(c));
+            return result.ToString();
+        }
+
+        /// <summary>
+        /// Returns the given char as a string<br/>
+        /// Values above ASCII #127 are converted to approximate equivalents, e.g. 'é' -> "e".<br/>
+        /// If a German keyboard is being used 'Ä' is converted to "AE", 'ö' to "oe", etc.
+        /// </summary>
+        public static string FilterAscii127(char c)
+        {
+            if (c < 127)
+                return c.ToString();
+            var _deutscheTastatur = InputLanguageManager.Current.CurrentInputLanguage.Name.StartsWith("de");
+            return c switch
+            {
+                'À'or'Á'or'Â'or'Ã'or'Å'or'Ā'or'Ă'or'Ą'or'Ǎ'or'Ǟ'or'Ǡ'or'Ǻ'or'Ȁ'or'Ȃ'or'Ȧ'or'Ⱥ' => "A",
+                'Ä' => _deutscheTastatur ? "AE" : "A",
+                'Æ'or'Ǣ'or'Ǽ' => "AE",
+                'Ɓ'or'Ƃ'or'Ƀ' => "B",
+                'Ç'or'Ć'or'Ĉ'or'Ċ'or'Č'or'Ƈ'or'Ȼ' => "C",
+                'Ð'or'Ď'or'Đ'or'Ɖ'or'Ɗ'or'Ƌ' => "D",
+                'È'or'É'or'Ê'or'Ë'or'Ē'or'Ĕ'or'Ė'or'Ę'or'Ě'or'Ǝ'or'Ɛ'or'Ȅ'or'Ȇ'or'Ȩ'or'Ɇ' => "E",
+                'Ƒ' => "F",
+                'Ĝ'or'Ğ'or'Ġ'or'Ģ'or'Ɠ'or'Ǥ'or'Ǧ'or'Ǵ' => "G",
+                'Ĥ'or'Ħ'or'Ȟ' => "H",
+                'Ì'or'Í'or'Î'or'Ï'or'Ĩ'or'Ī'or'Ĭ'or'Į'or'İ'or'Ɩ'or'Ɨ'or'Ǐ'or'Ȉ'or'Ȋ' => "I",
+                'Ĳ' => "IJ",
+                'Ĵ'or'Ɉ' => "J",
+                'Ķ'or'Ƙ'or'Ǩ' => "K",
+                'Ĺ'or'Ļ'or'Ľ'or'Ŀ'or'Ł'or'Ƚ' => "L",
+                'Ɯ' => "M",
+                'Ñ'or'Ń'or'Ņ'or'Ň'or'Ŋ'or'Ɲ'or'Ǹ'or'Ƞ' => "N",
+                'Ò'or'Ó'or'Ô'or'Õ'or'Ø'or'Ō'or'Ŏ'or'Ő'or'Ɔ'or'Ơ'or'Ǒ'or'Ǫ'or'Ǭ'or'Ǿ'or'Ȍ'or'Ȏ'or'Ȫ'or'Ȭ'or'Ȯ'or'Ȱ' => "O",
+                'Ö' => _deutscheTastatur ? "OE" : "O",
+                'Œ' => "OE",
+                'Ƥ' => "P",
+                'Ɋ' => "Q",
+                'Ŕ'or'Ŗ'or'Ř'or'Ʀ'or'Ȑ'or'Ȓ'or'Ɍ' => "R",
+                'Ś'or'Ŝ'or'Ş'or'Š'or'Ș' => "S",
+                'Ţ'or'Ť'or'Ŧ'or'Ƭ'or'Ʈ'or'Ț'or'Ⱦ' => "T",
+                'Ù'or'Ú'or'Û'or'Ũ'or'Ū'or'Ŭ'or'Ů'or'Ű'or'Ų'or'Ư'or'Ǔ'or'Ǖ'or'Ǘ'or'Ǚ'or'Ǜ'or'Ȕ'or'Ȗ'or'Ʉ' => "U",
+                'Ü' => _deutscheTastatur ? "UE" : "U",
+                'Ʋ' => "V",
+                'Ŵ' => "W",
+                '¥'or'Ý'or'Ŷ'or'Ÿ'or'Ƴ'or'Ȳ'or'Ɏ' => "Y",
+                'Ź'or'Ż'or'Ž'or'Ƶ'or'Ȥ' => "Z",
+                'à'or'á'or'â'or'ã'or'å'or'ā'or'ă'or'ą'or'ǎ'or'ǟ'or'ǡ'or'ǻ'or'ȁ'or'ȃ'or'ȧ' => "a",
+                'ä' => _deutscheTastatur ? "ae" : "a",
+                'æ'or'ǣ'or'ǽ' => "ae",
+                'ƀ'or'ƃ'or'Ƅ'or'ƅ'or'ɓ' => "b",
+                '¢'or'ç'or'ć'or'ĉ'or'ċ'or'č'or'ć'or'ĉ'or'ċ'or'č'or'ƈ'or'ȼ'or'ɕ' => "c",
+                'ď'or'đ'or'ƌ'or'ƍ'or'ȡ'or'ɖ'or'ɗ' => "d",
+                'è'or'é'or'ê'or'ë'or'ē'or'ĕ'or'ė'or'ę'or'ě'or'ǝ'or'ȅ'or'ȇ'or'ȩ'or'ɇ' => "e",
+                'ƒ' => "f",
+                'ĝ'or'ğ'or'ġ'or'ģ'or'ǥ'or'ǧ'or'ǵ'or'ɠ'or'ɡ' => "g",
+                'ĥ'or'ħ'or'ȟ'or'ɦ'or'ɧ' => "h",
+                'ì'or'í'or'î'or'ï'or'ĩ'or'ī'or'ĭ'or'į'or'ı'or'ƚ'or'ǐ'or'ȉ'or'ȋ'or'ɨ' => "i",
+                'ĳ' => "ij",
+                'ĵ'or'ǰ'or'ȷ'or'ɉ'or'ɟ' => "j",
+                'ķ'or'ĸ'or'ƙ'or'ǩ' => "k",
+                'ĺ'or'ļ'or'ľ'or'ŀ'or'ł'or'ȴ'or'ɫ'or'ɬ'or'ɭ' => "l",
+                'µ'or'ɱ' => "m",
+                'ñ'or'ń'or'ņ'or'ň'or'ŉ'or'ŋ'or'ƞ'or'ǹ'or'ȵ'or'ɲ'or'ɳ' => "n",
+                'ò'or'ó'or'ô'or'õ'or'ø'or'ō'or'ŏ'or'ő'or'ơ'or'ǒ'or'ǫ'or'ǭ'or'ǿ'or'ȍ'or'ȏ'or'ȫ'or'ȭ'or'ȯ'or'ȱ'or'ɔ' => "o",
+                'ö' => _deutscheTastatur ? "oe" : "o",
+                'œ' => "oe",
+                'ƥ' => "p",
+                'ɋ'or'ʠ' => "q",
+                'ŕ'or'ŗ'or'ř'or'ȑ'or'ȓ'or'ɍ'or'ɼ'or'ɽ'or'ɾ' => "r",
+                'ś'or'ŝ'or'ş'or'š'or'ſ'or'ș'or'ȿ'or'ʂ' => "s",
+                'ß'=>"ss",
+                'ţ'or'ť'or'ŧ'or'ƫ'or'ƭ'or'ț'or'ȶ'or'ʈ' => "t",
+                'ù'or'ú'or'û'or'ũ'or'ū'or'ŭ'or'ů'or'ű'or'ų'or'ư'or'ǔ'or'ǖ'or'ǘ'or'ǚ'or'ǜ'or'ȕ'or'ȗ'or'ʉ' => "u",
+                'ü' => _deutscheTastatur ? "ue" : "u",
+                'ʋ' => "v",
+                'ŵ' => "w",
+                '×' => "x",
+                'ÿ'or'ŷ'or'ý'or'ƴ'or'ȳ'or'ɏ' => "y",
+                'ź'or'ż'or'ž'or'ƶ'or'ȥ'or'ɀ'or'ʐ'or'ʑ' => "z",
+                '¡' => "!",
+                '¿' => "?",
+                '£' => "#",
+                '€' => "EUR",
+                '©' => "(c)",
+                '®' => "(R)",
+                '«'or'»' => "\"",
+                '´' => "'",
+                '÷' => "/",
+                '¬' => "-",
+                '¦' => "|",
+                '·'or'¸' => ".",
+                _ => "*"
+            };
+        }
+
+    }
+}
