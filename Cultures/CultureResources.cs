@@ -36,8 +36,12 @@ namespace CTecUtil.Cultures
 
         public static void ChangeCulture(CultureInfo culture)
         {
+            if (culture == null)
+                return;
+
             Cultures.Resources.Culture = culture;
             ResourceProvider.Refresh();
+            Registry.WriteSubKey(Registry.CultureKey, culture.Name);
         }
     }
 }

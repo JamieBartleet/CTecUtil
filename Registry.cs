@@ -20,6 +20,10 @@ namespace CTecUtil
         }
 
 
+        public const string ZoomKey = @"ZoomLevel";
+        public const string CultureKey = @"Culture";
+
+
         private static bool   _initialised;
         private static string _productName;
         private const  string _rootKey = @"SOFTWARE\CTec\";
