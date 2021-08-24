@@ -9,9 +9,9 @@ using System.Windows.Threading;
 namespace CTecUtil
 {
     /// <summary>
-    ///   Contains helper methods for UI, so far just one for showing a waitcursor
+    /// Contains helper methods for UI, so far just one for showing a waitcursor
     /// </summary>
-    public static class Cursor
+    public static class UIState
     {
         /// <summary>
         ///   A value indicating whether the UI is currently busy
