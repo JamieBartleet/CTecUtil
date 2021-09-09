@@ -20,8 +20,12 @@ namespace CTecUtil
         }
 
 
-        public const string ZoomKey = @"ZoomLevel";
-        public const string CultureKey = @"Culture";
+        public class Keys
+        {
+            public const string ZoomKey = @"ZoomLevel";
+            public const string CultureKey = @"Culture";
+            public const string WindowSizeKey = @"Window";
+        }
 
 
         private static bool   _initialised;

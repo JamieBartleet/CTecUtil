@@ -41,7 +41,7 @@ namespace CTecUtil.Cultures
 
             Cultures.Resources.Culture = culture;
             ResourceProvider.Refresh();
-            Registry.WriteSubKey(Registry.CultureKey, culture.Name);
+            Registry.WriteSubKey(Registry.Keys.CultureKey, culture.Name);
         }
     }
 }
