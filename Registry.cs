@@ -26,7 +26,6 @@ namespace CTecUtil
         /// </summary>
         public static void SaveWindowState(Window window)
         {
-            if (!_initialised) throw new Exception("CTecUtil: the Registry class has not been initialised.");
             writeSubKey(Keys.WindowKey, window.WindowState == WindowState.Maximized ? _maximised : window.Width + "," + window.Height + ":" + window.Left + "," + window.Top);
         }
 
@@ -36,9 +35,7 @@ namespace CTecUtil
         /// </summary>
         public static WindowState RestoreWindowState(Window window)
         {
-            if (!_initialised) throw new Exception("CTecUtil: the Registry class has not been initialised.");
-
-            var prevState = (string)CTecUtil.Registry.readSubKey(CTecUtil.Registry.Keys.WindowKey);
+            var prevState = (string)readSubKey(Keys.WindowKey);
             if (prevState is not null)
             {
                 if (prevState == _maximised)
@@ -51,28 +48,16 @@ namespace CTecUtil
 
                     if (size_pos.Length > 0)
                     {
-                        var w_h = size_pos[0].Split(new char[] { ',' });
-                        if (w_h.Length > 1)
-                        {
-                            if (int.TryParse(w_h[0], out var w) && int.TryParse(w_h[1], out var h))
-                            {
-                                window.Width = w;
-                                window.Height = h;
-                            }
-                        }
+                        var w_h = parsePoint(size_pos[0]);
+                        window.Width = w_h.X;
+                        window.Height = w_h.Y;
                     }
 
                     if (size_pos.Length > 1)
                     {
-                        var left_top = size_pos[1].Split(new char[] { ',' });
-                        if (left_top.Length > 1)
-                        {
-                            if (int.TryParse(left_top[0], out var l) && int.TryParse(left_top[1], out var t))
-                            {
-                                window.Left = l;
-                                window.Top = t;
-                            }
-                        }
+                        var x_y = parsePoint(size_pos[1]);
+                        window.Left = x_y.X;
+                        window.Top = x_y.Y;
                     }
                 }
             }
@@ -85,15 +70,20 @@ namespace CTecUtil
         public static float? ReadZoomLevel() => float.TryParse((string)readSubKey(Keys.ZoomKey), out float zoomLevel) ? zoomLevel : null;
 
 
+        public static void SaveMessageBoxPosition(Window mesageBox) => writeSubKey(Keys.MessageBoxKey, mesageBox.Left + "," + mesageBox.Top);
+        public static Point ReadMessageBoxPosition() => parsePoint((string)readSubKey(Keys.MessageBoxKey));
+
+
         public static void SaveCulture(string cultureName) => writeSubKey(Keys.CultureKey, cultureName);
         public static string ReadCulture() => (string)readSubKey(Keys.CultureKey);
 
 
         internal class Keys
         {
-            public const string ZoomKey    = @"ZoomLevel";
-            public const string CultureKey = @"Culture";
-            public const string WindowKey  = @"Window";
+            public const string ZoomKey       = @"ZoomLevel";
+            public const string CultureKey    = @"Culture";
+            public const string WindowKey     = @"Window";
+            public const string MessageBoxKey = @"MsgBox";
         }
 
 
@@ -141,6 +131,19 @@ namespace CTecUtil
             {
                 return null;
             }
+        }
+
+
+        private static Point parsePoint(string value)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                var pair = value.Split(new char[] { ',' });
+                if (pair.Length > 1)
+                    if (double.TryParse(pair[0], out var d1) && double.TryParse(pair[1], out var d2))
+                        return new Point { X = d1, Y = d2 };
+            }
+            return new Point();
         }
     }
 }
