@@ -10,39 +10,32 @@ namespace CTecUtil.IO
 {
     public class SerialComms
     {
-        private static bool _initialised;
         private static SerialPort _serial = new();
 
-        private static void init()
-        {
-            _serial = new();
-            _serial.Handshake = System.IO.Ports.Handshake.None;
-            _serial.Parity = Parity.None;
-            _serial.DataBits = 8;
-            _serial.StopBits = StopBits.One;
-            _serial.ReadTimeout = 5000;
-            _serial.WriteTimeout = 500;
-            _serial.DataReceived += new((s,e) => { OnReceiveData?.Invoke(s, e); });
-            _initialised = true;
-        }
+
+        public static string    PortName     { get => _serial.PortName;     set { _serial.PortName = value; } }
+        public static int       BaudRate     { get => _serial.BaudRate;     set { _serial.BaudRate = value; } }
+        public static Handshake Handshake    { get => _serial.Handshake;    set { _serial.Handshake = value; } }
+        public static Parity    Parity       { get => _serial.Parity;       set { _serial.Parity = value; } }
+        public static int       DataBits     { get => _serial.DataBits;     set { _serial.DataBits = value; } }
+        public static StopBits  StopBits     { get => _serial.StopBits;     set { _serial.StopBits = value; } }
+        public static int       ReadTimeout  { get => _serial.ReadTimeout;  set { _serial.ReadTimeout = value; } }
+        public static int       WriteTimeout { get => _serial.WriteTimeout; set { _serial.WriteTimeout = value; } }
 
 
         public delegate void ReceivedDataHandler(object sender, SerialDataReceivedEventArgs e);
         public static ReceivedDataHandler OnReceiveData;
 
 
-        public static bool Open(string portName, int baud, out string errorMessage)
+        public static bool Open(out string errorMessage)
         {
-            if (!_initialised)
-                init();
+            //if (!_initialised)
+            //    init();
 
             errorMessage = "";
 
             if (_serial.IsOpen)
                 return true;
-
-            _serial.PortName = portName;
-            _serial.BaudRate = baud;
 
             try
             {
@@ -60,8 +53,6 @@ namespace CTecUtil.IO
 
         public static bool IsOpen { get => _serial?.IsOpen ?? false; }
 
-
-        //public static bool SendData(string data, out string errorMessage) => SendData(Encoding.ASCII.GetBytes(data), out errorMessage);
 
         public static bool SendData(byte[] command, out string errorMessage)
         {
