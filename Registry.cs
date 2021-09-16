@@ -1,6 +1,8 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO.Ports;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -66,9 +68,8 @@ namespace CTecUtil
         }
 
 
-        public static void SaveZoomLevel(float zoomLevel) => writeSubKey(Keys.ZoomKey, zoomLevel);
-        public static float? ReadZoomLevel() => float.TryParse((string)readSubKey(Keys.ZoomKey), out float zoomLevel) ? zoomLevel : null;
-
+        public static void SaveZoomLevel(float zoomLevel) => writeSubKey(Keys.ZoomKey, zoomLevel.ToString("F2", CultureInfo.InvariantCulture));
+        public static float? ReadZoomLevel() => float.TryParse((string)readSubKey(Keys.ZoomKey), NumberStyles.Float, CultureInfo.InvariantCulture, out float zoomLevel) ? zoomLevel : null;
 
         public static void SaveMessageBoxPosition(Window mesageBox) => writeSubKey(Keys.MessageBoxKey, mesageBox.Left + "," + mesageBox.Top);
         public static Point ReadMessageBoxPosition() => parsePoint((string)readSubKey(Keys.MessageBoxKey));
@@ -77,6 +78,50 @@ namespace CTecUtil
         public static void SaveCulture(string cultureName) => writeSubKey(Keys.CultureKey, cultureName);
         public static string ReadCulture() => (string)readSubKey(Keys.CultureKey);
 
+        
+        public static void SaveSerialPortSettings(SerialPort port)
+            => writeSubKey(Keys.SerialPortKey, "n=" + port.PortName
+                                            + ",b=" + port.BaudRate
+                                            + ",h=" + port.Handshake
+                                            + ",p=" + port.Parity
+                                            + ",d=" + port.DataBits
+                                            + ",s=" + port.StopBits
+                                            + ",r=" + port.ReadTimeout
+                                            + ",w=" + port.WriteTimeout);
+
+        public static void ReadSerialPortSettings(SerialPort port)
+        {
+            var keyData = (string)readSubKey(Keys.SerialPortKey);
+            if (!string.IsNullOrEmpty(keyData))
+            {
+                var settings = keyData.Split(new char[] { ',' });
+                
+                foreach (var s in settings)
+                {
+                    var param = s.Split(new char[] { '=' });
+                    if (param.Length > 1)
+                    {
+                        switch (param?[0][0])
+                        {
+                            case 'n': port.PortName     = param[1]; break;
+                            case 'b': port.BaudRate     = parseInt(param[1], 9600); break;
+                            case 'h': port.Handshake    = parseHandshake(param[1]); break;
+                            case 'p': port.Parity       = parseParity(param[1]); break;
+                            case 'd': port.DataBits     = parseInt(param[1], 8); break;
+                            case 's': port.StopBits     = parseStopBits(param[1]); break;
+                            case 'r': port.ReadTimeout  = parseInt(param[1], 500); break;
+                            case 'w': port.WriteTimeout = parseInt(param[1], 500); break;
+                        }
+                    }
+                }
+            }
+        }
+
+        private static int       parseInt(string value, int defaultValue) { return (int.TryParse(value, out var b)) ? b : defaultValue; }
+        private static Handshake parseHandshake(string value) { return (Handshake.TryParse(value, out Handshake h)) ? h : Handshake.None; }
+        private static Parity    parseParity(string value)    { return (Parity.TryParse(value, out Parity h)) ? h : Parity.None; }
+        private static StopBits  parseStopBits(string value)  { return (StopBits.TryParse(value, out StopBits s)) ? s : StopBits.None; }
+
 
         internal class Keys
         {
@@ -84,6 +129,7 @@ namespace CTecUtil
             public const string CultureKey    = @"Culture";
             public const string WindowKey     = @"Window";
             public const string MessageBoxKey = @"MsgBox";
+            public const string SerialPortKey = @"SerialPort";
         }
 
 

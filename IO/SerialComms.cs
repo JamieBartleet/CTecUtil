@@ -10,10 +10,22 @@ namespace CTecUtil.IO
 {
     public class SerialComms
     {
-        private static SerialPort _serial = new();
+        private static SerialPort _serial = newSerialPort();
+        public static SerialPort Port { get => _serial; }
 
 
-        public static string    PortName     { get => _serial.PortName;     set { _serial.PortName = value; } }
+        public static string PortName
+        {
+            get => _serial.PortName;
+            set
+            {
+                if (_serial.PortName != value)
+                    _serial.Close();
+                _serial.PortName = value;
+            }
+        }
+
+
         public static int       BaudRate     { get => _serial.BaudRate;     set { _serial.BaudRate = value; } }
         public static Handshake Handshake    { get => _serial.Handshake;    set { _serial.Handshake = value; } }
         public static Parity    Parity       { get => _serial.Parity;       set { _serial.Parity = value; } }
@@ -23,15 +35,12 @@ namespace CTecUtil.IO
         public static int       WriteTimeout { get => _serial.WriteTimeout; set { _serial.WriteTimeout = value; } }
 
 
-        public delegate void ReceivedDataHandler(object sender, SerialDataReceivedEventArgs e);
+        public delegate void ReceivedDataHandler(byte[] incomingData);
         public static ReceivedDataHandler OnReceiveData;
 
 
         public static bool Open(out string errorMessage)
         {
-            //if (!_initialised)
-            //    init();
-
             errorMessage = "";
 
             if (_serial.IsOpen)
@@ -58,11 +67,11 @@ namespace CTecUtil.IO
         {
             errorMessage = "";
 
-            if (!_serial.IsOpen)
-                _serial.Open();
-
             try
             {
+                if (!_serial.IsOpen)
+                    _serial.Open();
+
                 _serial.Write(command, 0, command.Length);
                 return true;
             }
@@ -75,7 +84,7 @@ namespace CTecUtil.IO
         }
 
 
-        public static byte[] Read()
+        public static byte[] ReadIncomingData()
         {
             byte[] buffer = new byte[_serial.BytesToRead];
             _serial.Read(buffer, 0, _serial.BytesToRead);
@@ -97,6 +106,23 @@ namespace CTecUtil.IO
                 errorMessage = ex.ToString();
             }
             return false;
+        }
+
+
+        
+        public static List<string> GetAvailablePorts() => SerialPort.GetPortNames().ToList();
+
+
+        private static SerialPort newSerialPort()
+        {
+            var port = new SerialPort();
+            CTecUtil.Registry.ReadSerialPortSettings(port);
+            var available = GetAvailablePorts();
+            if (available.Count > 0)
+                if (!available.Contains(port.PortName))
+                    port.PortName = available[0] ?? port.PortName;
+            port.DataReceived += new SerialDataReceivedEventHandler((s, e) => { OnReceiveData?.Invoke(ReadIncomingData()); });
+            return port;
         }
 
     }
