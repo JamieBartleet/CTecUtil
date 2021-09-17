@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace CTecUtil.IO
 {
@@ -63,35 +64,6 @@ namespace CTecUtil.IO
         public static bool IsOpen { get => _serial?.IsOpen ?? false; }
 
 
-        public static bool SendData(byte[] command, out string errorMessage)
-        {
-            errorMessage = "";
-
-            try
-            {
-                if (!_serial.IsOpen)
-                    _serial.Open();
-
-                _serial.Write(command, 0, command.Length);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                errorMessage = ex.ToString();
-            }
-
-            return false;
-        }
-
-
-        public static byte[] ReadIncomingData()
-        {
-            byte[] buffer = new byte[_serial.BytesToRead];
-            _serial.Read(buffer, 0, _serial.BytesToRead);
-            return buffer;
-        }
-
-
         public static bool Close(out string errorMessage)
         {
             errorMessage = "";
@@ -112,6 +84,79 @@ namespace CTecUtil.IO
         
         public static List<string> GetAvailablePorts() => SerialPort.GetPortNames().ToList();
 
+        
+//        public delegate void ReceivedDataHandler(string data);
+
+        private class Command
+        {
+            public byte[] CommandData { get; set; }
+            public ReceivedDataHandler DataReceiver { get; set; }
+            public bool   Sent { get; set; }
+        }
+
+        private static Queue<Command> _commandQueue = new();
+
+        public static void EnqueueCommand(byte[] commandData, ReceivedDataHandler dataReceiver)
+        {
+            _commandQueue.Enqueue(new() { CommandData = commandData, DataReceiver = dataReceiver });
+        }
+
+
+        public static void SendCommandQueue()
+        {
+            if (_commandQueue.Count == 0)
+                return;
+
+            string errorMessage;
+            var cmd = _commandQueue.Peek();
+            if (!SendData(cmd, out errorMessage))
+                error(errorMessage);
+        }
+
+
+        public static byte CalcChecksum(byte[] data, bool outgoing = false)
+        {
+            int checksumCalc = 0;
+            for (int i = outgoing ? 1 : 0; i < data.Length; i++)
+                checksumCalc += data[i];
+            return (byte)(checksumCalc & 0xff);
+        }
+
+
+        public static bool CheckChecksum(byte[] data)
+        {
+            int checksumCalc = 0;
+            for (int i = 0; i < data.Length - 1; i++)
+                checksumCalc += data[i];
+            return (byte)(checksumCalc & 0xff) == data[data.Length - 1];
+        }
+
+
+        private static bool SendData(Command command, out string errorMessage)
+        {
+            errorMessage = "";
+
+            try
+            {
+                if (!_serial.IsOpen)
+                    _serial.Open();
+
+                OnReceiveData = command.DataReceiver;
+                command.Sent = true;
+                _serial.Write(command.CommandData, 0, command.CommandData.Length);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ex.ToString();
+            }
+
+            return false;
+        }
+
+
+        private static void error(string message) => MessageBox.Show("Comms error:\n\n" + message, "Panel Comms");
+
 
         private static SerialPort newSerialPort()
         {
@@ -121,8 +166,44 @@ namespace CTecUtil.IO
             if (available.Count > 0)
                 if (!available.Contains(port.PortName))
                     port.PortName = available[0] ?? port.PortName;
-            port.DataReceived += new SerialDataReceivedEventHandler((s, e) => { OnReceiveData?.Invoke(ReadIncomingData()); });
+            port.DataReceived += dataReceived;
             return port;
+        }
+
+
+        private static void dataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            var incoming = readIncomingData();
+
+            if (_commandQueue.Count > 0)
+            {
+                if (incoming[0] == _commandQueue.Peek().CommandData[1] && CheckChecksum(incoming))
+                {                    
+                    OnReceiveData?.Invoke(incoming);
+                    _commandQueue.Dequeue();
+                }
+
+                //send next in queue
+                SendCommandQueue();
+            }
+        }
+
+
+        private static byte[] readIncomingData()
+        {
+            //wait for buffer
+            int oldBytes = _serial.BytesToRead, newBytes;
+            do
+            {
+                Thread.Sleep(30);
+                if ((newBytes = _serial.BytesToRead) == oldBytes)
+                    break;
+                oldBytes = newBytes;
+            } while (true);
+
+            byte[] buffer = new byte[_serial.BytesToRead];
+            _serial.Read(buffer, 0, _serial.BytesToRead);
+            return buffer;
         }
 
     }
