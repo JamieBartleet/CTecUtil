@@ -39,7 +39,7 @@ namespace CTecUtil.Cultures {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("CTecUtil.Cultures.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("CTecControls.Cultures.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -57,6 +57,24 @@ namespace CTecUtil.Cultures {
             }
             set {
                 resourceCulture = value;
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Discovery Aspirating Detector.
+        /// </summary>
+        public static string Error_Serial_Port {
+            get {
+                return ResourceManager.GetString("Error_Serial_Port", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Discovery CO Detector.
+        /// </summary>
+        public static string Serial_Comms {
+            get {
+                return ResourceManager.GetString("Serial_Comms", resourceCulture);
             }
         }
     }

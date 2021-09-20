@@ -38,7 +38,9 @@ namespace CTecUtil.Cultures
         {
             if (culture == null)
                 return;
-
+            
+            //System.Threading.Thread.CurrentThread.CurrentCulture = culture; 
+            //System.Threading.Thread.CurrentThread.CurrentUICulture = culture; 
             Cultures.Resources.Culture = culture;
             ResourceProvider.Refresh();
             Registry.SaveCulture(culture.Name);

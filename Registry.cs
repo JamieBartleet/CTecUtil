@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using CTecUtil.IO;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -79,18 +80,20 @@ namespace CTecUtil
         public static string ReadCulture() => (string)readSubKey(Keys.CultureKey);
 
         
-        public static void SaveSerialPortSettings(SerialPort port)
-            => writeSubKey(Keys.SerialPortKey, "n=" + port.PortName
-                                            + ",b=" + port.BaudRate
-                                            + ",h=" + port.Handshake
-                                            + ",p=" + port.Parity
-                                            + ",d=" + port.DataBits
-                                            + ",s=" + port.StopBits
-                                            + ",r=" + port.ReadTimeout
-                                            + ",w=" + port.WriteTimeout);
+        public static void SaveSerialPortSettings(SerialComms.SerialPortSettings settings)
+            => writeSubKey(Keys.SerialPortKey, "n=" + settings.PortName
+                                            + ",b=" + settings.BaudRate
+                                            + ",h=" + settings.Handshake
+                                            + ",p=" + settings.Parity
+                                            + ",d=" + settings.DataBits
+                                            + ",s=" + settings.StopBits
+                                            + ",r=" + settings.ReadTimeout
+                                            + ",w=" + settings.WriteTimeout);
 
-        public static void ReadSerialPortSettings(SerialPort port)
+        public static SerialComms.SerialPortSettings ReadSerialPortSettings()
         {
+            SerialComms.SerialPortSettings result = new();
+
             var keyData = (string)readSubKey(Keys.SerialPortKey);
             if (!string.IsNullOrEmpty(keyData))
             {
@@ -103,18 +106,20 @@ namespace CTecUtil
                     {
                         switch (param?[0][0])
                         {
-                            case 'n': port.PortName     = param[1]; break;
-                            case 'b': port.BaudRate     = parseInt(param[1], 9600); break;
-                            case 'h': port.Handshake    = parseHandshake(param[1]); break;
-                            case 'p': port.Parity       = parseParity(param[1]); break;
-                            case 'd': port.DataBits     = parseInt(param[1], 8); break;
-                            case 's': port.StopBits     = parseStopBits(param[1]); break;
-                            case 'r': port.ReadTimeout  = parseInt(param[1], 500); break;
-                            case 'w': port.WriteTimeout = parseInt(param[1], 500); break;
+                            case 'n': result.PortName     = param[1]; break;
+                            case 'b': result.BaudRate     = parseInt(param[1], 9600); break;
+                            case 'h': result.Handshake    = parseHandshake(param[1]); break;
+                            case 'p': result.Parity       = parseParity(param[1]); break;
+                            case 'd': result.DataBits     = parseInt(param[1], 8); break;
+                            case 's': result.StopBits     = parseStopBits(param[1]); break;
+                            case 'r': result.ReadTimeout  = parseInt(param[1], 500); break;
+                            case 'w': result.WriteTimeout = parseInt(param[1], 500); break;
                         }
                     }
                 }
             }
+
+            return result;
         }
 
         private static int       parseInt(string value, int defaultValue) { return (int.TryParse(value, out var b)) ? b : defaultValue; }
