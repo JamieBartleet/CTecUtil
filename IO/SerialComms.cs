@@ -162,7 +162,7 @@ namespace CTecUtil.IO
                 if (!_port.IsOpen)
                     _port.Open();
 
-_port.DataReceived += dataReceived;
+                _port.DataReceived += dataReceived;
 
                 // OnReceiveData = command.DataReceiver;
                 command.Sent = true;
