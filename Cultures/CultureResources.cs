@@ -29,7 +29,7 @@ namespace CTecUtil.Cultures
             get
             {
                 if (_provider == null)
-                    _provider = (ObjectDataProvider)System.Windows.Application.Current.FindResource("CTecControls");
+                    _provider = (ObjectDataProvider)System.Windows.Application.Current.FindResource("CTecUtil");
                 return _provider;
             }
         }
@@ -39,8 +39,9 @@ namespace CTecUtil.Cultures
             if (culture == null)
                 return;
             
-            //System.Threading.Thread.CurrentThread.CurrentCulture = culture; 
-            //System.Threading.Thread.CurrentThread.CurrentUICulture = culture; 
+
+            System.Threading.Thread.CurrentThread.CurrentCulture = culture;
+            System.Threading.Thread.CurrentThread.CurrentUICulture = culture; 
             Cultures.Resources.Culture = culture;
             ResourceProvider.Refresh();
             Registry.SaveCulture(culture.Name);

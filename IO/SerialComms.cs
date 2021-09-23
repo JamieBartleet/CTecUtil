@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO.Ports;
 using System.Linq;
 using System.Text;
@@ -49,33 +50,6 @@ namespace CTecUtil.IO
 
 
         public delegate void ReceivedDataHandler(byte[] incomingData);
-        //public static ReceivedDataHandler OnReceiveData;
-
-
-        //public static bool Open(out string errorMessage)
-        //{
-        //    errorMessage = "";
-
-        //    if (_serial?.IsOpen == true)
-        //        return true;
-
-        //    try
-        //    {
-        //        if (_serial is null)
-        //            _serial = newSerialPort();
-        //        _serial.Open();
-        //        return true;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        errorMessage = ex.ToString();
-        //    }
-
-        //    return false;
-        //}
-
-
-        //public static bool IsOpen { get => _serial?.IsOpen ?? false; }
 
 
         public static bool Close()
@@ -106,27 +80,35 @@ namespace CTecUtil.IO
 
         private class Command
         {
+            /// <summary>The command data.</summary>
             public byte[] CommandData { get; set; }
+
+            /// <summary>Handler to which the response will be sent.</summary>
             public ReceivedDataHandler DataReceiver { get; set; }
+            
             public bool Sent { get; set; }
         }
 
 
         private static Queue<Command> _commandQueue = new();
 
+
+        /// <summary>
+        /// Queue a new command ready to send to the panel.
+        /// </summary>
+        /// <param name="commandData">The command data.</param>
+        /// <param name="dataReceiver">Handler to which the response will be sent.</param>
         public static void EnqueueCommand(byte[] commandData, ReceivedDataHandler dataReceiver)
             => _commandQueue.Enqueue(new() { CommandData = commandData, DataReceiver = dataReceiver });
 
 
-        public static void SendNextCommandInQueue()
-        {
-            if (_commandQueue.Count == 0)
-                return;
+        public static void StartSendingCommandQueue() => SendNextCommandInQueue();
 
-            string errorMessage;
-            var cmd = _commandQueue.Peek();
-            if (!SendData(cmd, out errorMessage))
-                error(errorMessage);
+
+        private static void SendNextCommandInQueue()
+        {
+            if (_commandQueue.Count > 0)
+                SendData(_commandQueue.Peek());
         }
 
 
@@ -141,7 +123,7 @@ namespace CTecUtil.IO
 
         public static bool CheckChecksum(byte[] data)
         {
-            if (data.Length == 0)
+            if (data.Length == 0) 
                 return false;
             int checksumCalc = 0;
             for (int i = 0; i < data.Length - 1; i++)
@@ -150,10 +132,8 @@ namespace CTecUtil.IO
         }
 
 
-        private static bool SendData(Command command, out string errorMessage)
+        private static bool SendData(Command command)
         {
-            errorMessage = "";
-
             try
             {
                 if (_port is null)
@@ -162,26 +142,32 @@ namespace CTecUtil.IO
                 if (!_port.IsOpen)
                     _port.Open();
 
-                _port.DataReceived += dataReceived;
-
-                // OnReceiveData = command.DataReceiver;
-                command.Sent = true;
                 _port.Write(command.CommandData, 0, command.CommandData.Length);
-                return true;
+
+                return command.Sent = true;
             }
             catch (Exception ex)
             {
-                errorMessage = ex.ToString();
+                error(Cultures.Resources.Error_Serial_Port, ex);
             }
 
             return false;
         }
 
 
-        private static void error(string message) => MessageBox.Show(message, Cultures.Resources.Serial_Comms);
-        private static void error(string message, Exception ex) => error(message + "\n\n" + ex.Message);
+        /// <summary>Use of this delegate allows house style message box to be used</summary>
+        public delegate void ErrorMessageHandler(string message);
+
+        /// <summary>Set this to provide house style message box for any error messages generated during serial comms</summary>
+        public static ErrorMessageHandler ShowErrorMessage;
 
 
+        private static void error(string message, Exception ex) => ShowErrorMessage?.Invoke(message + "\n\n'" + ex.Message + "'");
+
+
+        /// <summary>
+        /// Returns a new serial port Initialised with the current PortName, BaudRate, etc. properties.
+        /// </summary>
         private static SerialPort newSerialPort()
         {
             try
@@ -211,23 +197,23 @@ namespace CTecUtil.IO
 
             if (incoming is not null && _commandQueue.Count > 0)
             {
-                //                OnReceiveData?.Invoke(incoming);
+//                OnReceiveData?.Invoke(incoming);
                 _commandQueue.Peek().DataReceiver?.Invoke(incoming);
-            }
+
                 //remove just-handled command from queue
                 _commandQueue.Dequeue();
-            //}
+            }
 
             //send next command or finish
             if (_commandQueue.Count > 0)
             {
                 SendNextCommandInQueue();
             }
-            //else
-            //{
-            //    _port?.Close();
-            //    _port?.Dispose();
-            //}
+            else
+            {
+                _port?.Close();
+                _port?.Dispose();
+            }
 
             //}
         }
@@ -235,58 +221,66 @@ namespace CTecUtil.IO
 
         private static byte[] readIncomingData(SerialPort sender)
         {
-            //wait for buffer
-            Thread.Sleep(30);
-            int bytes = sender.BytesToRead, newBytes;
-            do
+            try
             {
+                //wait for buffer
                 Thread.Sleep(30);
-                if ((newBytes = sender.BytesToRead) > 0 && newBytes == bytes)
-                    break;
-                bytes = newBytes;
-            } while (true);
+                int bytes = sender.BytesToRead, newBytes;
+                do
+                {
+                    Thread.Sleep(30);
+                    if ((newBytes = sender.BytesToRead) > 0 && newBytes == bytes)
+                        break;
+                    bytes = newBytes;
+                } while (true);
 
-            byte[] buffer = new byte[sender.BytesToRead];
-            sender.Read(buffer, 0, sender.BytesToRead);
-            //return buffer;
-            return CheckChecksum(buffer) ? buffer : null;
+                byte[] buffer = new byte[sender.BytesToRead];
+                sender.Read(buffer, 0, sender.BytesToRead);
+                //return buffer;
+                return CheckChecksum(buffer) ? buffer : null;
 
 
 
-            //Thread.Sleep(30);
-            //if (sender.BytesToRead == 0)
-            //    return null;
+                //Thread.Sleep(30);
+                //if (sender.BytesToRead == 0)
+                //    return null;
 
-            //byte[] header = new byte[2];
+                //byte[] header = new byte[2];
 
-            ////read first byte & check for ack/nak
-            //sender.Read(header, 0, 1);
-            //if (header[0] == AckByte) return new byte[] { AckByte };
-            //if (header[0] == NakByte) return new byte[] { NakByte };
+                ////read first byte & check for ack/nak
+                //sender.Read(header, 0, 1);
+                //if (header[0] == AckByte) return new byte[] { AckByte };
+                //if (header[0] == NakByte) return new byte[] { NakByte };
 
-            ////first byte is command code; next read payload length
-            //while (sender.BytesToRead == 0) Thread.Sleep(5);
-            //sender.Read(header, 1, 1);
-            //var payloadLength = header[1];
-            //var checkSumLength = 1;
+                ////first byte is command code; next read payload length
+                //while (sender.BytesToRead == 0) Thread.Sleep(5);
+                //sender.Read(header, 1, 1);
+                //var payloadLength = header[1];
+                //var checkSumLength = 1;
 
-            //int bytesRead = header.Length;
-            //var buffer = new byte[payloadLength + bytesRead + checkSumLength];
-            //buffer[0] = header[0];
-            //buffer[1] = header[1];
+                //int bytesRead = header.Length;
+                //var buffer = new byte[payloadLength + bytesRead + checkSumLength];
+                //buffer[0] = header[0];
+                //buffer[1] = header[1];
 
-            //while (bytesRead < payloadLength + checkSumLength)
-            //{
-            //    while (sender.BytesToRead == 0) Thread.Sleep(5);
-            //    int newBytes = Math.Min(sender.BytesToRead, header.Length + payloadLength + checkSumLength - bytesRead);
-            //    sender.Read(buffer, bytesRead, newBytes);
-            //    bytesRead += newBytes;
-            //}
+                //while (bytesRead < payloadLength + checkSumLength)
+                //{
+                //    while (sender.BytesToRead == 0) Thread.Sleep(5);
+                //    int newBytes = Math.Min(sender.BytesToRead, header.Length + payloadLength + checkSumLength - bytesRead);
+                //    sender.Read(buffer, bytesRead, newBytes);
+                //    bytesRead += newBytes;
+                //}
 
-            //int r;
-            //while ((r = sender.BytesToRead) > 0) { Thread.Sleep(5); var discard = new byte[r]; sender.Read(discard, 0, r); }
+                //int r;
+                //while ((r = sender.BytesToRead) > 0) { Thread.Sleep(5); var discard = new byte[r]; sender.Read(discard, 0, r); }
 
-            //return CheckChecksum(buffer) ? buffer : null;
+                //return CheckChecksum(buffer) ? buffer : null;
+            }
+            catch (Exception ex)
+            {
+                error(Cultures.Resources.Error_Reading_Incoming_Data, ex);
+                return null;
+            }
         }
 
     }
