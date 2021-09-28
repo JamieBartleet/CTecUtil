@@ -10,46 +10,32 @@ using System.Windows;
 
 namespace CTecUtil.IO
 {
-    public class SerialComms
+    public partial class SerialComms
     {
         static SerialComms() => _settings = CTecUtil.Registry.ReadSerialPortSettings();
 
 
-        private static SerialPort _port;
+        private static SerialPort     _port;
+        private static Queue<Command> _commandQueue = new();
+
+        
+        private static int _totalCommandsToSend;
+        public delegate void ProgressMaxSetter(int maxValue);
+        public delegate void ProgressValueUpdater(int value);
+
+        public static SerialComms.ProgressMaxSetter    SetProgressMaxValue;
+        public static SerialComms.ProgressValueUpdater UpdateProgressValue;
+
+
+        public delegate void ReceivedDataHandler(byte[] incomingData);
 
 
         public static byte AckByte { get; set; }
         public static byte NakByte { get; set; }
 
 
-        public class SerialPortSettings
-        {
-            public string PortName { get; set; }
-            public int BaudRate { get; set; }
-            public Handshake Handshake { get; set; }
-            public Parity Parity { get; set; }
-            public int DataBits { get; set; }
-            public StopBits StopBits { get; set; }
-            public int ReadTimeout { get; set; }
-            public int WriteTimeout { get; set; }
-        }
-
-
         private static SerialPortSettings _settings = new();
         public static SerialPortSettings Settings { get => _settings; }
-
-
-        public static string PortName { get => Settings.PortName; set => Settings.PortName = value; }
-        public static int BaudRate { get => Settings.BaudRate; set => Settings.BaudRate = value; }
-        public static Handshake Handshake { get => Settings.Handshake; set => Settings.Handshake = value; }
-        public static Parity Parity { get => Settings.Parity; set => Settings.Parity = value; }
-        public static int DataBits { get => Settings.DataBits; set => Settings.DataBits = value; }
-        public static StopBits StopBits { get => Settings.StopBits; set => Settings.StopBits = value; }
-        public static int ReadTimeout { get => Settings.ReadTimeout; set => Settings.ReadTimeout = value; }
-        public static int WriteTimeout { get => Settings.WriteTimeout; set => Settings.WriteTimeout = value; }
-
-
-        public delegate void ReceivedDataHandler(byte[] incomingData);
 
 
         public static bool Close()
@@ -78,21 +64,6 @@ namespace CTecUtil.IO
         public static List<string> GetAvailablePorts() => SerialPort.GetPortNames().ToList();
 
 
-        private class Command
-        {
-            /// <summary>The command data.</summary>
-            public byte[] CommandData { get; set; }
-
-            /// <summary>Handler to which the response will be sent.</summary>
-            public ReceivedDataHandler DataReceiver { get; set; }
-            
-            public bool Sent { get; set; }
-        }
-
-
-        private static Queue<Command> _commandQueue = new();
-
-
         /// <summary>
         /// Queue a new command ready to send to the panel.
         /// </summary>
@@ -102,14 +73,14 @@ namespace CTecUtil.IO
             => _commandQueue.Enqueue(new() { CommandData = commandData, DataReceiver = dataReceiver });
 
 
-        public static void StartSendingCommandQueue() => SendNextCommandInQueue();
-
-
-        private static void SendNextCommandInQueue()
+        public static void StartSendingCommandQueue()
         {
-            if (_commandQueue.Count > 0)
-                SendData(_commandQueue.Peek());
+            SetProgressMaxValue?.Invoke(_totalCommandsToSend = _commandQueue.Count);
+            UpdateProgressValue?.Invoke(0);
+            SendNextCommandInQueue();
         }
+
+        private static void SendNextCommandInQueue() => SendData(_commandQueue.Peek());
 
 
         public static byte CalcChecksum(byte[] data, bool outgoing = false)
@@ -134,21 +105,24 @@ namespace CTecUtil.IO
 
         private static bool SendData(Command command)
         {
-            try
+            if (command != null)
             {
-                if (_port is null)
-                    _port = newSerialPort();
+                try
+                {
+                    if (_port is null)
+                        _port = newSerialPort();
 
-                if (!_port.IsOpen)
-                    _port.Open();
+                    if (!_port.IsOpen)
+                        _port.Open();
 
-                _port.Write(command.CommandData, 0, command.CommandData.Length);
+                    _port.Write(command.CommandData, 0, command.CommandData.Length);
 
-                return command.Sent = true;
-            }
-            catch (Exception ex)
-            {
-                error(Cultures.Resources.Error_Serial_Port, ex);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    error(Cultures.Resources.Error_Serial_Port, ex);
+                }
             }
 
             return false;
@@ -172,9 +146,9 @@ namespace CTecUtil.IO
         {
             try
             {
-                var port = new SerialPort(PortName, BaudRate, Parity, DataBits, StopBits);
-                port.ReadTimeout  = ReadTimeout;
-                port.WriteTimeout = WriteTimeout;
+                var port = new SerialPort(Settings.PortName, Settings.BaudRate, Settings.Parity, Settings.DataBits, Settings.StopBits);
+                port.ReadTimeout  = Settings.ReadTimeout;
+                port.WriteTimeout = Settings.WriteTimeout;
 
                 var available = GetAvailablePorts();
                 if (available.Count > 0 && !available.Contains(port.PortName))
@@ -191,31 +165,30 @@ namespace CTecUtil.IO
         }
 
 
-        private static void dataReceived(object sender, SerialDataReceivedEventArgs e)
+        private static async void dataReceived(object sender, SerialDataReceivedEventArgs e)
         {
             var incoming = readIncomingData(sender as SerialPort);
 
             if (incoming is not null && _commandQueue.Count > 0)
             {
-//                OnReceiveData?.Invoke(incoming);
-                _commandQueue.Peek().DataReceiver?.Invoke(incoming);
+                var cmd = _commandQueue.Peek();
+                if (cmd != null)
+                {
+                    cmd.Complete = true;
 
-                //remove just-handled command from queue
-                _commandQueue.Dequeue();
+                    //send response to data receiver
+                    await Task.Run(new Action(() => { cmd.DataReceiver?.Invoke(incoming); }));
+
+                    if (_commandQueue.Count > 0)
+                        _commandQueue.Dequeue();
+
+                    UpdateProgressValue?.Invoke(_totalCommandsToSend - _commandQueue.Count);
+                }
             }
 
-            //send next command or finish
+            //send next command, if any
             if (_commandQueue.Count > 0)
-            {
                 SendNextCommandInQueue();
-            }
-            else
-            {
-                _port?.Close();
-                _port?.Dispose();
-            }
-
-            //}
         }
 
 
@@ -226,13 +199,14 @@ namespace CTecUtil.IO
                 //wait for buffer
                 Thread.Sleep(30);
                 int bytes = sender.BytesToRead, newBytes;
+                int count = 0;
                 do
                 {
                     Thread.Sleep(30);
                     if ((newBytes = sender.BytesToRead) > 0 && newBytes == bytes)
                         break;
                     bytes = newBytes;
-                } while (true);
+                } while (++count < 25);
 
                 byte[] buffer = new byte[sender.BytesToRead];
                 sender.Read(buffer, 0, sender.BytesToRead);

@@ -80,7 +80,7 @@ namespace CTecUtil
         public static string ReadCulture() => (string)readSubKey(Keys.CultureKey);
 
         
-        public static void SaveSerialPortSettings(SerialComms.SerialPortSettings settings)
+        public static void SaveSerialPortSettings(SerialPortSettings settings)
             => writeSubKey(Keys.SerialPortKey, "n=" + settings.PortName
                                             + ",b=" + settings.BaudRate
                                             + ",h=" + settings.Handshake
@@ -90,9 +90,9 @@ namespace CTecUtil
                                             + ",r=" + settings.ReadTimeout
                                             + ",w=" + settings.WriteTimeout);
 
-        public static SerialComms.SerialPortSettings ReadSerialPortSettings()
+        public static SerialPortSettings ReadSerialPortSettings()
         {
-            SerialComms.SerialPortSettings result = new();
+            SerialPortSettings result = new();
 
             var keyData = (string)readSubKey(Keys.SerialPortKey);
             if (!string.IsNullOrEmpty(keyData))
