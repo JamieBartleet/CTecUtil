@@ -117,6 +117,12 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Error_Checksum_Fail" xml:space="preserve">
+    <value>Des données non valides ont été reçues.</value>
+  </data>
+  <data name="Error_Comms_Timeout" xml:space="preserve">
+    <value>La communication a échoué parce que le panneau n’a pas répondu dans le délai imparti.</value>
+  </data>
   <data name="Error_Reading_Incoming_Data" xml:space="preserve">
     <value>Une erreur s’est produite lors de la lecture des données du panneau.</value>
   </data>

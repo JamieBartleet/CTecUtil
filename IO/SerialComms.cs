@@ -115,6 +115,7 @@ namespace CTecUtil.IO
                     if (!_port.IsOpen)
                         _port.Open();
 
+                    _port.DiscardOutBuffer();
                     _port.Write(command.CommandData, 0, command.CommandData.Length);
 
                     return true;
@@ -136,7 +137,7 @@ namespace CTecUtil.IO
         public static ErrorMessageHandler ShowErrorMessage;
 
 
-        private static void error(string message, Exception ex) => ShowErrorMessage?.Invoke(message + "\n\n'" + ex.Message + "'");
+        public static void error(string message, Exception ex) => ShowErrorMessage?.Invoke(message + "\n\n'" + ex.Message + "'");
 
 
         /// <summary>
@@ -167,7 +168,11 @@ namespace CTecUtil.IO
 
         private static async void dataReceived(object sender, SerialDataReceivedEventArgs e)
         {
-            var incoming = readIncomingData(sender as SerialPort);
+            var port = sender as SerialPort;
+            if (port == null || port.BytesToRead == 0)
+                return;
+
+            var incoming = readIncomingData(port);
 
             if (incoming is not null && _commandQueue.Count > 0)
             {
@@ -176,11 +181,11 @@ namespace CTecUtil.IO
                 {
                     cmd.Complete = true;
 
-                    //send response to data receiver
-                    await Task.Run(new Action(() => { cmd.DataReceiver?.Invoke(incoming); }));
-
                     if (_commandQueue.Count > 0)
                         _commandQueue.Dequeue();
+
+                    //send response to data receiver
+                    await Task.Run(new Action(() => { cmd.DataReceiver?.Invoke(incoming); }));
 
                     UpdateProgressValue?.Invoke(_totalCommandsToSend - _commandQueue.Count);
                 }
@@ -194,66 +199,99 @@ namespace CTecUtil.IO
 
         private static byte[] readIncomingData(SerialPort sender)
         {
+            CommsTimer timer = new();
+            
             try
             {
-                //wait for buffer
-                Thread.Sleep(30);
-                int bytes = sender.BytesToRead, newBytes;
-                int count = 0;
-                do
-                {
-                    Thread.Sleep(30);
-                    if ((newBytes = sender.BytesToRead) > 0 && newBytes == bytes)
-                        break;
-                    bytes = newBytes;
-                } while (++count < 25);
-
-                byte[] buffer = new byte[sender.BytesToRead];
-                sender.Read(buffer, 0, sender.BytesToRead);
-                //return buffer;
-                return CheckChecksum(buffer) ? buffer : null;
-
-
-
+                ////wait for buffering [sometimes dataReceived() is called by the port when BytesToRead is still zero]
                 //Thread.Sleep(30);
-                //if (sender.BytesToRead == 0)
-                //    return null;
 
-                //byte[] header = new byte[2];
+                
+                timer.Start(5000);
 
-                ////read first byte & check for ack/nak
-                //sender.Read(header, 0, 1);
-                //if (header[0] == AckByte) return new byte[] { AckByte };
-                //if (header[0] == NakByte) return new byte[] { NakByte };
+                //wait for buffering [sometimes dataReceived() is called by the port when BytesToRead is still zero]
+                while (sender.BytesToRead == 0)
+                {
+                    Thread.Sleep(40);
+                    if (timer.TimedOut)
+                        throw new TimeoutException();
+                }
 
-                ////first byte is command code; next read payload length
-                //while (sender.BytesToRead == 0) Thread.Sleep(5);
-                //sender.Read(header, 1, 1);
-                //var payloadLength = header[1];
-                //var checkSumLength = 1;
+                //read first byte: either Ack/Nak or the command ID
+                byte[] header = new byte[2];
+                sender.Read(header, 0, 1);
+                if (header[0] == AckByte || header[0] == NakByte)
+                    return new byte[] { header[0] };
 
-                //int bytesRead = header.Length;
-                //var buffer = new byte[payloadLength + bytesRead + checkSumLength];
-                //buffer[0] = header[0];
-                //buffer[1] = header[1];
+                //read payload length byte
+                while (sender.BytesToRead == 0)
+                {
+                    Thread.Sleep(40);
+                    if (timer.TimedOut)
+                        throw new TimeoutException();
+                }
 
-                //while (bytesRead < payloadLength + checkSumLength)
+                sender.Read(header, 1, 1);
+                var payloadLength = header[1];
+
+                //now we know how many more bytes to expect - i.e. header + payloadLength + 1 byte for checksum
+                byte[] buffer = new byte[header.Length + payloadLength + 1];
+                Buffer.BlockCopy(header, 0, buffer, 0, header.Length);
+
+                int offset = header.Length;
+                while (offset < buffer.Length)
+                {
+                    while (sender.BytesToRead == 0)
+                    {
+                        Thread.Sleep(40);
+
+                        if (timer.TimedOut)
+                            throw new TimeoutException();
+                    }
+
+                    //Read payload & checksum
+                    var bytes = Math.Min(sender.BytesToRead, buffer.Length - offset);
+                    sender.Read(buffer, offset, bytes);
+                    offset += bytes;
+                }
+
+
+                //int bytes = sender.BytesToRead, newBytes;
+                //do
                 //{
-                //    while (sender.BytesToRead == 0) Thread.Sleep(5);
-                //    int newBytes = Math.Min(sender.BytesToRead, header.Length + payloadLength + checkSumLength - bytesRead);
-                //    sender.Read(buffer, bytesRead, newBytes);
-                //    bytesRead += newBytes;
-                //}
+                //    Thread.Sleep(30);
+                //    if ((newBytes = sender.BytesToRead) > 0 && newBytes == bytes)
+                //        break;
+                //    bytes = newBytes;
 
-                //int r;
-                //while ((r = sender.BytesToRead) > 0) { Thread.Sleep(5); var discard = new byte[r]; sender.Read(discard, 0, r); }
+                //    if (timer.TimedOut)
+                //        throw new TimeoutException();
 
-                //return CheckChecksum(buffer) ? buffer : null;
+                //} while (true);
+
+                //sender.Read(buffer, 0, sender.BytesToRead);
+
+                if (!CheckChecksum(buffer))
+                    throw new Exception(Cultures.Resources.Error_Checksum_Fail);
+
+                return buffer;
+            }
+            catch (TimeoutException ex)
+            {
+                error(Cultures.Resources.Error_Comms_Timeout, ex);
+                return null;
             }
             catch (Exception ex)
             {
                 error(Cultures.Resources.Error_Reading_Incoming_Data, ex);
                 return null;
+            }
+            finally
+            {
+                timer.Stop();
+                //timer.Dispose();
+                timer = null;
+                _port.DiscardInBuffer();
             }
         }
 

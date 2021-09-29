@@ -61,6 +61,24 @@ namespace CTecUtil.Cultures {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid data was received..
+        /// </summary>
+        public static string Error_Checksum_Fail {
+            get {
+                return ResourceManager.GetString("Error_Checksum_Fail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Comms failed because the panel did not respond within the time limit..
+        /// </summary>
+        public static string Error_Comms_Timeout {
+            get {
+                return ResourceManager.GetString("Error_Comms_Timeout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred reading incoming data from the panel..
         /// </summary>
         public static string Error_Reading_Incoming_Data {

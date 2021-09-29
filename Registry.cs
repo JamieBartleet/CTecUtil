@@ -29,7 +29,7 @@ namespace CTecUtil
         /// </summary>
         public static void SaveWindowState(Window window)
         {
-            writeSubKey(Keys.WindowKey, window.WindowState == WindowState.Maximized ? _maximised : window.Width + "," + window.Height + ":" + window.Left + "," + window.Top);
+            writeSubKey(Keys.WindowKey, window.WindowState == WindowState.Maximized ? _maximised : window.Width + "," + window.Height + ";" + window.Left + "," + window.Top);
         }
 
 
@@ -47,7 +47,7 @@ namespace CTecUtil
                 }
                 else
                 {
-                    var size_pos = prevState.Split(new char[] { ':' });
+                    var size_pos = prevState.Split(new char[] { ';' });
 
                     if (size_pos.Length > 0)
                     {
