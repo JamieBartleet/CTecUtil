@@ -27,7 +27,7 @@ namespace CTecUtil.IO
         public static SerialComms.ProgressValueUpdater UpdateProgressValue;
 
 
-        public delegate void ReceivedDataHandler(byte[] incomingData);
+        public delegate void ReceivedDataHandler(byte[] incomingData, int index = -1);
 
 
         public static byte AckByte { get; set; }
@@ -63,19 +63,21 @@ namespace CTecUtil.IO
 
         public static List<string> GetAvailablePorts() => SerialPort.GetPortNames().ToList();
 
-
+        
         /// <summary>
         /// Queue a new command ready to send to the panel.
         /// </summary>
         /// <param name="commandData">The command data.</param>
         /// <param name="dataReceiver">Handler to which the response will be sent.</param>
-        public static void EnqueueCommand(byte[] commandData, ReceivedDataHandler dataReceiver)
-            => _commandQueue.Enqueue(new() { CommandData = commandData, DataReceiver = dataReceiver });
+        /// <param name="index">(Optional) the index of the item requested - for the case where the index is not included in the response data (e.g. devices).</param>
+        public static void EnqueueCommand(byte[] commandData, ReceivedDataHandler dataReceiver, int? index = null)
+            => _commandQueue.Enqueue(new() { CommandData = commandData, DataReceiver = dataReceiver, Index = index });
 
 
         public static void StartSendingCommandQueue()
         {
             SetProgressMaxValue?.Invoke(_totalCommandsToSend = _commandQueue.Count);
+            ShowProgressBarWindow();
             UpdateProgressValue?.Invoke(0);
             SendNextCommandInQueue();
         }
@@ -185,7 +187,13 @@ namespace CTecUtil.IO
                         _commandQueue.Dequeue();
 
                     //send response to data receiver
-                    await Task.Run(new Action(() => { cmd.DataReceiver?.Invoke(incoming); }));
+                    await Task.Run(new Action(() =>
+                    {
+                        if (cmd.Index != null)
+                            cmd.DataReceiver?.Invoke(incoming, cmd.Index.Value);
+                        else
+                            cmd.DataReceiver?.Invoke(incoming);
+                    }));
 
                     UpdateProgressValue?.Invoke(_totalCommandsToSend - _commandQueue.Count);
                 }

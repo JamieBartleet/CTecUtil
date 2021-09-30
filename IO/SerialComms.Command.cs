@@ -13,8 +13,11 @@ namespace CTecUtil.IO
             /// <summary>The command data.</summary>
             public byte[] CommandData { get; set; }
 
+            public int? Index { get; set; }
+
             /// <summary>Handler to which the response will be sent.</summary>
             public ReceivedDataHandler DataReceiver { get; set; }
+
 
             public bool Complete { get; set; }
         }
