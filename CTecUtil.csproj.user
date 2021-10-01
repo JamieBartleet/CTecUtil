@@ -5,5 +5,8 @@
     <Page Update="Cultures\CultureResourceDictionary.xaml">
       <SubType>Designer</SubType>
     </Page>
+    <Page Update="UI\ProgressBarWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
 </Project>

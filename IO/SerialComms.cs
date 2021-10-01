@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO.Ports;
 using System.Linq;
@@ -7,6 +8,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
+using CTecUtil.UI;
 
 namespace CTecUtil.IO
 {
@@ -16,18 +19,17 @@ namespace CTecUtil.IO
 
 
         private static SerialPort     _port;
-        private static Queue<Command> _commandQueue = new();
+        private static CommandQueue _commandQueue = new();
 
         
-        private static int _totalCommandsToSend;
         public delegate void ProgressMaxSetter(int maxValue);
         public delegate void ProgressValueUpdater(int value);
 
-        public static SerialComms.ProgressMaxSetter    SetProgressMaxValue;
-        public static SerialComms.ProgressValueUpdater UpdateProgressValue;
+        /// <summary>Use of this delegate allows house style message box to be used</summary>
+        public delegate void ErrorMessageHandler(string message);
 
-
-        public delegate void ReceivedDataHandler(byte[] incomingData, int index = -1);
+        /// <summary>Set this to provide house style message box for any error messages generated during serial comms</summary>
+        public static ErrorMessageHandler ShowErrorMessage;
 
 
         public static byte AckByte { get; set; }
@@ -63,45 +65,60 @@ namespace CTecUtil.IO
 
         public static List<string> GetAvailablePorts() => SerialPort.GetPortNames().ToList();
 
-        
+
+        public static void InitCommandQueue(string legend) => _commandQueue = new() { Legend = legend };
+
+
         /// <summary>
         /// Queue a new command ready to send to the panel.
         /// </summary>
         /// <param name="commandData">The command data.</param>
         /// <param name="dataReceiver">Handler to which the response will be sent.</param>
         /// <param name="index">(Optional) the index of the item requested - for the case where the index is not included in the response data (e.g. devices).</param>
-        public static void EnqueueCommand(byte[] commandData, ReceivedDataHandler dataReceiver, int? index = null)
-            => _commandQueue.Enqueue(new() { CommandData = commandData, DataReceiver = dataReceiver, Index = index });
+        public static void EnqueueCommand(byte[] commandData, Command.ReceivedDataHandler dataReceiver, int? index = null)
+        {
+            if (_commandQueue.Count == 0)
+                InitCommandQueue("Downloading...");
+            _commandQueue.Enqueue(new() { CommandData = commandData, DataReceiver = dataReceiver, Index = index });
+        }
 
 
         public static void StartSendingCommandQueue()
-        {
-            SetProgressMaxValue?.Invoke(_totalCommandsToSend = _commandQueue.Count);
-            ShowProgressBarWindow();
-            UpdateProgressValue?.Invoke(0);
-            SendNextCommandInQueue();
-        }
-
-        private static void SendNextCommandInQueue() => SendData(_commandQueue.Peek());
-
-
-        public static byte CalcChecksum(byte[] data, bool outgoing = false)
-        {
-            int checksumCalc = 0;
-            for (int i = outgoing ? 1 : 0; i < data.Length; i++)
-                checksumCalc += data[i];
-            return (byte)(checksumCalc & 0xff);
+        {            
+            if (_commandQueue.Count > 2)
+                ShowProgressBarWindow();
+            else
+                SendFirstCommandInQueue();
         }
 
 
-        public static bool CheckChecksum(byte[] data)
+        private static void SendFirstCommandInQueue() => SendData(_commandQueue.Peek());
+        private static void SendNextCommandInQueue()  => SendData(_commandQueue.Peek());
+
+
+        /// <summary>
+        /// Returns a new serial port Initialised with the current PortName, BaudRate, etc. properties.
+        /// </summary>
+        private static SerialPort newSerialPort()
         {
-            if (data.Length == 0) 
-                return false;
-            int checksumCalc = 0;
-            for (int i = 0; i < data.Length - 1; i++)
-                checksumCalc += data[i];
-            return (byte)(checksumCalc & 0xff) == data[data.Length - 1];
+            try
+            {
+                var port = new SerialPort(Settings.PortName, Settings.BaudRate, Settings.Parity, Settings.DataBits, Settings.StopBits);
+                port.ReadTimeout  = Settings.ReadTimeout;
+                port.WriteTimeout = Settings.WriteTimeout;
+
+                var available = GetAvailablePorts();
+                if (available.Count > 0 && !available.Contains(port.PortName))
+                    port.PortName = available[0];
+
+                port.DataReceived += dataReceived;
+                return port;
+            }
+            catch (Exception ex)
+            {
+                error(Cultures.Resources.Error_Serial_Port, ex);
+            }
+            return null;
         }
 
 
@@ -132,76 +149,56 @@ namespace CTecUtil.IO
         }
 
 
-        /// <summary>Use of this delegate allows house style message box to be used</summary>
-        public delegate void ErrorMessageHandler(string message);
-
-        /// <summary>Set this to provide house style message box for any error messages generated during serial comms</summary>
-        public static ErrorMessageHandler ShowErrorMessage;
-
-
-        public static void error(string message, Exception ex) => ShowErrorMessage?.Invoke(message + "\n\n'" + ex.Message + "'");
-
-
         /// <summary>
-        /// Returns a new serial port Initialised with the current PortName, BaudRate, etc. properties.
+        /// called by port on reception of data
         /// </summary>
-        private static SerialPort newSerialPort()
-        {
-            try
-            {
-                var port = new SerialPort(Settings.PortName, Settings.BaudRate, Settings.Parity, Settings.DataBits, Settings.StopBits);
-                port.ReadTimeout  = Settings.ReadTimeout;
-                port.WriteTimeout = Settings.WriteTimeout;
-
-                var available = GetAvailablePorts();
-                if (available.Count > 0 && !available.Contains(port.PortName))
-                    port.PortName = available[0];
-
-                port.DataReceived += dataReceived;
-                return port;
-            }
-            catch (Exception ex)
-            {
-                error(Cultures.Resources.Error_Serial_Port, ex);
-            }
-            return null;
-        }
-
-
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private static async void dataReceived(object sender, SerialDataReceivedEventArgs e)
         {
             var port = sender as SerialPort;
             if (port == null || port.BytesToRead == 0)
                 return;
 
-            var incoming = readIncomingData(port);
-
-            if (incoming is not null && _commandQueue.Count > 0)
+            try
             {
-                var cmd = _commandQueue.Peek();
-                if (cmd != null)
+                var incoming = readIncomingData(port);
+
+                if (incoming is not null && _commandQueue.Count > 0)
                 {
-                    cmd.Complete = true;
-
-                    if (_commandQueue.Count > 0)
-                        _commandQueue.Dequeue();
-
-                    //send response to data receiver
-                    await Task.Run(new Action(() =>
+                    var cmd = _commandQueue.Peek();
+                    if (cmd != null)
                     {
-                        if (cmd.Index != null)
-                            cmd.DataReceiver?.Invoke(incoming, cmd.Index.Value);
-                        else
-                            cmd.DataReceiver?.Invoke(incoming);
-                    }));
+                        cmd.Complete = true;
 
-                    UpdateProgressValue?.Invoke(_totalCommandsToSend - _commandQueue.Count);
+                        if (_commandQueue.Count > 0)
+                            _commandQueue.Dequeue();
+
+                        //send response to data receiver
+                        await Task.Run(new Action(() =>
+                        {
+                            if (cmd.Index != null)
+                                cmd.DataReceiver?.Invoke(incoming, cmd.Index.Value);
+                            else
+                                cmd.DataReceiver?.Invoke(incoming);
+                        }));
+                    }
                 }
-            }
+                
+                _progress++;
 
-            //send next command, if any
-            if (_commandQueue.Count > 0)
-                SendNextCommandInQueue();
+                //send next command, if any
+                if (_commandQueue.Count > 0)
+                    SendNextCommandInQueue();
+            }
+            catch (TimeoutException ex)
+            {
+                error(Cultures.Resources.Error_Comms_Timeout, ex);
+            }
+            catch (Exception ex)
+            {
+                error(Cultures.Resources.Error_Reading_Incoming_Data, ex);
+            }
         }
 
 
@@ -211,11 +208,8 @@ namespace CTecUtil.IO
             
             try
             {
-                ////wait for buffering [sometimes dataReceived() is called by the port when BytesToRead is still zero]
-                //Thread.Sleep(30);
-
-                
-                timer.Start(5000);
+                //10 sec timeout
+                timer.Start(10000);
 
                 //wait for buffering [sometimes dataReceived() is called by the port when BytesToRead is still zero]
                 while (sender.BytesToRead == 0)
@@ -263,45 +257,120 @@ namespace CTecUtil.IO
                     offset += bytes;
                 }
 
-
-                //int bytes = sender.BytesToRead, newBytes;
-                //do
-                //{
-                //    Thread.Sleep(30);
-                //    if ((newBytes = sender.BytesToRead) > 0 && newBytes == bytes)
-                //        break;
-                //    bytes = newBytes;
-
-                //    if (timer.TimedOut)
-                //        throw new TimeoutException();
-
-                //} while (true);
-
-                //sender.Read(buffer, 0, sender.BytesToRead);
-
                 if (!CheckChecksum(buffer))
                     throw new Exception(Cultures.Resources.Error_Checksum_Fail);
 
                 return buffer;
             }
-            catch (TimeoutException ex)
-            {
-                error(Cultures.Resources.Error_Comms_Timeout, ex);
-                return null;
-            }
-            catch (Exception ex)
-            {
-                error(Cultures.Resources.Error_Reading_Incoming_Data, ex);
-                return null;
-            }
             finally
             {
                 timer.Stop();
                 //timer.Dispose();
-                timer = null;
                 _port.DiscardInBuffer();
             }
         }
+
+
+        public static byte CalcChecksum(byte[] data, bool outgoing = false, bool check = false)
+        {
+            var startByte = outgoing ? 1 : 0;
+            var checkLength = check ? data.Length - 1 : data.Length;
+            int checksumCalc = 0;
+            for (int i = startByte; i < checkLength; i++)
+                checksumCalc += data[i];
+            return (byte)(checksumCalc & 0xff);
+        }
+
+        
+        //public static bool CheckChecksum(byte[] data)
+        //{
+        //    if (data.Length == 0)
+        //        return false;
+        //    int checksumCalc = 0;
+        //    for (int i = 0; i < data.Length - 1; i++)
+        //        checksumCalc += data[i];
+        //    return (byte)(checksumCalc & 0xff) == data[data.Length - 1];
+        //}
+
+        public static bool CheckChecksum(byte[] data) => data.Length > 0 && CalcChecksum(data, false, true) == data[data.Length - 1];
+
+
+        public static void error(string message, Exception ex)
+        {
+            _commandQueue?.Clear();
+            _progress = _numCommandsToProcess;
+            ShowErrorMessage?.Invoke(message + "\n\n'" + ex.Message + "'");
+        }
+
+
+        #region progress bar
+        private static ProgressBarWindow _progressBarWindow = new();
+        private static int _progress, _numCommandsToProcess;
+
+
+        public static void ShowProgressBarWindow()
+        {
+            try
+            {
+                _progress = 0;
+                //use background worker to asynchronously run work method
+                BackgroundWorker worker = new BackgroundWorker();
+                worker.WorkerReportsProgress = true;
+                worker.DoWork += ProcessAsynch;
+                worker.ProgressChanged += worker_ProgressChanged;
+                worker.RunWorkerAsync();
+            }
+            catch (Exception ex)
+            {
+                error(ex.Message, ex);
+            }
+        }
+
+        private static void worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            // Notifying the progress bar window of the current progress
+            _progressBarWindow.UpdateProgress(e.ProgressPercentage);
+        }
+
+        private static void ProcessAsynch(object sender, DoWorkEventArgs e)
+        {
+            Application.Current.Dispatcher.Invoke(new Action(() =>
+            {
+                //disable parent window controls while the work is being done?
+                
+
+                //launch the progress bar window
+                _progressBarWindow.Show();
+
+            }), DispatcherPriority.ContextIdle);
+
+            Application.Current.Dispatcher.Invoke(new Action(() => _progressBarWindow.ProgressBarMax = _numCommandsToProcess = _commandQueue.Count), DispatcherPriority.ContextIdle);
+            Application.Current.Dispatcher.Invoke(new Action(() => _progressBarWindow.ProgressBarLegend = _commandQueue.Legend), DispatcherPriority.ContextIdle);
+
+            //start the job
+            SendFirstCommandInQueue();
+
+            var startTime = DateTime.Now;
+
+            while (_progress < _numCommandsToProcess)
+            {
+                if (DateTime.Now > startTime.AddMinutes(1))
+                    break;
+                //report progress
+                Application.Current.Dispatcher.Invoke(new Action(() => _progressBarWindow.UpdateProgress(_progress)), DispatcherPriority.ContextIdle);
+                Thread.Sleep(100);
+            }
+
+            //hide progress window if it hasn't already done it itself
+            Application.Current.Dispatcher.Invoke(new Action(() =>
+            {
+                //enable parent window controls?
+
+                _progressBarWindow.Hide();
+
+            }), DispatcherPriority.ContextIdle);
+        }
+        #endregion
 
     }
 }
