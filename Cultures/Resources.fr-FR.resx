@@ -129,4 +129,7 @@
   <data name="Error_Serial_Port" xml:space="preserve">
     <value>Une erreur s’est produite lors de l’ouverture du port série.</value>
   </data>
+  <data name="Option_Cancel" xml:space="preserve">
+    <value>Annuler</value>
+  </data>
 </root>

@@ -8,15 +8,95 @@ namespace CTecUtil.IO
 {
     internal class CommandQueue
     {
-        public Queue<Command> Commands = new();
+        private Queue<CommandSubQueue> _subQueues = new();
 
-        public string Legend { get; set; }
+        private CommandSubQueue _currentQueue;
 
 
-        public void    Enqueue(Command command) => Commands.Enqueue(command);
-        public void    Dequeue() => Commands.Dequeue();
-        public Command Peek() => Commands?.Peek();
-        public void    Clear() => Commands?.Clear();
-        public int     Count { get => Commands.Count; }
+        /// <summary>
+        /// The name of the overall operation - e.g. 'Downloading from panel'
+        /// </summary>
+        public string OperationName { get; set; }
+
+
+        /// <summary>
+        /// Name attached to the first subqueue (i.e. the one currently being serviced)
+        /// </summary>
+        public string QueueName { get => _subQueues.Count > 0 && _subQueues?.Peek()?.Count > 0 ? _subQueues?.Peek()?.Name : null; }
+
+
+        public void AddSubqueue(CommandSubQueue commandQueue) => _subQueues.Enqueue(_currentQueue = commandQueue);
+
+
+        /// <summary>
+        /// Enqueues the command in the currently-enqueueing queue.<br/>
+        /// NB: AddSubQueue() must be called prior to this to initialise the queue that is actively being added to.
+        /// </summary>
+        /// <param name="command"></param>
+        public void Enqueue(Command command)
+        {
+            _currentQueue?.Enqueue(command);
+        }
+
+
+        /// <summary>
+        /// Dequeue the first command in the first subqueue.
+        /// </summary>
+        public void Dequeue()
+        {
+            //remove first command in the first subqueue
+            _subQueues.Peek()?.Dequeue();
+
+            //if there are no more commands in this subqueue, remove it so the first command in the next subqueue becomes front-of-queue
+            if (_subQueues.Peek()?.Count == 0)
+            {
+                if (_subQueues.Count > 1)
+                    _subQueues.Dequeue();
+                else
+                    Clear();
+            }
+        }
+
+
+        /// <summary>
+        /// Returns the first command in the first subqueue.
+        /// </summary>
+        public Command Peek()
+        {
+            try
+            {
+                return _subQueues.Peek()?.Peek();
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+
+        /// <summary>
+        /// Clear all command queues.
+        /// </summary>
+        public void Clear()
+        {
+            foreach (var q in _subQueues)
+                q.Clear();
+            _subQueues?.Clear();
+        }
+
+
+        /// <summary>
+        /// Total count of all commands in all subqueues.
+        /// </summary>
+        public int Count
+        {
+            get
+            {
+                int count = 0;
+                foreach (var q in _subQueues)
+                    count += q.Count;
+                return count;
+            }
+        }
     }
 }

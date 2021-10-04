@@ -18,8 +18,5 @@ namespace CTecUtil.IO
 
         /// <summary>Handler to which the response will be sent.</summary>
         public ReceivedDataHandler DataReceiver { get; set; }
-
-
-        public bool Complete { get; set; }
     }
 }

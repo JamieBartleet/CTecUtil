@@ -23,17 +23,27 @@ namespace CTecUtil.UI
         public ProgressBarWindow()
         {
             InitializeComponent();
+            Topmost = true;
         }
 
 
-        public string ProgressBarLegend { set => txtLegend.Text = value; }
+        public string ProgressBarLegend { set => txtOperationName.Text = value; }
 
         public int    ProgressBarMax    { get;    set; }
 
 
-        public void UpdateProgress(int value)
+        public delegate void CancelHandler();
+
+        /// <summary>
+        /// Delegate called when Cancel button is clicked - assign this if any clean-up is required on cancellation.
+        /// </summary>
+        public CancelHandler OnCancel;
+
+
+        public void UpdateProgress(string processName, int value)
         {
-            pbLoad.Value = (double)value / ProgressBarMax * 100;
+            txtProcessName.Text = processName;
+            pbProgress.Value = (double)value / ProgressBarMax * 100;
             txtProgress.Text = value + " / " + ProgressBarMax;
 
             // When progress reaches 100%, close the progress bar window.
@@ -43,5 +53,7 @@ namespace CTecUtil.UI
                 Hide();
             }
         }
+
+        private void Button_Click(object sender, RoutedEventArgs e) => OnCancel?.Invoke();
     }
 }

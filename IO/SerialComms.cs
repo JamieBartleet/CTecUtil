@@ -15,11 +15,16 @@ namespace CTecUtil.IO
 {
     public partial class SerialComms
     {
-        static SerialComms() => _settings = CTecUtil.Registry.ReadSerialPortSettings();
+        static SerialComms()
+        {
+            _settings = CTecUtil.Registry.ReadSerialPortSettings();
+            _progressBarWindow.OnCancel = CancelCommandQueue;
+        }
 
 
-        private static SerialPort     _port;
+        private static SerialPort   _port;
         private static CommandQueue _commandQueue = new();
+        private static CommsTimer   _timer = new();
 
         
         public delegate void ProgressMaxSetter(int maxValue);
@@ -66,7 +71,26 @@ namespace CTecUtil.IO
         public static List<string> GetAvailablePorts() => SerialPort.GetPortNames().ToList();
 
 
-        public static void InitCommandQueue(string legend) => _commandQueue = new() { Legend = legend };
+        /// <summary>
+        /// Initialise new set of command command queues with the given process name.
+        /// </summary>
+        /// <param name="operationName">Name of the process to be displayed in the progress bar window.<br/>
+        /// E.g. 'Downloading from panel...'</param>
+        public static void InitCommandQueue(string operationName)
+        {
+            _commandQueue.Clear();
+            _commandQueue.OperationName = operationName;
+        }
+
+
+        /// <summary>
+        /// Add a new command subqueue to the set
+        /// </summary>
+        /// <param name="name">Name of the command queue, to be displayed in the progress bar window.</param>
+        public static void AddNewCommandSubqueue(string name)
+        {
+            _commandQueue.AddSubqueue(new CommandSubQueue() { Name = name });
+        }
 
 
         /// <summary>
@@ -76,11 +100,7 @@ namespace CTecUtil.IO
         /// <param name="dataReceiver">Handler to which the response will be sent.</param>
         /// <param name="index">(Optional) the index of the item requested - for the case where the index is not included in the response data (e.g. devices).</param>
         public static void EnqueueCommand(byte[] commandData, Command.ReceivedDataHandler dataReceiver, int? index = null)
-        {
-            if (_commandQueue.Count == 0)
-                InitCommandQueue("Downloading...");
-            _commandQueue.Enqueue(new() { CommandData = commandData, DataReceiver = dataReceiver, Index = index });
-        }
+            => _commandQueue.Enqueue(new Command() { CommandData = commandData, DataReceiver = dataReceiver, Index = index });
 
 
         public static void StartSendingCommandQueue()
@@ -92,8 +112,174 @@ namespace CTecUtil.IO
         }
 
 
+        public static void CancelCommandQueue()
+        {
+            _timer.Stop();
+            _commandQueue?.Clear();
+            _progress = _numCommandsToProcess;
+        }
+
+
         private static void SendFirstCommandInQueue() => SendData(_commandQueue.Peek());
         private static void SendNextCommandInQueue()  => SendData(_commandQueue.Peek());
+
+
+        private static void SendData(Command command)
+        {
+            if (command != null)
+            {
+                try
+                {
+                    if (_port is null)
+                        _port = newSerialPort();
+
+                    if (!_port.IsOpen)
+                        _port.Open();
+
+                    _port.DiscardOutBuffer();
+                    _port.Write(command.CommandData, 0, command.CommandData.Length);
+                }
+                catch (Exception ex)
+                {
+                    error(Cultures.Resources.Error_Serial_Port, ex);
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// called by port on reception of data
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private static async void dataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            var port = sender as SerialPort;
+            if (port == null || port.BytesToRead == 0)
+                return;
+
+            try
+            {
+                var incoming = readIncomingData(port);
+
+                if (_commandQueue.Count > 0)
+                {
+                    var cmd = _commandQueue.Peek();
+                    if (cmd != null)
+                    {
+                        if (_commandQueue.Count > 0)
+                            _commandQueue.Dequeue();
+
+                        if (incoming is not null)
+                        {
+                            //send response to data receiver
+                            await Task.Run(new Action(() =>
+                            {
+                                if (cmd.Index != null)
+                                    cmd.DataReceiver?.Invoke(incoming, cmd.Index.Value);
+                                else
+                                    cmd.DataReceiver?.Invoke(incoming);
+                            }));
+                        }
+                    }
+                }
+                
+                _progress++;
+
+                //send next command, if any
+                if (_commandQueue.Count > 0)
+                    SendNextCommandInQueue();
+            }
+            catch (TimeoutException ex)
+            {
+                error(Cultures.Resources.Error_Comms_Timeout, ex);
+            }
+            catch (Exception ex)
+            {
+                error(Cultures.Resources.Error_Reading_Incoming_Data, ex);
+            }
+        }
+
+
+        private static byte[] readIncomingData(SerialPort sender)
+        {            
+            try
+            {
+                //10 sec timeout
+                _timer.Start(10000);
+
+                //wait for buffering [sometimes dataReceived() is called by the port when BytesToRead is still zero]
+                while (sender.BytesToRead == 0)
+                {
+                    Thread.Sleep(40);
+                    if (_timer.TimedOut)
+                        throw new TimeoutException();
+                }
+
+                //read first byte: either Ack/Nak or the command ID
+                byte[] header = new byte[2];
+                sender.Read(header, 0, 1);
+                if (header[0] == AckByte || header[0] == NakByte)
+                    return new byte[] { header[0] };
+
+                //read payload length byte
+                while (sender.BytesToRead == 0)
+                {
+                    Thread.Sleep(40);
+                    if (_timer.TimedOut)
+                        throw new TimeoutException();
+                }
+
+                sender.Read(header, 1, 1);
+                var payloadLength = header[1];
+
+                //now we know how many more bytes to expect - i.e. header + payloadLength + 1 byte for checksum
+                byte[] buffer = new byte[header.Length + payloadLength + 1];
+                Buffer.BlockCopy(header, 0, buffer, 0, header.Length);
+
+                int offset = header.Length;
+                while (offset < buffer.Length)
+                {
+                    while (sender.BytesToRead == 0)
+                    {
+                        Thread.Sleep(40);
+
+                        if (_timer.TimedOut)
+                            throw new TimeoutException();
+                    }
+
+                    //Read payload & checksum
+                    var bytes = Math.Min(sender.BytesToRead, buffer.Length - offset);
+                    sender.Read(buffer, offset, bytes);
+                    offset += bytes;
+                }
+
+                if (!CheckChecksum(buffer))
+                    throw new Exception(Cultures.Resources.Error_Checksum_Fail);
+
+                return buffer;
+            }
+            finally
+            {
+                _timer.Stop();
+                //timer.Dispose();
+                _port.DiscardInBuffer();
+            }
+        }
+
+
+        public static byte CalcChecksum(byte[] data, bool outgoing = false, bool check = false)
+        {
+            var startByte = outgoing ? 1 : 0;
+            var checkLength = check ? data.Length - 1 : data.Length;
+            int checksumCalc = 0;
+            for (int i = startByte; i < checkLength; i++)
+                checksumCalc += data[i];
+            return (byte)(checksumCalc & 0xff);
+        }
+
+
+        private static bool CheckChecksum(byte[] data) => data.Length > 0 && CalcChecksum(data, false, true) == data[data.Length - 1];
 
 
         /// <summary>
@@ -122,183 +308,9 @@ namespace CTecUtil.IO
         }
 
 
-        private static bool SendData(Command command)
+        private static void error(string message, Exception ex)
         {
-            if (command != null)
-            {
-                try
-                {
-                    if (_port is null)
-                        _port = newSerialPort();
-
-                    if (!_port.IsOpen)
-                        _port.Open();
-
-                    _port.DiscardOutBuffer();
-                    _port.Write(command.CommandData, 0, command.CommandData.Length);
-
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    error(Cultures.Resources.Error_Serial_Port, ex);
-                }
-            }
-
-            return false;
-        }
-
-
-        /// <summary>
-        /// called by port on reception of data
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private static async void dataReceived(object sender, SerialDataReceivedEventArgs e)
-        {
-            var port = sender as SerialPort;
-            if (port == null || port.BytesToRead == 0)
-                return;
-
-            try
-            {
-                var incoming = readIncomingData(port);
-
-                if (incoming is not null && _commandQueue.Count > 0)
-                {
-                    var cmd = _commandQueue.Peek();
-                    if (cmd != null)
-                    {
-                        cmd.Complete = true;
-
-                        if (_commandQueue.Count > 0)
-                            _commandQueue.Dequeue();
-
-                        //send response to data receiver
-                        await Task.Run(new Action(() =>
-                        {
-                            if (cmd.Index != null)
-                                cmd.DataReceiver?.Invoke(incoming, cmd.Index.Value);
-                            else
-                                cmd.DataReceiver?.Invoke(incoming);
-                        }));
-                    }
-                }
-                
-                _progress++;
-
-                //send next command, if any
-                if (_commandQueue.Count > 0)
-                    SendNextCommandInQueue();
-            }
-            catch (TimeoutException ex)
-            {
-                error(Cultures.Resources.Error_Comms_Timeout, ex);
-            }
-            catch (Exception ex)
-            {
-                error(Cultures.Resources.Error_Reading_Incoming_Data, ex);
-            }
-        }
-
-
-        private static byte[] readIncomingData(SerialPort sender)
-        {
-            CommsTimer timer = new();
-            
-            try
-            {
-                //10 sec timeout
-                timer.Start(10000);
-
-                //wait for buffering [sometimes dataReceived() is called by the port when BytesToRead is still zero]
-                while (sender.BytesToRead == 0)
-                {
-                    Thread.Sleep(40);
-                    if (timer.TimedOut)
-                        throw new TimeoutException();
-                }
-
-                //read first byte: either Ack/Nak or the command ID
-                byte[] header = new byte[2];
-                sender.Read(header, 0, 1);
-                if (header[0] == AckByte || header[0] == NakByte)
-                    return new byte[] { header[0] };
-
-                //read payload length byte
-                while (sender.BytesToRead == 0)
-                {
-                    Thread.Sleep(40);
-                    if (timer.TimedOut)
-                        throw new TimeoutException();
-                }
-
-                sender.Read(header, 1, 1);
-                var payloadLength = header[1];
-
-                //now we know how many more bytes to expect - i.e. header + payloadLength + 1 byte for checksum
-                byte[] buffer = new byte[header.Length + payloadLength + 1];
-                Buffer.BlockCopy(header, 0, buffer, 0, header.Length);
-
-                int offset = header.Length;
-                while (offset < buffer.Length)
-                {
-                    while (sender.BytesToRead == 0)
-                    {
-                        Thread.Sleep(40);
-
-                        if (timer.TimedOut)
-                            throw new TimeoutException();
-                    }
-
-                    //Read payload & checksum
-                    var bytes = Math.Min(sender.BytesToRead, buffer.Length - offset);
-                    sender.Read(buffer, offset, bytes);
-                    offset += bytes;
-                }
-
-                if (!CheckChecksum(buffer))
-                    throw new Exception(Cultures.Resources.Error_Checksum_Fail);
-
-                return buffer;
-            }
-            finally
-            {
-                timer.Stop();
-                //timer.Dispose();
-                _port.DiscardInBuffer();
-            }
-        }
-
-
-        public static byte CalcChecksum(byte[] data, bool outgoing = false, bool check = false)
-        {
-            var startByte = outgoing ? 1 : 0;
-            var checkLength = check ? data.Length - 1 : data.Length;
-            int checksumCalc = 0;
-            for (int i = startByte; i < checkLength; i++)
-                checksumCalc += data[i];
-            return (byte)(checksumCalc & 0xff);
-        }
-
-        
-        //public static bool CheckChecksum(byte[] data)
-        //{
-        //    if (data.Length == 0)
-        //        return false;
-        //    int checksumCalc = 0;
-        //    for (int i = 0; i < data.Length - 1; i++)
-        //        checksumCalc += data[i];
-        //    return (byte)(checksumCalc & 0xff) == data[data.Length - 1];
-        //}
-
-        public static bool CheckChecksum(byte[] data) => data.Length > 0 && CalcChecksum(data, false, true) == data[data.Length - 1];
-
-
-        public static void error(string message, Exception ex)
-        {
-            _commandQueue?.Clear();
-            _progress = _numCommandsToProcess;
+            CancelCommandQueue();
             ShowErrorMessage?.Invoke(message + "\n\n'" + ex.Message + "'");
         }
 
@@ -326,11 +338,6 @@ namespace CTecUtil.IO
             }
         }
 
-        private static void worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-            // Notifying the progress bar window of the current progress
-            _progressBarWindow.UpdateProgress(e.ProgressPercentage);
-        }
 
         private static void ProcessAsynch(object sender, DoWorkEventArgs e)
         {
@@ -338,14 +345,13 @@ namespace CTecUtil.IO
             {
                 //disable parent window controls while the work is being done?
                 
-
                 //launch the progress bar window
                 _progressBarWindow.Show();
 
             }), DispatcherPriority.ContextIdle);
 
             Application.Current.Dispatcher.Invoke(new Action(() => _progressBarWindow.ProgressBarMax = _numCommandsToProcess = _commandQueue.Count), DispatcherPriority.ContextIdle);
-            Application.Current.Dispatcher.Invoke(new Action(() => _progressBarWindow.ProgressBarLegend = _commandQueue.Legend), DispatcherPriority.ContextIdle);
+            Application.Current.Dispatcher.Invoke(new Action(() => _progressBarWindow.ProgressBarLegend = _commandQueue.OperationName), DispatcherPriority.ContextIdle);
 
             //start the job
             SendFirstCommandInQueue();
@@ -357,7 +363,7 @@ namespace CTecUtil.IO
                 if (DateTime.Now > startTime.AddMinutes(1))
                     break;
                 //report progress
-                Application.Current.Dispatcher.Invoke(new Action(() => _progressBarWindow.UpdateProgress(_progress)), DispatcherPriority.ContextIdle);
+                Application.Current.Dispatcher.Invoke(new Action(() => _progressBarWindow.UpdateProgress(_commandQueue?.QueueName, _progress)), DispatcherPriority.ContextIdle);
                 Thread.Sleep(100);
             }
 
@@ -369,6 +375,13 @@ namespace CTecUtil.IO
                 _progressBarWindow.Hide();
 
             }), DispatcherPriority.ContextIdle);
+        }
+
+
+        private static void worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            // Notifying the progress bar window of the current progress
+            _progressBarWindow.UpdateProgress("test", e.ProgressPercentage);
         }
         #endregion
 

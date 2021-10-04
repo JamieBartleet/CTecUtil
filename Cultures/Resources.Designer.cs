@@ -95,5 +95,14 @@ namespace CTecUtil.Cultures {
                 return ResourceManager.GetString("Error_Serial_Port", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cancel.
+        /// </summary>
+        public static string Option_Cancel {
+            get {
+                return ResourceManager.GetString("Option_Cancel", resourceCulture);
+            }
+        }
     }
 }
