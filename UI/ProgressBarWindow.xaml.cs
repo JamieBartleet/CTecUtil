@@ -24,12 +24,23 @@ namespace CTecUtil.UI
         {
             InitializeComponent();
             Topmost = true;
+
+            var location = Registry.ReadMessageBoxPosition();
+            if (location.X != 0 && location.Y != 0)
+            {
+                Left = location.X;
+                Top = location.Y;
+            }
         }
 
 
         public string ProgressBarLegend { set => txtOperationName.Text = value; }
 
-        public int    ProgressBarMax    { get;    set; }
+        public int ProgressBarOverallMax  { get; set; }
+
+        public int ProgressBarSubqueueMax { get => (int)pbProgressSubqueue.Maximum; set => pbProgressSubqueue.Maximum = value; }
+
+        public int SubqueueCount { set => pbProgressSubqueue.Visibility = txtProgressSubqueue.Visibility = value > 1 ? Visibility.Visible : Visibility.Collapsed; }
 
 
         public delegate void CancelHandler();
@@ -40,18 +51,16 @@ namespace CTecUtil.UI
         public CancelHandler OnCancel;
 
 
-        public void UpdateProgress(string processName, int value)
+        public void UpdateProgress(string subqueueName, int valueOverall, int valueSubqueue)
         {
-            txtProcessName.Text = processName;
-            pbProgress.Value = (double)value / ProgressBarMax * 100;
-            txtProgress.Text = value + " / " + ProgressBarMax;
+            txtSubqueueName.Text = subqueueName;
+            pbProgressOverall.Value = (double)valueOverall / ProgressBarOverallMax * 100;
+            pbProgressSubqueue.Value = valueSubqueue;
+            txtProgressSubqueue.Text = valueSubqueue + " / " + ProgressBarSubqueueMax;
 
             // When progress reaches 100%, close the progress bar window.
-            if (value >= ProgressBarMax)
-            {
-                Thread.Sleep(500);
+            if (valueOverall >= ProgressBarOverallMax)
                 Hide();
-            }
         }
 
         private void Button_Click(object sender, RoutedEventArgs e) => OnCancel?.Invoke();

@@ -10,36 +10,43 @@
         BorderThickness="0"
         AllowsTransparency="True"
         WindowStyle="None"
-        Width="240"
-        Height="130"
         Style="{StaticResource CTecMessageBoxStyle}"
+        Width="240" Height="130"
         Title="ProgressBarWindow">
+    
     <Grid>
         <Border Background="{StaticResource Brush10}" 
                 BorderBrush="#707070" 
                 BorderThickness="2"
-                CornerRadius="10"
-                Width="Auto"
-                Height="Auto">
-            
-            <StackPanel Grid.Column="0" Grid.Row="0"
+                CornerRadius="10">
+
+            <!--<Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>-->
+                
+                <StackPanel Grid.Column="0" Grid.Row="0"
                         Orientation="Vertical" Margin="10"
                         HorizontalAlignment="Center" VerticalAlignment="Center">
 
                 <TextBlock Name="txtOperationName" HorizontalAlignment="Center"/>
-                    
-                <Grid Margin="0,15,0,0">
-                
-                    <ProgressBar Name="pbProgress"  Height="18" Width="200" Value="0" Minimum="0" Maximum="100"/>
-                    
+
+                <Grid Margin="0,5,0,0">
+                    <ProgressBar Name="pbProgressOverall" Height="18" Width="200" Value="0" Minimum="0" Maximum="100"/>
+
                     <!-- Progress as a percentage - binds 'Value' property of ProgressBar control to TextBlock Text -->
-                    <!--<TextBlock Name="tbProgress" Text="{Binding ElementName=pbLoad, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center" VerticalAlignment="Center" />-->
-                    
-                    <TextBlock Name="txtProgress" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    
+                    <TextBlock Name="txtProgress" Text="{Binding ElementName=pbProgressOverall, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Grid>
 
-                <TextBlock Name="txtProcessName" HorizontalAlignment="Center"/>
+                <Grid Margin="0,5,0,0">
+                    <ProgressBar Name="pbProgressSubqueue" Height="10" Width="200" Value="0" Minimum="0"/>
+                    <TextBlock Name="txtProgressSubqueue" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="8"/>
+                </Grid>
+
+                    <TextBlock Name="txtSubqueueName" HorizontalAlignment="Center" FontSize="9"/>
 
                 <Grid HorizontalAlignment="Center" Margin="0,15,0,0">
                     <Grid.ColumnDefinitions>
@@ -49,6 +56,7 @@
                 </Grid>
 
             </StackPanel>
+            <!--</Grid>-->
         </Border>
     </Grid>
 </Window>

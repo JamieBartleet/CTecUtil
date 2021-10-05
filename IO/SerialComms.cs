@@ -49,6 +49,7 @@ namespace CTecUtil.IO
         {
             try
             {
+                CancelCommandQueue();
                 if (_port?.IsOpen == true)
                     _port?.Close();
                 _port?.Dispose();
@@ -105,7 +106,7 @@ namespace CTecUtil.IO
 
         public static void StartSendingCommandQueue()
         {            
-            if (_commandQueue.Count > 2)
+            if (_commandQueue.TotalCommandCount > 2)
                 ShowProgressBarWindow();
             else
                 SendFirstCommandInQueue();
@@ -116,7 +117,7 @@ namespace CTecUtil.IO
         {
             _timer.Stop();
             _commandQueue?.Clear();
-            _progress = _numCommandsToProcess;
+            _progressOverall = _numCommandsToProcess;
         }
 
 
@@ -162,13 +163,21 @@ namespace CTecUtil.IO
             {
                 var incoming = readIncomingData(port);
 
-                if (_commandQueue.Count > 0)
+                if (_commandQueue.TotalCommandCount > 0)
                 {
                     var cmd = _commandQueue.Peek();
                     if (cmd != null)
                     {
-                        if (_commandQueue.Count > 0)
-                            _commandQueue.Dequeue();
+                        if (_commandQueue.TotalCommandCount > 0 && _commandQueue.Dequeue())
+                        {
+                            _progressSubqueue = 0;
+                            Application.Current.Dispatcher.Invoke(new Action(() =>
+                            {
+                                _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.CommandsInCurrentSubqueue;
+                                _progressBarWindow.SubqueueCount          = _commandQueue.SubqueueCount;
+
+                            }), DispatcherPriority.ContextIdle);
+                        }
 
                         if (incoming is not null)
                         {
@@ -184,10 +193,11 @@ namespace CTecUtil.IO
                     }
                 }
                 
-                _progress++;
+                _progressOverall++;
+                _progressSubqueue++;
 
                 //send next command, if any
-                if (_commandQueue.Count > 0)
+                if (_commandQueue.TotalCommandCount > 0)
                     SendNextCommandInQueue();
             }
             catch (TimeoutException ex)
@@ -317,19 +327,19 @@ namespace CTecUtil.IO
 
         #region progress bar
         private static ProgressBarWindow _progressBarWindow = new();
-        private static int _progress, _numCommandsToProcess;
+        private static int _progressOverall, _progressSubqueue, _numCommandsToProcess;
 
 
         public static void ShowProgressBarWindow()
         {
             try
             {
-                _progress = 0;
+                _progressOverall = _progressSubqueue = 0;
                 //use background worker to asynchronously run work method
                 BackgroundWorker worker = new BackgroundWorker();
                 worker.WorkerReportsProgress = true;
                 worker.DoWork += ProcessAsynch;
-                worker.ProgressChanged += worker_ProgressChanged;
+                //worker.ProgressChanged += worker_ProgressChanged;
                 worker.RunWorkerAsync();
             }
             catch (Exception ex)
@@ -344,26 +354,40 @@ namespace CTecUtil.IO
             Application.Current.Dispatcher.Invoke(new Action(() =>
             {
                 //disable parent window controls while the work is being done?
-                
+
                 //launch the progress bar window
                 _progressBarWindow.Show();
 
             }), DispatcherPriority.ContextIdle);
 
-            Application.Current.Dispatcher.Invoke(new Action(() => _progressBarWindow.ProgressBarMax = _numCommandsToProcess = _commandQueue.Count), DispatcherPriority.ContextIdle);
-            Application.Current.Dispatcher.Invoke(new Action(() => _progressBarWindow.ProgressBarLegend = _commandQueue.OperationName), DispatcherPriority.ContextIdle);
+            Application.Current.Dispatcher.Invoke(new Action(() =>
+            {
+                _progressBarWindow.ProgressBarLegend      = _commandQueue.OperationName;
+                _progressBarWindow.ProgressBarOverallMax  = _numCommandsToProcess = _commandQueue.TotalCommandCount;
+                _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.CommandsInCurrentSubqueue;
+                _progressBarWindow.SubqueueCount          = _commandQueue.SubqueueCount;
+            }), DispatcherPriority.ContextIdle);
 
             //start the job
             SendFirstCommandInQueue();
 
             var startTime = DateTime.Now;
+            int lastProgress = 0;
 
-            while (_progress < _numCommandsToProcess)
+            while (_progressOverall < _numCommandsToProcess)
             {
-                if (DateTime.Now > startTime.AddMinutes(1))
+                //stop if progress hasn't changed for 10 secs
+                if (DateTime.Now > startTime.AddSeconds(10))
                     break;
+
+                if (_progressOverall > lastProgress)
+                {
+                    lastProgress = _progressOverall;
+                    startTime = DateTime.Now;
+                }
+
                 //report progress
-                Application.Current.Dispatcher.Invoke(new Action(() => _progressBarWindow.UpdateProgress(_commandQueue?.QueueName, _progress)), DispatcherPriority.ContextIdle);
+                Application.Current.Dispatcher.Invoke(new Action(() => _progressBarWindow.UpdateProgress(_commandQueue?.QueueName, _progressOverall, _progressSubqueue)), DispatcherPriority.ContextIdle);
                 Thread.Sleep(100);
             }
 
@@ -378,11 +402,11 @@ namespace CTecUtil.IO
         }
 
 
-        private static void worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-            // Notifying the progress bar window of the current progress
-            _progressBarWindow.UpdateProgress("test", e.ProgressPercentage);
-        }
+        //private static void worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        //{
+        //    // Notifying the progress bar window of the current progress
+        //    _progressBarWindow.UpdateProgress("test", e.ProgressPercentage, 0);
+        //}
         #endregion
 
     }

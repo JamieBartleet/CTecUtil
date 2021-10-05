@@ -8,7 +8,7 @@ namespace CTecUtil.IO
 {
     internal class CommandQueue
     {
-        private Queue<CommandSubQueue> _subQueues = new();
+        private Queue<CommandSubQueue> _subqueues = new();
 
         private CommandSubQueue _currentQueue;
 
@@ -22,10 +22,10 @@ namespace CTecUtil.IO
         /// <summary>
         /// Name attached to the first subqueue (i.e. the one currently being serviced)
         /// </summary>
-        public string QueueName { get => _subQueues.Count > 0 && _subQueues?.Peek()?.Count > 0 ? _subQueues?.Peek()?.Name : null; }
+        public string QueueName { get => _subqueues.Count > 0 && _subqueues?.Peek()?.Count > 0 ? _subqueues?.Peek()?.Name : null; }
 
 
-        public void AddSubqueue(CommandSubQueue commandQueue) => _subQueues.Enqueue(_currentQueue = commandQueue);
+        public void AddSubqueue(CommandSubQueue commandQueue) => _subqueues.Enqueue(_currentQueue = commandQueue);
 
 
         /// <summary>
@@ -42,19 +42,23 @@ namespace CTecUtil.IO
         /// <summary>
         /// Dequeue the first command in the first subqueue.
         /// </summary>
-        public void Dequeue()
+        /// <returns>True if a the subqueue was changed.</returns>
+        public bool Dequeue()
         {
             //remove first command in the first subqueue
-            _subQueues.Peek()?.Dequeue();
+            _subqueues.Peek()?.Dequeue();
 
             //if there are no more commands in this subqueue, remove it so the first command in the next subqueue becomes front-of-queue
-            if (_subQueues.Peek()?.Count == 0)
+            if (_subqueues.Peek()?.Count == 0)
             {
-                if (_subQueues.Count > 1)
-                    _subQueues.Dequeue();
+                if (_subqueues.Count > 1)
+                    _subqueues.Dequeue();
                 else
                     Clear();
+                return true;
             }
+
+            return false;
         }
 
 
@@ -65,7 +69,7 @@ namespace CTecUtil.IO
         {
             try
             {
-                return _subQueues.Peek()?.Peek();
+                return _subqueues.Peek()?.Peek();
             }
             catch
             {
@@ -79,24 +83,37 @@ namespace CTecUtil.IO
         /// </summary>
         public void Clear()
         {
-            foreach (var q in _subQueues)
+            foreach (var q in _subqueues)
                 q.Clear();
-            _subQueues?.Clear();
+            _subqueues?.Clear();
         }
 
 
         /// <summary>
         /// Total count of all commands in all subqueues.
         /// </summary>
-        public int Count
+        public int TotalCommandCount
         {
             get
             {
                 int count = 0;
-                foreach (var q in _subQueues)
+                foreach (var q in _subqueues)
                     count += q.Count;
                 return count;
             }
         }
+
+
+        /// <summary>
+        /// Count of subqueues.
+        /// </summary>
+        public int SubqueueCount { get => _subqueues.Count; }
+
+
+        /// <summary>
+        /// Count of commands in current subqueue.
+        /// </summary>
+        public int CommandsInCurrentSubqueue { get => _subqueues.Count > 0 ? _subqueues?.Peek()?.Count??0 : 0; }
+
     }
 }
