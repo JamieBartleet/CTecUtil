@@ -120,6 +120,9 @@
   <data name="Error_Checksum_Fail" xml:space="preserve">
     <value>Des données non valides ont été reçues.</value>
   </data>
+  <data name="Error_Comms_Retries" xml:space="preserve">
+    <value>La communication a été abandonnée après trop de tentatives.</value>
+  </data>
   <data name="Error_Comms_Timeout" xml:space="preserve">
     <value>La communication a échoué parce que le panneau n’a pas répondu dans le délai imparti.</value>
   </data>

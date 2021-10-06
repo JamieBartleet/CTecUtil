@@ -120,6 +120,9 @@
   <data name="Error_Checksum_Fail" xml:space="preserve">
     <value>Invalid data was received.</value>
   </data>
+  <data name="Error_Comms_Retries" xml:space="preserve">
+    <value>Comms cancelled after too many retries.</value>
+  </data>
   <data name="Error_Comms_Timeout" xml:space="preserve">
     <value>Comms failed because the panel did not respond within the time limit.</value>
   </data>

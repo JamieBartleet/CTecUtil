@@ -33,7 +33,11 @@ namespace CTecUtil.IO
         }
 
 
-        public void Stop() => _timer.Stop();
+        public void Stop()
+        {
+            _timer.Stop();
+            //TimedOut = false;
+        }
 
 
         //public void Dispose()

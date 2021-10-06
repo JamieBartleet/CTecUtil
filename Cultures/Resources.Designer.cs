@@ -70,6 +70,15 @@ namespace CTecUtil.Cultures {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Comms cancelled after too many retries..
+        /// </summary>
+        public static string Error_Comms_Retries {
+            get {
+                return ResourceManager.GetString("Error_Comms_Retries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Comms failed because the panel did not respond within the time limit..
         /// </summary>
         public static string Error_Comms_Timeout {

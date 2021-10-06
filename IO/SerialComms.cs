@@ -80,7 +80,7 @@ namespace CTecUtil.IO
         public static void InitCommandQueue(string operationName)
         {
             _commandQueue.Clear();
-            _commandQueue.OperationName = operationName;
+            _commandQueue.OperationDesc = operationName;
         }
 
 
@@ -116,6 +116,7 @@ namespace CTecUtil.IO
         public static void CancelCommandQueue()
         {
             _timer.Stop();
+            _timer.TimedOut = true;
             _commandQueue?.Clear();
             _progressOverall = _numCommandsToProcess;
         }
@@ -137,6 +138,7 @@ namespace CTecUtil.IO
                     if (!_port.IsOpen)
                         _port.Open();
 
+                    _port.DiscardInBuffer();
                     _port.DiscardOutBuffer();
                     _port.Write(command.CommandData, 0, command.CommandData.Length);
                 }
@@ -158,6 +160,8 @@ namespace CTecUtil.IO
             var port = sender as SerialPort;
             if (port == null || port.BytesToRead == 0)
                 return;
+
+            int retries = 0;
 
             try
             {
@@ -200,6 +204,13 @@ namespace CTecUtil.IO
                 if (_commandQueue.TotalCommandCount > 0)
                     SendNextCommandInQueue();
             }
+            catch (FormatException ex)
+            {
+                if (retries++ < 5)
+                    SendNextCommandInQueue();
+                else
+                    error(Cultures.Resources.Error_Comms_Retries, ex);
+            }
             catch (TimeoutException ex)
             {
                 error(Cultures.Resources.Error_Comms_Timeout, ex);
@@ -211,7 +222,7 @@ namespace CTecUtil.IO
         }
 
 
-        private static byte[] readIncomingData(SerialPort sender)
+        private static byte[] readIncomingData(SerialPort port)
         {            
             try
             {
@@ -219,7 +230,7 @@ namespace CTecUtil.IO
                 _timer.Start(10000);
 
                 //wait for buffering [sometimes dataReceived() is called by the port when BytesToRead is still zero]
-                while (sender.BytesToRead == 0)
+                while (port.BytesToRead == 0)
                 {
                     Thread.Sleep(40);
                     if (_timer.TimedOut)
@@ -228,19 +239,19 @@ namespace CTecUtil.IO
 
                 //read first byte: either Ack/Nak or the command ID
                 byte[] header = new byte[2];
-                sender.Read(header, 0, 1);
+                port.Read(header, 0, 1);
                 if (header[0] == AckByte || header[0] == NakByte)
                     return new byte[] { header[0] };
 
                 //read payload length byte
-                while (sender.BytesToRead == 0)
+                while (port.BytesToRead == 0)
                 {
                     Thread.Sleep(40);
                     if (_timer.TimedOut)
                         throw new TimeoutException();
                 }
 
-                sender.Read(header, 1, 1);
+                port.Read(header, 1, 1);
                 var payloadLength = header[1];
 
                 //now we know how many more bytes to expect - i.e. header + payloadLength + 1 byte for checksum
@@ -248,32 +259,33 @@ namespace CTecUtil.IO
                 Buffer.BlockCopy(header, 0, buffer, 0, header.Length);
 
                 int offset = header.Length;
+                int count = 0;
                 while (offset < buffer.Length)
                 {
-                    while (sender.BytesToRead == 0)
+                    while (port.BytesToRead == 0)
                     {
                         Thread.Sleep(40);
 
                         if (_timer.TimedOut)
+                        if (++count > 200)
                             throw new TimeoutException();
                     }
 
                     //Read payload & checksum
-                    var bytes = Math.Min(sender.BytesToRead, buffer.Length - offset);
-                    sender.Read(buffer, offset, bytes);
+                    var bytes = Math.Min(port.BytesToRead, buffer.Length - offset);
+                    port.Read(buffer, offset, bytes);
                     offset += bytes;
                 }
 
                 if (!CheckChecksum(buffer))
-                    throw new Exception(Cultures.Resources.Error_Checksum_Fail);
+                    throw new FormatException(Cultures.Resources.Error_Checksum_Fail);
 
                 return buffer;
             }
             finally
             {
                 _timer.Stop();
-                //timer.Dispose();
-                _port.DiscardInBuffer();
+                port.DiscardInBuffer();
             }
         }
 
@@ -321,7 +333,7 @@ namespace CTecUtil.IO
         private static void error(string message, Exception ex)
         {
             CancelCommandQueue();
-            ShowErrorMessage?.Invoke(message + "\n\n'" + ex.Message + "'");
+            ShowErrorMessage?.Invoke(message + "\n\n" + ex.Message);
         }
 
 
@@ -362,7 +374,7 @@ namespace CTecUtil.IO
 
             Application.Current.Dispatcher.Invoke(new Action(() =>
             {
-                _progressBarWindow.ProgressBarLegend      = _commandQueue.OperationName;
+                _progressBarWindow.ProgressBarLegend      = _commandQueue.OperationDesc;
                 _progressBarWindow.ProgressBarOverallMax  = _numCommandsToProcess = _commandQueue.TotalCommandCount;
                 _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.CommandsInCurrentSubqueue;
                 _progressBarWindow.SubqueueCount          = _commandQueue.SubqueueCount;
@@ -378,7 +390,14 @@ namespace CTecUtil.IO
             {
                 //stop if progress hasn't changed for 10 secs
                 if (DateTime.Now > startTime.AddSeconds(10))
+                {
+                    Application.Current.Dispatcher.Invoke(new Action(() =>
+                    {
+                        _commandQueue.Clear();
+                        error(Cultures.Resources.Error_Comms_Timeout, new TimeoutException());
+                    }), DispatcherPriority.Send);
                     break;
+                }
 
                 if (_progressOverall > lastProgress)
                 {
@@ -387,7 +406,7 @@ namespace CTecUtil.IO
                 }
 
                 //report progress
-                Application.Current.Dispatcher.Invoke(new Action(() => _progressBarWindow.UpdateProgress(_commandQueue?.QueueName, _progressOverall, _progressSubqueue)), DispatcherPriority.ContextIdle);
+                Application.Current.Dispatcher.Invoke(new Action(() => _progressBarWindow.UpdateProgress(_commandQueue?.CurrentSubqueueName, _progressOverall, _progressSubqueue)), DispatcherPriority.Normal);
                 Thread.Sleep(100);
             }
 

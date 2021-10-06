@@ -6,31 +6,43 @@ using System.Threading.Tasks;
 
 namespace CTecUtil.IO
 {
+    /// <summary>
+    /// Class to maintain commands queued for sending to the panel.<br/>
+    /// Commands can be grouped in one or more queues - these would typically be according to the config page they relate to.<br/>
+    /// E.g. when requesting device details the zones and groups are also requested:<br/>
+    /// queue #1 = device request commands, queue #2 = zone request commands, queue #3 = group request commands.
+    /// </summary>
     internal class CommandQueue
     {
+        /// <summary>The queue of subqueues</summary>
         private Queue<CommandSubQueue> _subqueues = new();
 
+        /// <summary>The subqueue at the front of the queue</summary>
         private CommandSubQueue _currentQueue;
 
 
         /// <summary>
-        /// The name of the overall operation - e.g. 'Downloading from panel'
+        /// The description of the overall operation - e.g. 'Downloading from panel...'
         /// </summary>
-        public string OperationName { get; set; }
+        public string OperationDesc { get; set; }
 
 
         /// <summary>
         /// Name attached to the first subqueue (i.e. the one currently being serviced)
         /// </summary>
-        public string QueueName { get => _subqueues.Count > 0 && _subqueues?.Peek()?.Count > 0 ? _subqueues?.Peek()?.Name : null; }
+        public string CurrentSubqueueName { get => _subqueues.Count > 0 && _subqueues?.Peek()?.Count > 0 ? _subqueues?.Peek()?.Name : null; }
 
 
+        /// <summary>
+        /// Add a new subqueue to the queue
+        /// </summary>
+        /// <param name="commandQueue"></param>
         public void AddSubqueue(CommandSubQueue commandQueue) => _subqueues.Enqueue(_currentQueue = commandQueue);
 
 
         /// <summary>
         /// Enqueues the command in the currently-enqueueing queue.<br/>
-        /// NB: AddSubQueue() must be called prior to this to initialise the queue that is actively being added to.
+        /// NB: AddSubQueue() must have been called prior to this to initialise the queue that is actively being added to.
         /// </summary>
         /// <param name="command"></param>
         public void Enqueue(Command command)

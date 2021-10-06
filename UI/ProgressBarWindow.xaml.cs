@@ -64,5 +64,8 @@ namespace CTecUtil.UI
         }
 
         private void Button_Click(object sender, RoutedEventArgs e) => OnCancel?.Invoke();
+
+
+        private void Window_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e) => Registry.SaveMessageBoxPosition(this);
     }
 }

@@ -29,11 +29,15 @@ namespace CTecUtil
         {
             VersionInfo result = new();
 
-            //NB: ProductVersion string is in format v.v.v+BuildDate:yyyymmddhhmmsszz
-            var version_build = FileVersionInfo.GetVersionInfo(assemblyPath).ProductVersion.Split("+");
+            result.Version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
-            if (version_build.Length > 0)
-                result.Version = version_build[0];
+            var versionInfo = FileVersionInfo.GetVersionInfo(assemblyPath);
+
+            //NB: ProductVersion string is in format v.v.v+BuildDate:yyyymmddhhmmsszz
+            var version_build = versionInfo.ProductVersion.Split("+");
+
+            //if (version_build.Length > 0)
+            //    result.Version = version_build[0] + "." + versionInfo.ProductBuildPart;
 
             if (version_build.Length > 1)
             {
