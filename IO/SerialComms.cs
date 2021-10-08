@@ -30,8 +30,16 @@ namespace CTecUtil.IO
         public delegate void ProgressMaxSetter(int maxValue);
         public delegate void ProgressValueUpdater(int value);
 
+
+        private static SerialPortSettings _settings = new();
+        public static SerialPortSettings Settings { get => _settings; }
+
         /// <summary>Use of this delegate allows house style message box to be used</summary>
         public delegate void ErrorMessageHandler(string message);
+
+        /// <summary>Delegate called when a command subqueue's requests have been completed</summary>
+        public delegate void SubqueueCompletedHandler();
+
 
         /// <summary>Set this to provide house style message box for any error messages generated during serial comms</summary>
         public static ErrorMessageHandler ShowErrorMessage;
@@ -39,10 +47,6 @@ namespace CTecUtil.IO
 
         public static byte AckByte { get; set; }
         public static byte NakByte { get; set; }
-
-
-        private static SerialPortSettings _settings = new();
-        public static SerialPortSettings Settings { get => _settings; }
 
 
         public static bool Close()
@@ -88,9 +92,9 @@ namespace CTecUtil.IO
         /// Add a new command subqueue to the set
         /// </summary>
         /// <param name="name">Name of the command queue, to be displayed in the progress bar window.</param>
-        public static void AddNewCommandSubqueue(string name)
+        public static void AddNewCommandSubqueue(string name, SubqueueCompletedHandler onCompletion)
         {
-            _commandQueue.AddSubqueue(new CommandSubQueue() { Name = name });
+            _commandQueue.AddSubqueue(new CommandSubqueue(onCompletion) { Name = name });
         }
 
 
@@ -122,8 +126,19 @@ namespace CTecUtil.IO
         }
 
 
-        private static void SendFirstCommandInQueue() => SendData(_commandQueue.Peek());
-        private static void SendNextCommandInQueue()  => SendData(_commandQueue.Peek());
+        private static void SendFirstCommandInQueue()
+        {
+            Application.Current.Dispatcher.Invoke(new Action(() =>
+            {
+                _progressBarWindow.SubqueueCount = _commandQueue.SubqueueCount;
+
+            }), DispatcherPriority.Normal);
+
+            SendData(_commandQueue.Peek());
+        }
+
+
+        private static void SendNextCommandInQueue() => SendData(_commandQueue.Peek());
 
 
         private static void SendData(Command command)
@@ -178,7 +193,6 @@ namespace CTecUtil.IO
                             Application.Current.Dispatcher.Invoke(new Action(() =>
                             {
                                 _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.CommandsInCurrentSubqueue;
-                                _progressBarWindow.SubqueueCount          = _commandQueue.SubqueueCount;
 
                             }), DispatcherPriority.ContextIdle);
                         }
@@ -366,6 +380,8 @@ namespace CTecUtil.IO
             Application.Current.Dispatcher.Invoke(new Action(() =>
             {
                 //disable parent window controls while the work is being done?
+                //
+                //
 
                 //launch the progress bar window
                 _progressBarWindow.Show();
@@ -377,7 +393,7 @@ namespace CTecUtil.IO
                 _progressBarWindow.ProgressBarLegend      = _commandQueue.OperationDesc;
                 _progressBarWindow.ProgressBarOverallMax  = _numCommandsToProcess = _commandQueue.TotalCommandCount;
                 _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.CommandsInCurrentSubqueue;
-                _progressBarWindow.SubqueueCount          = _commandQueue.SubqueueCount;
+                
             }), DispatcherPriority.ContextIdle);
 
             //start the job
@@ -395,6 +411,7 @@ namespace CTecUtil.IO
                     {
                         _commandQueue.Clear();
                         error(Cultures.Resources.Error_Comms_Timeout, new TimeoutException());
+
                     }), DispatcherPriority.Send);
                     break;
                 }
@@ -414,7 +431,10 @@ namespace CTecUtil.IO
             Application.Current.Dispatcher.Invoke(new Action(() =>
             {
                 //enable parent window controls?
+                //
+                //
 
+                CancelCommandQueue();
                 _progressBarWindow.Hide();
 
             }), DispatcherPriority.ContextIdle);

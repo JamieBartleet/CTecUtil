@@ -15,10 +15,10 @@ namespace CTecUtil.IO
     internal class CommandQueue
     {
         /// <summary>The queue of subqueues</summary>
-        private Queue<CommandSubQueue> _subqueues = new();
+        private Queue<CommandSubqueue> _subqueues = new();
 
         /// <summary>The subqueue at the front of the queue</summary>
-        private CommandSubQueue _currentQueue;
+        private CommandSubqueue _currentQueue;
 
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace CTecUtil.IO
         /// Add a new subqueue to the queue
         /// </summary>
         /// <param name="commandQueue"></param>
-        public void AddSubqueue(CommandSubQueue commandQueue) => _subqueues.Enqueue(_currentQueue = commandQueue);
+        public void AddSubqueue(CommandSubqueue commandQueue) => _subqueues.Enqueue(_currentQueue = commandQueue);
 
 
         /// <summary>
@@ -63,10 +63,16 @@ namespace CTecUtil.IO
             //if there are no more commands in this subqueue, remove it so the first command in the next subqueue becomes front-of-queue
             if (_subqueues.Peek()?.Count == 0)
             {
+                _subqueues.Peek().OnSubqueueComplete?.Invoke();
+
                 if (_subqueues.Count > 1)
+                {
                     _subqueues.Dequeue();
+                }
                 else
+                {
                     Clear();
+                }
                 return true;
             }
 

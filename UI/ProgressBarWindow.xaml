@@ -3,7 +3,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:CTecUtil.UI"
         mc:Ignorable="d"
         Background="Transparent"
         BorderBrush="Transparent"
@@ -11,7 +10,7 @@
         AllowsTransparency="True"
         WindowStyle="None"
         Style="{StaticResource CTecMessageBoxStyle}"
-        Width="240" Height="130"
+        Width="240" Height="140"
         Title="ProgressBarWindow"
         IsVisibleChanged="Window_IsVisibleChanged">
     
@@ -20,14 +19,6 @@
                 BorderBrush="#707070" 
                 BorderThickness="2"
                 CornerRadius="10">
-
-            <!--<Grid HorizontalAlignment="Center" VerticalAlignment="Center">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>-->
                 
                 <StackPanel Grid.Column="0" Grid.Row="0"
                         Orientation="Vertical" Margin="10"
@@ -36,14 +27,14 @@
                 <TextBlock Name="txtOperationName" HorizontalAlignment="Center"/>
 
                 <Grid Margin="0,5,0,0">
-                    <ProgressBar Name="pbProgressOverall" Height="18" Width="200" Value="0" Minimum="0" Maximum="100"/>
+                    <ProgressBar Name="pbProgressOverall" Height="18" Width="200" Value="0" Minimum="0" Maximum="100" Foreground="DeepSkyBlue" BorderBrush="{StaticResource Brush06}"/>
 
                     <!-- Progress as a percentage - binds 'Value' property of ProgressBar control to TextBlock Text -->
                     <TextBlock Name="txtProgress" Text="{Binding ElementName=pbProgressOverall, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Grid>
 
                 <Grid Margin="0,5,0,0">
-                    <ProgressBar Name="pbProgressSubqueue" Height="10" Width="200" Value="0" Minimum="0"/>
+                    <ProgressBar Name="pbProgressSubqueue" Height="10" Width="200" Value="0" Minimum="0" Foreground="Orchid" BorderBrush="{StaticResource Brush06}"/>
                     <TextBlock Name="txtProgressSubqueue" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="8"/>
                 </Grid>
 
@@ -57,7 +48,7 @@
                 </Grid>
 
             </StackPanel>
-            <!--</Grid>-->
+            
         </Border>
     </Grid>
 </Window>

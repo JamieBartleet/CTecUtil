@@ -6,8 +6,11 @@ using System.Threading.Tasks;
 
 namespace CTecUtil.IO
 {
-    internal class CommandSubQueue
+    internal class CommandSubqueue
     {
+        public CommandSubqueue(SerialComms.SubqueueCompletedHandler onCompletion) => OnSubqueueComplete = onCompletion;
+
+
         private Queue<Command> _commandQueue = new();
 
 
@@ -19,5 +22,8 @@ namespace CTecUtil.IO
         public Command Peek()                   { try { return _commandQueue?.Peek(); } catch { return null; } }
         public void    Clear()                  => _commandQueue?.Clear();
         public int     Count                    => _commandQueue.Count;
+
+
+        public SerialComms.SubqueueCompletedHandler OnSubqueueComplete;
     }
 }
