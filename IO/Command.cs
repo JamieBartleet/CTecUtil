@@ -16,6 +16,8 @@ namespace CTecUtil.IO
 
         public int? Index { get; set; }
 
+        public int Tries { get; set; }
+
         /// <summary>Handler to which the response will be sent.</summary>
         public ReceivedDataHandler DataReceiver { get; set; }
     }

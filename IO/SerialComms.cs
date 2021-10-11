@@ -108,6 +108,14 @@ namespace CTecUtil.IO
             => _commandQueue.Enqueue(new Command() { CommandData = commandData, DataReceiver = dataReceiver, Index = index });
 
 
+        /// <summary>
+        /// Queue a new command ready to send to the panel.
+        /// </summary>
+        /// <param name="commandData">The command data.</param>
+        /// <param name="index">(Optional) the index of the item requested - for the case where the index is not included in the response data (e.g. devices).</param>
+        public static void EnqueueCommand(byte[] commandData, int? index = null) => EnqueueCommand(commandData, null, index);
+
+
         public static void StartSendingCommandQueue()
         {            
             if (_commandQueue.TotalCommandCount > 2)
@@ -141,10 +149,25 @@ namespace CTecUtil.IO
         private static void SendNextCommandInQueue() => SendData(_commandQueue.Peek());
 
 
+        private static void ResendCommand()
+        {
+            var cmd = _commandQueue.Peek();
+            if (cmd != null)
+            {
+                if (cmd.Tries > 4)
+                    error(Cultures.Resources.Error_Comms_Retries);
+                else
+                    SendData(cmd);
+            }
+        }
+
+
         private static void SendData(Command command)
         {
             if (command != null)
             {
+                command.Tries++;
+
                 try
                 {
                     if (_port is null)
@@ -182,9 +205,14 @@ namespace CTecUtil.IO
             {
                 var incoming = readIncomingData(port);
 
-                if (_commandQueue.TotalCommandCount > 0)
+                if (isNak(incoming))
+                {
+                    ResendCommand();
+                }
+                else if (_commandQueue.TotalCommandCount > 0)
                 {
                     var cmd = _commandQueue.Peek();
+
                     if (cmd != null)
                     {
                         if (_commandQueue.TotalCommandCount > 0 && _commandQueue.Dequeue())
@@ -209,21 +237,19 @@ namespace CTecUtil.IO
                             }));
                         }
                     }
-                }
                 
-                _progressOverall++;
-                _progressSubqueue++;
+                    _progressOverall++;
+                    _progressSubqueue++;
 
-                //send next command, if any
-                if (_commandQueue.TotalCommandCount > 0)
-                    SendNextCommandInQueue();
+                    //send next command, if any
+                    if (_commandQueue.TotalCommandCount > 0)
+                        SendNextCommandInQueue();
+                }
             }
-            catch (FormatException ex)
+            catch (FormatException)
             {
-                if (retries++ < 5)
-                    SendNextCommandInQueue();
-                else
-                    error(Cultures.Resources.Error_Comms_Retries, ex);
+                //checksum fail
+                ResendCommand();
             }
             catch (TimeoutException ex)
             {
@@ -254,7 +280,7 @@ namespace CTecUtil.IO
                 //read first byte: either Ack/Nak or the command ID
                 byte[] header = new byte[2];
                 port.Read(header, 0, 1);
-                if (header[0] == AckByte || header[0] == NakByte)
+                if (isAck(header[0]) || isNak(header[0]))
                     return new byte[] { header[0] };
 
                 //read payload length byte
@@ -303,6 +329,12 @@ namespace CTecUtil.IO
             }
         }
 
+        
+        private static bool isAck(byte[] data) => data != null && data.Length > 0 && isAck(data[0]);
+        private static bool isNak(byte[] data) => data != null && data.Length > 0 && isNak(data[0]);
+        private static bool isAck(byte data) => data == AckByte;
+        private static bool isNak(byte data) => data == NakByte;
+
 
         public static byte CalcChecksum(byte[] data, bool outgoing = false, bool check = false)
         {
@@ -344,10 +376,10 @@ namespace CTecUtil.IO
         }
 
 
-        private static void error(string message, Exception ex)
+        private static void error(string message, Exception ex = null)
         {
             CancelCommandQueue();
-            ShowErrorMessage?.Invoke(message + "\n\n" + ex.Message);
+            ShowErrorMessage?.Invoke(message + "\n\n" + ex?.Message);
         }
 
 
@@ -386,7 +418,7 @@ namespace CTecUtil.IO
                 //launch the progress bar window
                 _progressBarWindow.Show();
 
-            }), DispatcherPriority.ContextIdle);
+            }), DispatcherPriority.Normal);
 
             Application.Current.Dispatcher.Invoke(new Action(() =>
             {
@@ -437,7 +469,7 @@ namespace CTecUtil.IO
                 CancelCommandQueue();
                 _progressBarWindow.Hide();
 
-            }), DispatcherPriority.ContextIdle);
+            }), DispatcherPriority.Normal);
         }
 
 
