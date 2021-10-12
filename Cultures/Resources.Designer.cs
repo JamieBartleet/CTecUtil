@@ -70,20 +70,20 @@ namespace CTecUtil.Cultures {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Comms cancelled after too many retries..
+        ///   Looks up a localized string similar to Download cancelled after too many retries..
         /// </summary>
-        public static string Error_Comms_Retries {
+        public static string Error_Download_Retries {
             get {
-                return ResourceManager.GetString("Error_Comms_Retries", resourceCulture);
+                return ResourceManager.GetString("Error_Download_Retries", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Comms failed because the panel did not respond within the time limit..
+        ///   Looks up a localized string similar to Download failed because the panel did not respond within the time limit..
         /// </summary>
-        public static string Error_Comms_Timeout {
+        public static string Error_Download_Timeout {
             get {
-                return ResourceManager.GetString("Error_Comms_Timeout", resourceCulture);
+                return ResourceManager.GetString("Error_Download_Timeout", resourceCulture);
             }
         }
         
@@ -102,6 +102,24 @@ namespace CTecUtil.Cultures {
         public static string Error_Serial_Port {
             get {
                 return ResourceManager.GetString("Error_Serial_Port", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Upload cancelled after too many retries..
+        /// </summary>
+        public static string Error_Upload_Retries {
+            get {
+                return ResourceManager.GetString("Error_Upload_Retries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Upload failed because the panel did not respond within the time limit..
+        /// </summary>
+        public static string Error_Upload_Timeout {
+            get {
+                return ResourceManager.GetString("Error_Upload_Timeout", resourceCulture);
             }
         }
         

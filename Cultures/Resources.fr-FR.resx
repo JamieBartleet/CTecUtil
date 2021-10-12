@@ -120,17 +120,23 @@
   <data name="Error_Checksum_Fail" xml:space="preserve">
     <value>Des données non valides ont été reçues.</value>
   </data>
-  <data name="Error_Comms_Retries" xml:space="preserve">
-    <value>La communication a été abandonnée après trop de tentatives.</value>
+  <data name="Error_Download_Retries" xml:space="preserve">
+    <value>Téléchargement du panneau a été annulé après trop de tentatives.</value>
   </data>
-  <data name="Error_Comms_Timeout" xml:space="preserve">
-    <value>La communication a échoué parce que le panneau n’a pas répondu dans le délai imparti.</value>
+  <data name="Error_Download_Timeout" xml:space="preserve">
+    <value>Le téléchargement du panneau a échoué car il n’a pas répondu dans le délai imparti.</value>
   </data>
   <data name="Error_Reading_Incoming_Data" xml:space="preserve">
     <value>Une erreur s’est produite lors de la lecture des données du panneau.</value>
   </data>
   <data name="Error_Serial_Port" xml:space="preserve">
     <value>Une erreur s’est produite lors de l’ouverture du port série.</value>
+  </data>
+  <data name="Error_Upload_Retries" xml:space="preserve">
+    <value>Téléchargement au panneau a été annulé après trop de tentatives.</value>
+  </data>
+  <data name="Error_Upload_Timeout" xml:space="preserve">
+    <value>Le téléchargement au panneau a échoué car il n’a pas répondu dans le délai imparti.</value>
   </data>
   <data name="Option_Cancel" xml:space="preserve">
     <value>Annuler</value>

@@ -36,7 +36,7 @@ namespace CTecUtil.IO
         public void Stop()
         {
             _timer.Stop();
-            //TimedOut = false;
+            TimedOut = false;
         }
 
 

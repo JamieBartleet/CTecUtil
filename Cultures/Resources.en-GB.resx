@@ -120,17 +120,23 @@
   <data name="Error_Checksum_Fail" xml:space="preserve">
     <value>Invalid data was received.</value>
   </data>
-  <data name="Error_Comms_Retries" xml:space="preserve">
-    <value>Comms cancelled after too many retries.</value>
+  <data name="Error_Download_Retries" xml:space="preserve">
+    <value>Download cancelled after too many retries.</value>
   </data>
-  <data name="Error_Comms_Timeout" xml:space="preserve">
-    <value>Comms failed because the panel did not respond within the time limit.</value>
+  <data name="Error_Download_Timeout" xml:space="preserve">
+    <value>Download failed because the panel did not respond within the time limit.</value>
   </data>
   <data name="Error_Reading_Incoming_Data" xml:space="preserve">
     <value>An error occurred reading incoming data from the panel.</value>
   </data>
   <data name="Error_Serial_Port" xml:space="preserve">
     <value>Error opening the serial port.</value>
+  </data>
+  <data name="Error_Upload_Retries" xml:space="preserve">
+    <value>Upload cancelled after too many retries.</value>
+  </data>
+  <data name="Error_Upload_Timeout" xml:space="preserve">
+    <value>Upload failed because the panel did not respond within the time limit.</value>
   </data>
   <data name="Option_Cancel" xml:space="preserve">
     <value>Cancel</value>

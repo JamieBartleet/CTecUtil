@@ -21,6 +21,10 @@ namespace CTecUtil.IO
         private CommandSubqueue _currentQueue;
 
 
+        /// <summary>The comms direction of the current subqueue (Up/Down; or Idle if there is nothing queued)</summary>
+        public SerialComms.Direction Direction { get => _subqueues.Peek()?.Direction ?? SerialComms.Direction.Idle; }
+
+
         /// <summary>
         /// The description of the overall operation - e.g. 'Downloading from panel...'
         /// </summary>
@@ -45,10 +49,7 @@ namespace CTecUtil.IO
         /// NB: AddSubQueue() must have been called prior to this to initialise the queue that is actively being added to.
         /// </summary>
         /// <param name="command"></param>
-        public void Enqueue(Command command)
-        {
-            _currentQueue?.Enqueue(command);
-        }
+        public void Enqueue(Command command) => _currentQueue?.Enqueue(command);
 
 
         /// <summary>

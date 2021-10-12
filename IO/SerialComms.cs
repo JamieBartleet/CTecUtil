@@ -22,6 +22,9 @@ namespace CTecUtil.IO
         }
 
 
+        public enum Direction { Idle, Up, Down }
+
+
         private static SerialPort   _port;
         private static CommandQueue _commandQueue = new();
         private static CommsTimer   _timer = new();
@@ -91,10 +94,11 @@ namespace CTecUtil.IO
         /// <summary>
         /// Add a new command subqueue to the set
         /// </summary>
+        /// <param name="direction">Comms direction (Up/Down).</param>
         /// <param name="name">Name of the command queue, to be displayed in the progress bar window.</param>
-        public static void AddNewCommandSubqueue(string name, SubqueueCompletedHandler onCompletion)
+        public static void AddNewCommandSubqueue(Direction direction, string name, SubqueueCompletedHandler onCompletion)
         {
-            _commandQueue.AddSubqueue(new CommandSubqueue(onCompletion) { Name = name });
+            _commandQueue.AddSubqueue(new CommandSubqueue(direction, onCompletion) { Name = name });
         }
 
 
@@ -128,7 +132,7 @@ namespace CTecUtil.IO
         public static void CancelCommandQueue()
         {
             _timer.Stop();
-            _timer.TimedOut = true;
+            //_timer.TimedOut = true;
             _commandQueue?.Clear();
             _progressOverall = _numCommandsToProcess;
         }
@@ -155,7 +159,7 @@ namespace CTecUtil.IO
             if (cmd != null)
             {
                 if (cmd.Tries > 4)
-                    error(Cultures.Resources.Error_Comms_Retries);
+                    error(_commandQueue.Direction == Direction.Up ? Cultures.Resources.Error_Upload_Retries : Cultures.Resources.Error_Download_Retries);
                 else
                     SendData(cmd);
             }
@@ -253,7 +257,8 @@ namespace CTecUtil.IO
             }
             catch (TimeoutException ex)
             {
-                error(Cultures.Resources.Error_Comms_Timeout, ex);
+                if (_commandQueue.Direction != Direction.Idle)
+                    error(_commandQueue.Direction == Direction.Up ? Cultures.Resources.Error_Upload_Timeout : Cultures.Resources.Error_Download_Timeout, ex);
             }
             catch (Exception ex)
             {
@@ -299,7 +304,6 @@ namespace CTecUtil.IO
                 Buffer.BlockCopy(header, 0, buffer, 0, header.Length);
 
                 int offset = header.Length;
-                int count = 0;
                 while (offset < buffer.Length)
                 {
                     while (port.BytesToRead == 0)
@@ -307,8 +311,10 @@ namespace CTecUtil.IO
                         Thread.Sleep(40);
 
                         if (_timer.TimedOut)
-                        if (++count > 200)
                             throw new TimeoutException();
+
+                        if (_commandQueue.TotalCommandCount == 0)
+                            return null;
                     }
 
                     //Read payload & checksum
@@ -411,10 +417,6 @@ namespace CTecUtil.IO
         {
             Application.Current.Dispatcher.Invoke(new Action(() =>
             {
-                //disable parent window controls while the work is being done?
-                //
-                //
-
                 //launch the progress bar window
                 _progressBarWindow.Show();
 
@@ -441,8 +443,8 @@ namespace CTecUtil.IO
                 {
                     Application.Current.Dispatcher.Invoke(new Action(() =>
                     {
-                        _commandQueue.Clear();
-                        error(Cultures.Resources.Error_Comms_Timeout, new TimeoutException());
+                        if (_commandQueue.Direction != Direction.Idle)
+                           error(_commandQueue.Direction == Direction.Up ? Cultures.Resources.Error_Upload_Timeout : Cultures.Resources.Error_Download_Timeout, new TimeoutException());
 
                     }), DispatcherPriority.Send);
                     break;
@@ -462,10 +464,6 @@ namespace CTecUtil.IO
             //hide progress window if it hasn't already done it itself
             Application.Current.Dispatcher.Invoke(new Action(() =>
             {
-                //enable parent window controls?
-                //
-                //
-
                 CancelCommandQueue();
                 _progressBarWindow.Hide();
 

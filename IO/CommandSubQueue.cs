@@ -8,13 +8,19 @@ namespace CTecUtil.IO
 {
     internal class CommandSubqueue
     {
-        public CommandSubqueue(SerialComms.SubqueueCompletedHandler onCompletion) => OnSubqueueComplete = onCompletion;
+        public CommandSubqueue(SerialComms.Direction direction, SerialComms.SubqueueCompletedHandler onCompletion)
+        {
+            Direction = direction;
+            OnSubqueueComplete = onCompletion;
+        }
 
 
         private Queue<Command> _commandQueue = new();
 
 
         public string Name { get; set; }
+
+        public SerialComms.Direction Direction { get; set; }
 
 
         public void    Enqueue(Command command) => _commandQueue.Enqueue(command);
