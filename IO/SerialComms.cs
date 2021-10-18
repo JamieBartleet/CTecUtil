@@ -52,6 +52,9 @@ namespace CTecUtil.IO
         public static byte NakByte { get; set; }
 
 
+        /// <summary>
+        /// Discard any pending commands and close the serial port
+        /// </summary>
         public static bool Close()
         {
             try
@@ -60,6 +63,7 @@ namespace CTecUtil.IO
                 if (_port?.IsOpen == true)
                     _port?.Close();
                 _port?.Dispose();
+                _port = null;
                 return true;
             }
             catch
@@ -75,7 +79,9 @@ namespace CTecUtil.IO
         }
 
 
-
+        /// <summary>
+        /// Gets a list of serial ports available on the system
+        /// </summary>
         public static List<string> GetAvailablePorts() => SerialPort.GetPortNames().ToList();
 
 
