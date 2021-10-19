@@ -55,29 +55,27 @@ namespace CTecUtil.IO
         /// <summary>
         /// Dequeue the first command in the first subqueue.
         /// </summary>
-        /// <returns>True if a the subqueue was changed.</returns>
+        /// <returns>True if a new subqueue was started (or there are none left to process).</returns>
         public bool Dequeue()
         {
-            //remove first command in the first subqueue
+            //remove first command in the current subqueue
             _subqueues.Peek()?.Dequeue();
 
-            //if there are no more commands in this subqueue, remove it so the first command in the next subqueue becomes front-of-queue
-            if (_subqueues.Peek()?.Count == 0)
+            if (_subqueues.Count == 0 || _subqueues?.Peek()?.Count > 0)
+                return false;
+
+            //if the current subqueue is empty, remove it so the first command in the next subqueue becomes front-of-queue
+            while (_subqueues.Count > 0 && _subqueues?.Peek()?.Count == 0)
             {
                 _subqueues.Peek().OnSubqueueComplete?.Invoke();
 
                 if (_subqueues.Count > 1)
-                {
                     _subqueues.Dequeue();
-                }
                 else
-                {
                     Clear();
-                }
-                return true;
             }
 
-            return false;
+            return true;
         }
 
 
@@ -111,28 +109,19 @@ namespace CTecUtil.IO
         /// <summary>
         /// Total count of all commands in all subqueues.
         /// </summary>
-        public int TotalCommandCount
-        {
-            get
-            {
-                int count = 0;
-                foreach (var q in _subqueues)
-                    count += q.Count;
-                return count;
-            }
-        }
+        public int TotalCommandCount { get => _subqueues?.Select(q => q.Count)?.Sum() ?? 0; }
 
 
         /// <summary>
         /// Count of subqueues.
         /// </summary>
-        public int SubqueueCount { get => _subqueues.Count; }
+        public int SubqueueCount { get => _subqueues?.Count ?? 0; }
 
 
         /// <summary>
         /// Count of commands in current subqueue.
         /// </summary>
-        public int CommandsInCurrentSubqueue { get => _subqueues.Count > 0 ? _subqueues?.Peek()?.Count??0 : 0; }
+        public int CommandsInCurrentSubqueue { get => _subqueues.Count > 0 ? _subqueues?.Peek()?.Count ?? 0 : 0; }
 
     }
 }

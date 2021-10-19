@@ -209,8 +209,6 @@ namespace CTecUtil.IO
             if (port == null || port.BytesToRead == 0)
                 return;
 
-            int retries = 0;
-
             try
             {
                 var incoming = readIncomingData(port);
@@ -225,8 +223,9 @@ namespace CTecUtil.IO
 
                     if (cmd != null)
                     {
-                        if (_commandQueue.TotalCommandCount > 0 && _commandQueue.Dequeue())
+                        if (_commandQueue.Dequeue())
                         {
+                            //new queue - reset the count
                             _progressSubqueue = 0;
                             Application.Current.Dispatcher.Invoke(new Action(() =>
                             {
@@ -246,10 +245,10 @@ namespace CTecUtil.IO
                                     cmd.DataReceiver?.Invoke(incoming);
                             }));
                         }
-                    }
                 
-                    _progressOverall++;
-                    _progressSubqueue++;
+                        _progressOverall++;
+                        _progressSubqueue++;
+                    }
 
                     //send next command, if any
                     if (_commandQueue.TotalCommandCount > 0)
