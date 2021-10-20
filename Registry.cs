@@ -72,9 +72,6 @@ namespace CTecUtil
         public static void SaveZoomLevel(float zoomLevel) => writeSubKey(Keys.ZoomKey, zoomLevel.ToString("F2", CultureInfo.InvariantCulture));
         public static float? ReadZoomLevel() => float.TryParse((string)readSubKey(Keys.ZoomKey), NumberStyles.Float, CultureInfo.InvariantCulture, out float zoomLevel) ? zoomLevel : null;
 
-        public static void SaveMessageBoxPosition(Window mesageBox) => writeSubKey(Keys.MessageBoxKey, mesageBox.Left + "," + mesageBox.Top);
-        public static Point ReadMessageBoxPosition() => parsePoint((string)readSubKey(Keys.MessageBoxKey));
-
 
         public static void SaveCulture(string cultureName) => writeSubKey(Keys.CultureKey, cultureName);
         public static string ReadCulture() => (string)readSubKey(Keys.CultureKey);

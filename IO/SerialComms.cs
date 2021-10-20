@@ -276,8 +276,8 @@ namespace CTecUtil.IO
         {            
             try
             {
-                //10 sec timeout
-                _timer.Start(10000);
+                //15 sec timeout
+                _timer.Start(15000);
 
                 //wait for buffering [sometimes dataReceived() is called by the port when BytesToRead is still zero]
                 while (port.BytesToRead == 0)

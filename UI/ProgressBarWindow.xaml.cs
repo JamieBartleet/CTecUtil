@@ -25,12 +25,22 @@ namespace CTecUtil.UI
             InitializeComponent();
             Topmost = true;
 
-            var location = Registry.ReadMessageBoxPosition();
-            if (location.X != 0 && location.Y != 0)
+            //if (Application.Current.MainWindow != null)
+            //{
+            //    Top = Application.Current.MainWindow.Top + Application.Current.MainWindow.Height / 2 - 70;
+            //    Left = Application.Current.MainWindow.Left + Application.Current.MainWindow.Width / 2 - 120;
+            //}
+        }
+
+
+        public new void Show()
+        {
+            if (Application.Current.MainWindow != null)
             {
-                Left = location.X;
-                Top = location.Y;
+                Top = Application.Current.MainWindow.Top + Application.Current.MainWindow.Height / 2 - Height / 2;
+                Left = Application.Current.MainWindow.Left + Application.Current.MainWindow.Width / 2 - Width / 2;
             }
+            base.Show();
         }
 
 
@@ -64,8 +74,5 @@ namespace CTecUtil.UI
         }
 
         private void Button_Click(object sender, RoutedEventArgs e) => OnCancel?.Invoke();
-
-
-        private void Window_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e) => Registry.SaveMessageBoxPosition(this);
     }
 }

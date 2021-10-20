@@ -11,8 +11,7 @@
         WindowStyle="None"
         Style="{StaticResource CTecMessageBoxStyle}"
         Width="240" Height="140"
-        Title="ProgressBarWindow"
-        IsVisibleChanged="Window_IsVisibleChanged">
+        Title="ProgressBarWindow">
     
     <Grid>
         <Border Background="{StaticResource Brush10}" 
