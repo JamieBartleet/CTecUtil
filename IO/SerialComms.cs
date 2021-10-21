@@ -126,10 +126,10 @@ namespace CTecUtil.IO
         public static void EnqueueCommand(byte[] commandData, int? index = null) => EnqueueCommand(commandData, null, index);
 
 
-        public static void StartSendingCommandQueue()
+        public static void StartSendingCommandQueue(Task onStart, Task onEnd)
         {            
             if (_commandQueue.TotalCommandCount > 2)
-                ShowProgressBarWindow();
+                ShowProgressBarWindow(onStart, onEnd);
             else
                 SendFirstCommandInQueue();
         }
@@ -164,7 +164,7 @@ namespace CTecUtil.IO
             var cmd = _commandQueue.Peek();
             if (cmd != null)
             {
-                if (cmd.Tries > 4)
+                if (cmd.Tries > 9)
                     error(_commandQueue.Direction == Direction.Up ? Cultures.Resources.Error_Upload_Retries : Cultures.Resources.Error_Download_Retries);
                 else
                     SendData(cmd);
@@ -226,7 +226,7 @@ namespace CTecUtil.IO
                         if (_commandQueue.Dequeue())
                         {
                             //new queue - reset the count
-                            _progressSubqueue = 0;
+                            _progressWithinSubqueue = 0;
                             Application.Current.Dispatcher.Invoke(new Action(() =>
                             {
                                 _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.CommandsInCurrentSubqueue;
@@ -247,7 +247,7 @@ namespace CTecUtil.IO
                         }
                 
                         _progressOverall++;
-                        _progressSubqueue++;
+                        _progressWithinSubqueue++;
                     }
 
                     //send next command, if any
@@ -396,14 +396,19 @@ namespace CTecUtil.IO
 
         #region progress bar
         private static ProgressBarWindow _progressBarWindow = new();
-        private static int _progressOverall, _progressSubqueue, _numCommandsToProcess;
+        private static int _progressOverall, _progressWithinSubqueue, _numCommandsToProcess;
+
+        private static Task _onStartProgress, _onEndProgress;
 
 
-        public static void ShowProgressBarWindow()
+        public static void ShowProgressBarWindow(Task onStart, Task onEnd)
         {
+            _onStartProgress = onStart;
+            _onEndProgress = onEnd;
+
             try
             {
-                _progressOverall = _progressSubqueue = 0;
+                _progressOverall = _progressWithinSubqueue = 0;
                 //use background worker to asynchronously run work method
                 BackgroundWorker worker = new BackgroundWorker();
                 worker.WorkerReportsProgress = true;
@@ -422,6 +427,8 @@ namespace CTecUtil.IO
         {
             Application.Current.Dispatcher.Invoke(new Action(() =>
             {
+                _onStartProgress?.Start();
+
                 //launch the progress bar window
                 _progressBarWindow.Show();
 
@@ -462,7 +469,7 @@ namespace CTecUtil.IO
                 }
 
                 //report progress
-                Application.Current.Dispatcher.Invoke(new Action(() => _progressBarWindow.UpdateProgress(_commandQueue?.CurrentSubqueueName, _progressOverall, _progressSubqueue)), DispatcherPriority.Normal);
+                Application.Current.Dispatcher.Invoke(new Action(() => _progressBarWindow.UpdateProgress(_commandQueue?.CurrentSubqueueName, _progressOverall, _progressWithinSubqueue)), DispatcherPriority.Normal);
                 Thread.Sleep(100);
             }
 
@@ -471,6 +478,8 @@ namespace CTecUtil.IO
             {
                 CancelCommandQueue();
                 _progressBarWindow.Hide();
+
+                _onEndProgress?.Start();
 
             }), DispatcherPriority.Normal);
         }

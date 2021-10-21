@@ -24,12 +24,6 @@ namespace CTecUtil.UI
         {
             InitializeComponent();
             Topmost = true;
-
-            //if (Application.Current.MainWindow != null)
-            //{
-            //    Top = Application.Current.MainWindow.Top + Application.Current.MainWindow.Height / 2 - 70;
-            //    Left = Application.Current.MainWindow.Left + Application.Current.MainWindow.Width / 2 - 120;
-            //}
         }
 
 

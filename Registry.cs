@@ -41,27 +41,23 @@ namespace CTecUtil
             var prevState = (string)readSubKey(Keys.WindowKey);
             if (prevState is not null)
             {
-                if (prevState == _maximised)
-                {
+                if (prevState.StartsWith(_maximised))
                     return WindowState.Maximized;
-                }
-                else
+                
+                var size_pos = prevState.Split(new char[] { ';' });
+
+                if (size_pos.Length > 0)
                 {
-                    var size_pos = prevState.Split(new char[] { ';' });
+                    var w_h = parsePoint(size_pos[0]);
+                    window.Width = w_h.X;
+                    window.Height = w_h.Y;
+                }
 
-                    if (size_pos.Length > 0)
-                    {
-                        var w_h = parsePoint(size_pos[0]);
-                        window.Width = w_h.X;
-                        window.Height = w_h.Y;
-                    }
-
-                    if (size_pos.Length > 1)
-                    {
-                        var x_y = parsePoint(size_pos[1]);
-                        window.Left = x_y.X;
-                        window.Top = x_y.Y;
-                    }
+                if (size_pos.Length > 1)
+                {
+                    var x_y = parsePoint(size_pos[1]);
+                    window.Left = x_y.X;
+                    window.Top = x_y.Y;
                 }
             }
 
