@@ -282,7 +282,7 @@ namespace CTecUtil.IO
                 //wait for buffering [sometimes dataReceived() is called by the port when BytesToRead is still zero]
                 while (port.BytesToRead == 0)
                 {
-                    Thread.Sleep(40);
+                    Thread.Sleep(20);
                     if (_timer.TimedOut)
                         throw new TimeoutException();
                 }
@@ -296,7 +296,7 @@ namespace CTecUtil.IO
                 //read payload length byte
                 while (port.BytesToRead == 0)
                 {
-                    Thread.Sleep(40);
+                    Thread.Sleep(20);
                     if (_timer.TimedOut)
                         throw new TimeoutException();
                 }
@@ -313,7 +313,7 @@ namespace CTecUtil.IO
                 {
                     while (port.BytesToRead == 0)
                     {
-                        Thread.Sleep(40);
+                        Thread.Sleep(20);
 
                         if (_timer.TimedOut)
                             throw new TimeoutException();

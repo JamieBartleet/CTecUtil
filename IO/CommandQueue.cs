@@ -22,7 +22,7 @@ namespace CTecUtil.IO
 
 
         /// <summary>The comms direction of the current subqueue (Up/Down; or Idle if there is nothing queued)</summary>
-        public SerialComms.Direction Direction { get => _subqueues.Peek()?.Direction ?? SerialComms.Direction.Idle; }
+        public SerialComms.Direction Direction { get => _subqueues.Count > 0 ? _subqueues.Peek()?.Direction ?? SerialComms.Direction.Idle : SerialComms.Direction.Idle; }
 
 
         /// <summary>
