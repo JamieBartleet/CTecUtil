@@ -164,6 +164,8 @@ namespace CTecUtil.IO
             var cmd = _commandQueue.Peek();
             if (cmd != null)
             {
+                Debug.WriteLine(DateTime.Now + " - ResendCommand()");
+
                 if (cmd.Tries > 9)
                     error(_commandQueue.Direction == Direction.Up ? Cultures.Resources.Error_Upload_Retries : Cultures.Resources.Error_Download_Retries);
                 else
@@ -177,6 +179,7 @@ namespace CTecUtil.IO
             if (command != null)
             {
                 command.Tries++;
+                Debug.WriteLine(DateTime.Now + " - SendData() - (try=" + command.Tries + ") queue: " + _commandQueue.ToString());
 
                 try
                 {
@@ -211,46 +214,59 @@ namespace CTecUtil.IO
 
             try
             {
+                Debug.WriteLine(DateTime.Now + " - dataReceived()");
+
                 var incoming = readIncomingData(port);
+
+                Debug.WriteLine(DateTime.Now + " -   incoming: [" + Utils.ByteArrayToString(incoming) + "]");
 
                 if (isNak(incoming))
                 {
+                    Debug.WriteLine(DateTime.Now + " -   Nak");
                     ResendCommand();
                 }
                 else if (_commandQueue.TotalCommandCount > 0)
                 {
                     var cmd = _commandQueue.Peek();
 
-                    if (cmd != null)
+                    if (incoming != null && cmd != null)
                     {
+                        Debug.WriteLine(DateTime.Now + " -   dataReceived()");
+
                         if (_commandQueue.Dequeue())
                         {
+                            Debug.WriteLine(DateTime.Now + " -   dequeued");
                             //new queue - reset the count
                             _progressWithinSubqueue = 0;
+                            Debug.WriteLine(DateTime.Now + " ---> Action - invoke");
                             Application.Current.Dispatcher.Invoke(new Action(() =>
                             {
+                                Debug.WriteLine(DateTime.Now + " ---> Action - set ProgressBarSubqueueMax");
                                 _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.CommandsInCurrentSubqueue;
+                                Debug.WriteLine(DateTime.Now + " --->        - set ProgressBarSubqueueMax - done");
 
-                            }), DispatcherPriority.ContextIdle);
+                            }), DispatcherPriority.Normal);
+                            Debug.WriteLine(DateTime.Now + " ---> Action - invoke - done");
                         }
+                        Debug.WriteLine(DateTime.Now + " ---> Action - return data");
 
-                        if (incoming is not null)
+                        //send response to data receiver
+                        await Task.Run(new Action(() =>
                         {
-                            //send response to data receiver
-                            await Task.Run(new Action(() =>
-                            {
-                                if (cmd.Index != null)
-                                    cmd.DataReceiver?.Invoke(incoming, cmd.Index.Value);
-                                else
-                                    cmd.DataReceiver?.Invoke(incoming);
-                            }));
-                        }
-                
+                            if (cmd.Index != null)
+                                cmd.DataReceiver?.Invoke(incoming, cmd.Index.Value);
+                            else
+                                cmd.DataReceiver?.Invoke(incoming);
+                        }));
+
+                        Debug.WriteLine(DateTime.Now + " ---> Action - return data - done");
+
                         _progressOverall++;
                         _progressWithinSubqueue++;
                     }
 
                     //send next command, if any
+                    Debug.WriteLine(DateTime.Now + " -   dataReceived() - next...");
                     if (_commandQueue.TotalCommandCount > 0)
                         SendNextCommandInQueue();
                 }
@@ -273,7 +289,9 @@ namespace CTecUtil.IO
 
 
         private static byte[] readIncomingData(SerialPort port)
-        {            
+        {
+            Debug.WriteLine(DateTime.Now + " - readIncomingData()");
+
             try
             {
                 //15 sec timeout
@@ -282,6 +300,7 @@ namespace CTecUtil.IO
                 //wait for buffering [sometimes dataReceived() is called by the port when BytesToRead is still zero]
                 while (port.BytesToRead == 0)
                 {
+                    Debug.WriteLine(DateTime.Now + " -    wait #1");
                     Thread.Sleep(20);
                     if (_timer.TimedOut)
                         throw new TimeoutException();
@@ -293,9 +312,13 @@ namespace CTecUtil.IO
                 if (isAck(header[0]) || isNak(header[0]))
                     return new byte[] { header[0] };
 
+               // if (header[0] != _commandQueue.Peek().CommandData[2])
+
+
                 //read payload length byte
                 while (port.BytesToRead == 0)
                 {
+                    Debug.WriteLine(DateTime.Now + " -    wait #2");
                     Thread.Sleep(20);
                     if (_timer.TimedOut)
                         throw new TimeoutException();
@@ -313,14 +336,19 @@ namespace CTecUtil.IO
                 {
                     while (port.BytesToRead == 0)
                     {
+                        Debug.WriteLine(DateTime.Now + " -    wait #3 - expecting " + payloadLength + " bytes payload");
                         Thread.Sleep(20);
-
                         if (_timer.TimedOut)
-                            throw new TimeoutException();
-
+                        {
+//                            throw new TimeoutException();
+ResendCommand();
+return null;
+                        }
                         if (_commandQueue.TotalCommandCount == 0)
                             return null;
                     }
+
+                    Debug.WriteLine(DateTime.Now + " -   read " + port.BytesToRead + " bytes");
 
                     //Read payload & checksum
                     var bytes = Math.Min(port.BytesToRead, buffer.Length - offset);

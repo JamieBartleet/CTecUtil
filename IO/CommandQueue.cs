@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -34,7 +35,7 @@ namespace CTecUtil.IO
         /// <summary>
         /// Name attached to the first subqueue (i.e. the one currently being serviced)
         /// </summary>
-        public string CurrentSubqueueName { get => _subqueues.Count > 0 && _subqueues?.Peek()?.Count > 0 ? _subqueues?.Peek()?.Name : null; }
+        public string CurrentSubqueueName { get => _subqueues.Count > 0 && _subqueues.Peek()?.Count > 0 ? _subqueues.Peek()?.Name : null; }
 
 
         /// <summary>
@@ -58,14 +59,16 @@ namespace CTecUtil.IO
         /// <returns>True if a new subqueue was started (or there are none left to process).</returns>
         public bool Dequeue()
         {
+            Debug.WriteLine(DateTime.Now + " - Dequeue() - _subqueues.Count=" + _subqueues.Count);
+
             //remove first command in the current subqueue
             _subqueues.Peek()?.Dequeue();
 
-            if (_subqueues.Count == 0 || _subqueues?.Peek()?.Count > 0)
+            if (_subqueues.Count == 0 || _subqueues.Peek()?.Count > 0)
                 return false;
 
             //if the current subqueue is empty, remove it so the first command in the next subqueue becomes front-of-queue
-            while (_subqueues.Count > 0 && _subqueues?.Peek()?.Count == 0)
+            while (_subqueues.Count > 0 && _subqueues.Peek()?.Count == 0)
             {
                 _subqueues.Peek().OnSubqueueComplete?.Invoke();
 
@@ -102,26 +105,45 @@ namespace CTecUtil.IO
         {
             foreach (var q in _subqueues)
                 q.Clear();
-            _subqueues?.Clear();
+            _subqueues.Clear();
         }
 
 
         /// <summary>
         /// Total count of all commands in all subqueues.
         /// </summary>
-        public int TotalCommandCount { get => _subqueues?.Select(q => q.Count)?.Sum() ?? 0; }
+        public int TotalCommandCount { get => _subqueues.Select(q => q.Count)?.Sum() ?? 0; }
 
 
         /// <summary>
         /// Count of subqueues.
         /// </summary>
-        public int SubqueueCount { get => _subqueues?.Count ?? 0; }
+        public int SubqueueCount { get => _subqueues.Count; }
 
 
         /// <summary>
         /// Count of commands in current subqueue.
         /// </summary>
-        public int CommandsInCurrentSubqueue { get => _subqueues.Count > 0 ? _subqueues?.Peek()?.Count ?? 0 : 0; }
+        public int CommandsInCurrentSubqueue { get => _subqueues.Count > 0 ? _subqueues.Peek()?.Count ?? 0 : 0; }
 
+
+        public override string ToString()
+        {
+            var result = new StringBuilder();
+            result.Append("Subqueues=" + SubqueueCount);
+            result.Append(" TotCmds=" + TotalCommandCount);
+            if (_subqueues.Count > 0)
+            {
+                result.Append(" CurrQ=" + _subqueues.Peek()?.Name);
+                result.Append(" Count=" + CommandsInCurrentSubqueue);
+                if (_subqueues.Peek()?.Count > 0)
+                {
+                    var cmd = _subqueues.Peek().Peek();
+                    if (cmd != null)
+                        result.Append(" head=" + cmd.ToString());
+                }
+            }
+            return result.ToString();
+        }
     }
 }

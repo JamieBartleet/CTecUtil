@@ -20,5 +20,7 @@ namespace CTecUtil.IO
 
         /// <summary>Handler to which the response will be sent.</summary>
         public ReceivedDataHandler DataReceiver { get; set; }
+
+        public override string ToString() => Utils.ByteArrayToString(CommandData);
     }
 }
