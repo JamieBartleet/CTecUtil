@@ -28,6 +28,7 @@ namespace CTecUtil.IO
         private static SerialPort   _port;
         private static CommandQueue _commandQueue = new();
         private static CommsTimer   _timer = new();
+        private static Exception    _lastException = null;
 
         
         public delegate void ProgressMaxSetter(int maxValue);
@@ -167,7 +168,21 @@ namespace CTecUtil.IO
                 Debug.WriteLine(DateTime.Now + " - ResendCommand()");
 
                 if (cmd.Tries > 9)
-                    error(_commandQueue.Direction == Direction.Up ? Cultures.Resources.Error_Upload_Retries : Cultures.Resources.Error_Download_Retries);
+                {
+                    //the number of retries on the current command is excessive
+                    // - report the last-noted exception (if any)
+                    if (_lastException != null)
+                    {
+                        if (_lastException is TimeoutException)
+                            error(_commandQueue.Direction == Direction.Up ? Cultures.Resources.Error_Upload_Timeout : Cultures.Resources.Error_Download_Timeout, _lastException);
+                        else if (_lastException is FormatException)
+                            error(Cultures.Resources.Error_Checksum_Fail, _lastException);
+                        else 
+                            error(_commandQueue.Direction == Direction.Up ? Cultures.Resources.Error_Uploading_Data : Cultures.Resources.Error_Downloading_Data, _lastException);
+                    }
+                    else
+                        error(_commandQueue.Direction == Direction.Up ? Cultures.Resources.Error_Upload_Retries : Cultures.Resources.Error_Download_Retries);
+                }
                 else
                     SendData(cmd);
             }
@@ -176,6 +191,8 @@ namespace CTecUtil.IO
 
         private static void SendData(Command command)
         {
+            _lastException = null;
+
             if (command != null)
             {
                 command.Tries++;
@@ -271,19 +288,24 @@ namespace CTecUtil.IO
                         SendNextCommandInQueue();
                 }
             }
-            catch (FormatException)
+            catch (FormatException ex)
             {
                 //checksum fail
+                Debug.WriteLine(DateTime.Now + " -   FormatException");
+                _lastException = ex;
                 ResendCommand();
             }
             catch (TimeoutException ex)
             {
-                if (_commandQueue.Direction != Direction.Idle)
-                    error(_commandQueue.Direction == Direction.Up ? Cultures.Resources.Error_Upload_Timeout : Cultures.Resources.Error_Download_Timeout, ex);
+                Debug.WriteLine(DateTime.Now + " -   TimeoutException");
+                _lastException = ex;
+                ResendCommand();
             }
             catch (Exception ex)
             {
-                error(Cultures.Resources.Error_Reading_Incoming_Data, ex);
+                Debug.WriteLine(DateTime.Now + " -   Exception");
+                _lastException = ex;
+                ResendCommand();
             }
         }
 
@@ -294,8 +316,8 @@ namespace CTecUtil.IO
 
             try
             {
-                //15 sec timeout
-                _timer.Start(15000);
+                //1.5 sec timeout
+                _timer.Start(1500);
 
                 //wait for buffering [sometimes dataReceived() is called by the port when BytesToRead is still zero]
                 while (port.BytesToRead == 0)
@@ -339,11 +361,7 @@ namespace CTecUtil.IO
                         Debug.WriteLine(DateTime.Now + " -    wait #3 - expecting " + payloadLength + " bytes payload");
                         Thread.Sleep(20);
                         if (_timer.TimedOut)
-                        {
-//                            throw new TimeoutException();
-ResendCommand();
-return null;
-                        }
+                            throw new TimeoutException();
                         if (_commandQueue.TotalCommandCount == 0)
                             return null;
                     }
@@ -357,7 +375,7 @@ return null;
                 }
 
                 if (!CheckChecksum(buffer))
-                    throw new FormatException(Cultures.Resources.Error_Checksum_Fail);
+                    throw new FormatException();
 
                 return buffer;
             }

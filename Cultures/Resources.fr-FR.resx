@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Error_Checksum_Fail" xml:space="preserve">
-    <value>Des données non valides ont été reçues.</value>
+    <value>Des données non valides ont été reçues du panneau.</value>
   </data>
   <data name="Error_Download_Retries" xml:space="preserve">
     <value>Téléchargement du panneau a été annulé après trop de tentatives.</value>
@@ -126,7 +126,7 @@
   <data name="Error_Download_Timeout" xml:space="preserve">
     <value>Le téléchargement du panneau a échoué car il n’a pas répondu dans le délai imparti.</value>
   </data>
-  <data name="Error_Reading_Incoming_Data" xml:space="preserve">
+  <data name="Error_Downloading_Data" xml:space="preserve">
     <value>Une erreur s’est produite lors de la lecture des données du panneau.</value>
   </data>
   <data name="Error_Serial_Port" xml:space="preserve">
@@ -140,5 +140,8 @@
   </data>
   <data name="Option_Cancel" xml:space="preserve">
     <value>Annuler</value>
+  </data>
+  <data name="Error_Uploading_Data" xml:space="preserve">
+    <value>Une erreur s’est produite lors de l'envoi des données du panneau.</value>
   </data>
 </root>

@@ -61,7 +61,7 @@ namespace CTecUtil.Cultures {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid data was received..
+        ///   Looks up a localized string similar to Invalid data was received from the panel..
         /// </summary>
         public static string Error_Checksum_Fail {
             get {
@@ -88,11 +88,11 @@ namespace CTecUtil.Cultures {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An error occurred reading incoming data from the panel..
+        ///   Looks up a localized string similar to An error occurred while receiving data from the panel..
         /// </summary>
-        public static string Error_Reading_Incoming_Data {
+        public static string Error_Downloading_Data {
             get {
-                return ResourceManager.GetString("Error_Reading_Incoming_Data", resourceCulture);
+                return ResourceManager.GetString("Error_Downloading_Data", resourceCulture);
             }
         }
         
@@ -120,6 +120,15 @@ namespace CTecUtil.Cultures {
         public static string Error_Upload_Timeout {
             get {
                 return ResourceManager.GetString("Error_Upload_Timeout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred while sending data to the panel..
+        /// </summary>
+        public static string Error_Uploading_Data {
+            get {
+                return ResourceManager.GetString("Error_Uploading_Data", resourceCulture);
             }
         }
         

@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Error_Checksum_Fail" xml:space="preserve">
-    <value>Invalid data was received.</value>
+    <value>Invalid data was received from the panel.</value>
   </data>
   <data name="Error_Download_Retries" xml:space="preserve">
     <value>Download cancelled after too many retries.</value>
@@ -126,8 +126,8 @@
   <data name="Error_Download_Timeout" xml:space="preserve">
     <value>Download failed because the panel did not respond within the time limit.</value>
   </data>
-  <data name="Error_Reading_Incoming_Data" xml:space="preserve">
-    <value>An error occurred reading incoming data from the panel.</value>
+  <data name="Error_Downloading_Data" xml:space="preserve">
+    <value>An error occurred while receiving data from the panel.</value>
   </data>
   <data name="Error_Serial_Port" xml:space="preserve">
     <value>Error opening the serial port.</value>
@@ -140,5 +140,8 @@
   </data>
   <data name="Option_Cancel" xml:space="preserve">
     <value>Cancel</value>
+  </data>
+  <data name="Error_Uploading_Data" xml:space="preserve">
+    <value>An error occurred while sending data to the panel.</value>
   </data>
 </root>
