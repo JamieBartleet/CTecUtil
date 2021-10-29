@@ -139,8 +139,8 @@ namespace CTecUtil.IO
         public static void CancelCommandQueue()
         {
             _timer.Stop();
-            //_timer.TimedOut = true;
             _commandQueue?.Clear();
+            //force progress bar to end the comms
             _progressOverall = _numCommandsToProcess;
         }
 
@@ -196,7 +196,7 @@ namespace CTecUtil.IO
             if (command != null)
             {
                 command.Tries++;
-                Debug.WriteLine(DateTime.Now + " - SendData() - (try=" + command.Tries + ") queue: " + _commandQueue.ToString());
+                Debug.WriteLine(DateTime.Now + " - SendData() - (try=" + command.Tries + ")  [" + command.ToString() + "]");
 
                 try
                 {
@@ -248,24 +248,16 @@ namespace CTecUtil.IO
 
                     if (incoming != null && cmd != null)
                     {
-                        Debug.WriteLine(DateTime.Now + " -   dataReceived()");
-
                         if (_commandQueue.Dequeue())
                         {
-                            Debug.WriteLine(DateTime.Now + " -   dequeued");
                             //new queue - reset the count
                             _progressWithinSubqueue = 0;
-                            Debug.WriteLine(DateTime.Now + " ---> Action - invoke");
                             Application.Current.Dispatcher.Invoke(new Action(() =>
                             {
-                                Debug.WriteLine(DateTime.Now + " ---> Action - set ProgressBarSubqueueMax");
                                 _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.CommandsInCurrentSubqueue;
-                                Debug.WriteLine(DateTime.Now + " --->        - set ProgressBarSubqueueMax - done");
 
                             }), DispatcherPriority.Normal);
-                            Debug.WriteLine(DateTime.Now + " ---> Action - invoke - done");
                         }
-                        Debug.WriteLine(DateTime.Now + " ---> Action - return data");
 
                         //send response to data receiver
                         await Task.Run(new Action(() =>
@@ -276,14 +268,11 @@ namespace CTecUtil.IO
                                 cmd.DataReceiver?.Invoke(incoming);
                         }));
 
-                        Debug.WriteLine(DateTime.Now + " ---> Action - return data - done");
-
                         _progressOverall++;
                         _progressWithinSubqueue++;
                     }
 
                     //send next command, if any
-                    Debug.WriteLine(DateTime.Now + " -   dataReceived() - next...");
                     if (_commandQueue.TotalCommandCount > 0)
                         SendNextCommandInQueue();
                 }
@@ -291,19 +280,19 @@ namespace CTecUtil.IO
             catch (FormatException ex)
             {
                 //checksum fail
-                Debug.WriteLine(DateTime.Now + " -   FormatException");
+                Debug.WriteLine(DateTime.Now + " -   **FormatException**");
                 _lastException = ex;
                 ResendCommand();
             }
             catch (TimeoutException ex)
             {
-                Debug.WriteLine(DateTime.Now + " -   TimeoutException");
+                Debug.WriteLine(DateTime.Now + " -   **TimeoutException**");
                 _lastException = ex;
                 ResendCommand();
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(DateTime.Now + " -   Exception");
+                Debug.WriteLine(DateTime.Now + " -   **Exception**");
                 _lastException = ex;
                 ResendCommand();
             }
@@ -312,8 +301,6 @@ namespace CTecUtil.IO
 
         private static byte[] readIncomingData(SerialPort port)
         {
-            Debug.WriteLine(DateTime.Now + " - readIncomingData()");
-
             try
             {
                 //1.5 sec timeout
@@ -322,7 +309,6 @@ namespace CTecUtil.IO
                 //wait for buffering [sometimes dataReceived() is called by the port when BytesToRead is still zero]
                 while (port.BytesToRead == 0)
                 {
-                    Debug.WriteLine(DateTime.Now + " -    wait #1");
                     Thread.Sleep(20);
                     if (_timer.TimedOut)
                         throw new TimeoutException();
@@ -340,7 +326,6 @@ namespace CTecUtil.IO
                 //read payload length byte
                 while (port.BytesToRead == 0)
                 {
-                    Debug.WriteLine(DateTime.Now + " -    wait #2");
                     Thread.Sleep(20);
                     if (_timer.TimedOut)
                         throw new TimeoutException();
@@ -358,7 +343,7 @@ namespace CTecUtil.IO
                 {
                     while (port.BytesToRead == 0)
                     {
-                        Debug.WriteLine(DateTime.Now + " -    wait #3 - expecting " + payloadLength + " bytes payload");
+                        Debug.WriteLine(DateTime.Now + " -    wait - expecting " + payloadLength + " bytes payload");
                         Thread.Sleep(20);
                         if (_timer.TimedOut)
                             throw new TimeoutException();
