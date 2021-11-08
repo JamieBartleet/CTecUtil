@@ -157,7 +157,7 @@ namespace CTecUtil.IO
         }
 
 
-        private static void SendNextCommandInQueue() => SendData(_commandQueue.Peek());
+        private static void SendNextCommandInQueue() { SendData(_commandQueue.Peek()); }
 
 
         private static void ResendCommand()
@@ -274,7 +274,11 @@ namespace CTecUtil.IO
 
                     //send next command, if any
                     if (_commandQueue.TotalCommandCount > 0)
+{
+if (_commandQueue.TotalCommandCount == 1)
+    Debug.WriteLine(DateTime.Now + " - >>>>TotalCommandCount==1");
                         SendNextCommandInQueue();
+}
                 }
             }
             catch (FormatException ex)
@@ -347,8 +351,8 @@ namespace CTecUtil.IO
                         Thread.Sleep(20);
                         if (_timer.TimedOut)
                             throw new TimeoutException();
-                        if (_commandQueue.TotalCommandCount == 0)
-                            return null;
+                        //if (_commandQueue.TotalCommandCount == 0)
+                        //    return null;
                     }
 
                     Debug.WriteLine(DateTime.Now + " -   read " + port.BytesToRead + " bytes");
@@ -507,10 +511,14 @@ namespace CTecUtil.IO
             //hide progress window if it hasn't already done it itself
             Application.Current.Dispatcher.Invoke(new Action(() =>
             {
-                CancelCommandQueue();
-                _progressBarWindow.Hide();
+                try
+                {
+                    CancelCommandQueue();
+                    _progressBarWindow.Hide();
 
-                _onEndProgress?.Start();
+                    _onEndProgress?.Start();
+                }
+                catch { }
 
             }), DispatcherPriority.Normal);
         }
