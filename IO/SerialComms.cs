@@ -138,10 +138,10 @@ namespace CTecUtil.IO
 
         public static void CancelCommandQueue()
         {
+            //Debug.WriteLine(DateTime.Now + " - CancelCommandQueue()");
             _timer.Stop();
-            _commandQueue?.Clear();
-            //force progress bar to end the comms
-            _progressOverall = _numCommandsToProcess;
+            _commandQueue?.Clear();            
+            Thread.Sleep(500);
         }
 
 
@@ -196,7 +196,7 @@ namespace CTecUtil.IO
             if (command != null)
             {
                 command.Tries++;
-                Debug.WriteLine(DateTime.Now + " - SendData() - (try=" + command.Tries + ")  [" + command.ToString() + "]");
+                //Debug.WriteLine(DateTime.Now + " - SendData() - (try=" + command.Tries + ")  [" + command.ToString() + "]");
 
                 try
                 {
@@ -231,11 +231,9 @@ namespace CTecUtil.IO
 
             try
             {
-                Debug.WriteLine(DateTime.Now + " - dataReceived()");
-
                 var incoming = readIncomingData(port);
 
-                Debug.WriteLine(DateTime.Now + " -   incoming: [" + Utils.ByteArrayToString(incoming) + "]");
+                //Debug.WriteLine(DateTime.Now + " -   incoming: [" + Utils.ByteArrayToString(incoming) + "]");
 
                 if (isNak(incoming))
                 {
@@ -258,6 +256,7 @@ namespace CTecUtil.IO
 
                             }), DispatcherPriority.Normal);
                         }
+                        //Debug.WriteLine(DateTime.Now + " - dequeued         : Qs=" + _commandQueue.SubqueueCount + " this=" + _commandQueue.CurrentSubqueueName + "(" + _commandQueue.CommandsInCurrentSubqueue + ") tot=" + _commandQueue.TotalCommandCount);
 
                         //send response to data receiver
                         await Task.Run(new Action(() =>
@@ -268,35 +267,32 @@ namespace CTecUtil.IO
                                 cmd.DataReceiver?.Invoke(incoming);
                         }));
 
+                        //Debug.WriteLine(DateTime.Now + " - progress: subq=" + _progressWithinSubqueue + " o/a=" + _progressOverall + "/" + _numCommandsToProcess);
                         _progressOverall++;
                         _progressWithinSubqueue++;
                     }
 
                     //send next command, if any
                     if (_commandQueue.TotalCommandCount > 0)
-{
-if (_commandQueue.TotalCommandCount == 1)
-    Debug.WriteLine(DateTime.Now + " - >>>>TotalCommandCount==1");
                         SendNextCommandInQueue();
-}
                 }
             }
             catch (FormatException ex)
             {
                 //checksum fail
-                Debug.WriteLine(DateTime.Now + " -   **FormatException**");
+                Debug.WriteLine(DateTime.Now + " -   **FormatException** " + ex.Message);
                 _lastException = ex;
                 ResendCommand();
             }
             catch (TimeoutException ex)
             {
-                Debug.WriteLine(DateTime.Now + " -   **TimeoutException**");
+                Debug.WriteLine(DateTime.Now + " -   **TimeoutException** " + ex.Message);
                 _lastException = ex;
                 ResendCommand();
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(DateTime.Now + " -   **Exception**");
+                Debug.WriteLine(DateTime.Now + " -   **Exception** " + ex.Message);
                 _lastException = ex;
                 ResendCommand();
             }
@@ -341,13 +337,14 @@ if (_commandQueue.TotalCommandCount == 1)
                 //now we know how many more bytes to expect - i.e. header + payloadLength + 1 byte for checksum
                 byte[] buffer = new byte[header.Length + payloadLength + 1];
                 Buffer.BlockCopy(header, 0, buffer, 0, header.Length);
+                //Debug.WriteLine(DateTime.Now + " - buffer=" + Utils.ByteArrayToString(buffer));
 
                 int offset = header.Length;
                 while (offset < buffer.Length)
                 {
                     while (port.BytesToRead == 0)
                     {
-                        Debug.WriteLine(DateTime.Now + " -    wait - expecting " + payloadLength + " bytes payload");
+                        //Debug.WriteLine(DateTime.Now + " -    wait - expecting " + payloadLength + " bytes payload");
                         Thread.Sleep(20);
                         if (_timer.TimedOut)
                             throw new TimeoutException();
@@ -355,11 +352,12 @@ if (_commandQueue.TotalCommandCount == 1)
                         //    return null;
                     }
 
-                    Debug.WriteLine(DateTime.Now + " -   read " + port.BytesToRead + " bytes");
+                    //Debug.WriteLine(DateTime.Now + " -   read " + port.BytesToRead + " bytes");
 
                     //Read payload & checksum
                     var bytes = Math.Min(port.BytesToRead, buffer.Length - offset);
                     port.Read(buffer, offset, bytes);
+                    //Debug.WriteLine(DateTime.Now + " - buffer=" + Utils.ByteArrayToString(buffer));
                     offset += bytes;
                 }
 
@@ -460,6 +458,9 @@ if (_commandQueue.TotalCommandCount == 1)
 
         private static void ProcessAsynch(object sender, DoWorkEventArgs e)
         {
+            _numCommandsToProcess  = _commandQueue.TotalCommandCount;
+            var commandsInSubqueue = _commandQueue.CommandsInCurrentSubqueue;
+
             Application.Current.Dispatcher.Invoke(new Action(() =>
             {
                 _onStartProgress?.Start();
@@ -472,8 +473,8 @@ if (_commandQueue.TotalCommandCount == 1)
             Application.Current.Dispatcher.Invoke(new Action(() =>
             {
                 _progressBarWindow.ProgressBarLegend      = _commandQueue.OperationDesc;
-                _progressBarWindow.ProgressBarOverallMax  = _numCommandsToProcess = _commandQueue.TotalCommandCount;
-                _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.CommandsInCurrentSubqueue;
+                _progressBarWindow.ProgressBarOverallMax  = _numCommandsToProcess;
+                _progressBarWindow.ProgressBarSubqueueMax = commandsInSubqueue;
                 
             }), DispatcherPriority.ContextIdle);
 
@@ -483,7 +484,8 @@ if (_commandQueue.TotalCommandCount == 1)
             var startTime = DateTime.Now;
             int lastProgress = 0;
 
-            while (_progressOverall < _numCommandsToProcess)
+            //while (_progressOverall < _numCommandsToProcess)
+            while (_commandQueue?.TotalCommandCount > 0)
             {
                 //stop if progress hasn't changed for 10 secs
                 if (DateTime.Now > startTime.AddSeconds(10))
@@ -507,6 +509,8 @@ if (_commandQueue.TotalCommandCount == 1)
                 Application.Current.Dispatcher.Invoke(new Action(() => _progressBarWindow.UpdateProgress(_commandQueue?.CurrentSubqueueName, _progressOverall, _progressWithinSubqueue)), DispatcherPriority.Normal);
                 Thread.Sleep(100);
             }
+            
+            //Debug.WriteLine(DateTime.Now + " - finished?");
 
             //hide progress window if it hasn't already done it itself
             Application.Current.Dispatcher.Invoke(new Action(() =>

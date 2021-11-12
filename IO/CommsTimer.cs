@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -54,8 +55,9 @@ namespace CTecUtil.IO
  
         public void OnTimedCommsEvent(object source, ElapsedEventArgs e)
         {
-           TimedOut = true;
-           _timer.Stop();
+            Debug.WriteLine(DateTime.Now + " - ***** CommsTimer TimedOut *****");
+            TimedOut = true;
+            _timer.Stop();
         }
     }
 }

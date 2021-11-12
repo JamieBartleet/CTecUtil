@@ -59,7 +59,7 @@ namespace CTecUtil.IO
         /// <returns>True if a new subqueue was started (or there are none left to process).</returns>
         public bool Dequeue()
         {
-            Debug.WriteLine(DateTime.Now + " - Dequeue() - _subqueues.Count=" + _subqueues.Count);
+            //Debug.WriteLine(DateTime.Now + " - Dequeue() - _subqueues.Count=" + _subqueues.Count);
 
             //remove first command in the current subqueue
             _subqueues.Peek()?.Dequeue();
