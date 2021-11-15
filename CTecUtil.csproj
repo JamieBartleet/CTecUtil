@@ -4,6 +4,8 @@
     <TargetFramework>net5.0-windows</TargetFramework>
 	  <UseWPF>true</UseWPF>
 	  <SourceRevisionId>Build=$([System.DateTime]::UtcNow.ToString("yyyy-MM-dd HH:mm:ss"))</SourceRevisionId>
+	  <AssemblyVersion>1.0.2.0</AssemblyVersion>
+	  <FileVersion>1.0.2.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

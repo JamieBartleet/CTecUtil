@@ -10,7 +10,7 @@ namespace CTecUtil
 {
     public static class BuildInfo
     {
-        private static readonly VersionInfo _versionInfo = ParseProductVersionString(Assembly.GetExecutingAssembly().Location);
+        private static readonly VersionInfo _versionInfo = ParseProductVersionString(Assembly.GetExecutingAssembly());
 
         public static string   BuildVersion { get { return _versionInfo.Version;         } }
         public static DateTime BuildDate    { get { return _versionInfo.BuildDate.Value; } }
@@ -25,13 +25,13 @@ namespace CTecUtil
         }
 
 
-        public static VersionInfo ParseProductVersionString(string assemblyPath)
+        public static VersionInfo ParseProductVersionString(Assembly assembly)
         {
             VersionInfo result = new();
 
-            result.Version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            result.Version = assembly.GetName().Version.ToString();
 
-            var versionInfo = FileVersionInfo.GetVersionInfo(assemblyPath);
+            var versionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
 
             //NB: ProductVersion string is in format v.v.v+BuildDate:yyyymmddhhmmsszz
             var version_build = versionInfo.ProductVersion.Split("+");
