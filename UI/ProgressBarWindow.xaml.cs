@@ -23,17 +23,18 @@ namespace CTecUtil.UI
         public ProgressBarWindow()
         {
             InitializeComponent();
-            Topmost = true;
         }
 
 
-        public new void Show()
+        public void Show(Window owner)
         {
             if (Application.Current.MainWindow != null)
             {
                 Top = Application.Current.MainWindow.Top + Application.Current.MainWindow.Height / 2 - Height / 2;
                 Left = Application.Current.MainWindow.Left + Application.Current.MainWindow.Width / 2 - Width / 2;
             }
+            
+            base.Owner = owner;
             base.Show();
         }
 

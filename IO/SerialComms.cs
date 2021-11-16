@@ -34,6 +34,7 @@ namespace CTecUtil.IO
         public delegate void ProgressMaxSetter(int maxValue);
         public delegate void ProgressValueUpdater(int value);
 
+        public static Window OwnerWindow { get; set; }
 
         private static SerialPortSettings _settings = new();
         public static SerialPortSettings Settings { get => _settings; }
@@ -466,7 +467,7 @@ namespace CTecUtil.IO
                 _onStartProgress?.Start();
 
                 //launch the progress bar window
-                _progressBarWindow.Show();
+                _progressBarWindow.Show(OwnerWindow);
 
             }), DispatcherPriority.Normal);
 

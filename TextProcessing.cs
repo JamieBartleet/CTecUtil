@@ -28,7 +28,7 @@ namespace CTecUtil
 
 
         /// <summary>
-        /// Converts digit input Key to a string.<br/>E.g. Key.D1  or Key.Numpad1 -> "1".
+        /// Converts digit Key to a string.<br/>E.g. Key.D1 or Key.Numpad1 -> "1".
         /// </summary>
         public static string DigitKeyToString(Key k)
             => k switch
@@ -45,6 +45,17 @@ namespace CTecUtil
                 Key.D9 or Key.NumPad9 => "9",
                 _                     => "",
             };
+
+
+        /// <summary>
+        /// Converts alpha and digit Key to a string.<br/>E.g. Key.A -> "A"; Key.D1 or Key.Numpad1 -> "1".
+        /// </summary>
+        public static string AplhaNumericKeyToString(Key k)
+        {
+            if (k >= Key.A && k <= Key.Z)
+                return k.ToString();
+            return DigitKeyToString(k);
+        }
 
 
         /// <summary>

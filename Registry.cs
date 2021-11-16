@@ -29,7 +29,18 @@ namespace CTecUtil
         /// </summary>
         public static void SaveWindowState(Window window)
         {
-            writeSubKey(Keys.WindowKey, window.WindowState == WindowState.Maximized ? _maximised : window.Width + "," + window.Height + ";" + window.Left + "," + window.Top);
+            if (window.WindowState == WindowState.Maximized)
+            {
+                var prevState = (string)readSubKey(Keys.WindowKey);
+                if (prevState != null && prevState.EndsWith(_maximised))
+                    writeSubKey(Keys.WindowKey, prevState);
+                else
+                    writeSubKey(Keys.WindowKey, prevState + ";" + _maximised);
+            }
+            else
+            {
+                writeSubKey(Keys.WindowKey, window.Width + "," + window.Height + ";" + window.Left + "," + window.Top);
+            }
         }
 
 
@@ -41,8 +52,8 @@ namespace CTecUtil
             var prevState = (string)readSubKey(Keys.WindowKey);
             if (prevState is not null)
             {
-                if (prevState.StartsWith(_maximised))
-                    return WindowState.Maximized;
+                //if (prevState.StartsWith(_maximised))
+                //    return WindowState.Maximized;
                 
                 var size_pos = prevState.Split(new char[] { ';' });
 
@@ -59,6 +70,10 @@ namespace CTecUtil
                     window.Left = x_y.X;
                     window.Top = x_y.Y;
                 }
+
+                if (size_pos.Length > 2)
+                    if (size_pos[2] == _maximised)
+                        return WindowState.Maximized;
             }
 
             return WindowState.Normal;
