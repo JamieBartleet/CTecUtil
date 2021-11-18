@@ -89,14 +89,15 @@ namespace CTecUtil
 
         
         public static void SaveSerialPortSettings(SerialPortSettings settings)
-            => writeSubKey(Keys.SerialPortKey, "n=" + settings.PortName
-                                            + ",b=" + settings.BaudRate
-                                            + ",h=" + settings.Handshake
-                                            + ",p=" + settings.Parity
-                                            + ",d=" + settings.DataBits
-                                            + ",s=" + settings.StopBits
-                                            + ",r=" + settings.ReadTimeout
-                                            + ",w=" + settings.WriteTimeout);
+            => writeSubKey(Keys.SerialPortKey, "Port=" + settings.PortName
+                                                       //+ ",Baud=" + settings.BaudRate
+                                                       //+ ",Handshake=" + settings.Handshake
+                                                       //+ ",Parity=" + settings.Parity
+                                                       //+ ",DataBits=" + settings.DataBits
+                                                       //+ ",StopBits=" + settings.StopBits
+                                                       //+ ",ReadTimeout=" + settings.ReadTimeout
+                                                       //+ ",WriteTimeout=" + settings.WriteTimeout
+                                                    );
 
         public static SerialPortSettings ReadSerialPortSettings()
         {
@@ -112,16 +113,16 @@ namespace CTecUtil
                     var param = s.Split(new char[] { '=' });
                     if (param.Length > 1)
                     {
-                        switch (param?[0][0])
+                        switch (param?[0].ToLower())
                         {
-                            case 'n': result.PortName     = param[1]; break;
-                            case 'b': result.BaudRate     = parseInt(param[1], 9600); break;
-                            case 'h': result.Handshake    = parseHandshake(param[1]); break;
-                            case 'p': result.Parity       = parseParity(param[1]); break;
-                            case 'd': result.DataBits     = parseInt(param[1], 8); break;
-                            case 's': result.StopBits     = parseStopBits(param[1]); break;
-                            case 'r': result.ReadTimeout  = parseInt(param[1], 500); break;
-                            case 'w': result.WriteTimeout = parseInt(param[1], 500); break;
+                            case "port":         result.PortName     = param[1]; break;
+                            //case "baud":         result.BaudRate     = parseInt(param[1], 9600); break;
+                            //case "handshake":    result.Handshake    = parseHandshake(param[1]); break;
+                            //case "parity":       result.Parity       = parseParity(param[1]); break;
+                            //case "databits":     result.DataBits     = parseInt(param[1], 8); break;
+                            //case "stopbits":     result.StopBits     = parseStopBits(param[1]); break;
+                            //case "readtimeout":  result.ReadTimeout  = parseInt(param[1], 500); break;
+                            //case "writetimeout": result.WriteTimeout = parseInt(param[1], 500); break;
                         }
                     }
                 }

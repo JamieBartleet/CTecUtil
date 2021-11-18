@@ -17,7 +17,7 @@ namespace CTecUtil.IO
     {
         static SerialComms()
         {
-            _settings = CTecUtil.Registry.ReadSerialPortSettings();
+            _settings = Registry.ReadSerialPortSettings();
             _progressBarWindow.OnCancel = CancelCommandQueue;
         }
 
@@ -36,7 +36,7 @@ namespace CTecUtil.IO
 
         public static Window OwnerWindow { get; set; }
 
-        private static SerialPortSettings _settings = new();
+        private static SerialPortSettings _settings;
         public static SerialPortSettings Settings { get => _settings; }
 
         /// <summary>Use of this delegate allows house style message box to be used</summary>

@@ -9,6 +9,18 @@ namespace CTecUtil.IO
 {
     public class SerialPortSettings
     {
+        public SerialPortSettings()
+        {
+            //defaults
+            BaudRate     = 9600;
+            Handshake    = Handshake.None;
+            Parity       = Parity.None;
+            DataBits     = 8;
+            StopBits     = StopBits.One;
+            ReadTimeout  = 5000;
+            WriteTimeout = 500;
+        }
+
         public string    PortName { get; set; }
         public int       BaudRate { get; set; }
         public Handshake Handshake { get; set; }
