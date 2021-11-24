@@ -10,7 +10,7 @@
         AllowsTransparency="True"
         WindowStyle="None"
         Style="{StaticResource CTecMessageBoxStyle}"
-        Width="240" Height="140"
+        Width="250" Height="150"
         Title="ProgressBarWindow">
     
     <Grid>
@@ -18,14 +18,14 @@
                 BorderBrush="#707070" 
                 BorderThickness="2"
                 CornerRadius="10"
-                Margin="5">
+                Margin="10">
 
                 <Border.Effect>
                     <DropShadowEffect Color="Black"
                                       Direction="290"
-                                      BlurRadius="7"
+                                      BlurRadius="10"
                                       ShadowDepth="2"
-                                      Opacity="0.2"/>
+                                      Opacity="0.3"/>
                 </Border.Effect>
 
                 <StackPanel Grid.Column="0" Grid.Row="0"

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace CTecUtil
@@ -32,5 +33,9 @@ namespace CTecUtil
                 result.Append(string.Format("{0:X2} ", b));
             return result.ToString().Trim();
         }
+
+
+        public static bool IsNumeric(string text)  => new Regex("^[0-9]+").IsMatch(text);
+
     }
 }
