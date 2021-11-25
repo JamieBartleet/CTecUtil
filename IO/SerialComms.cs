@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Windows;
 using System.Windows.Threading;
 using CTecUtil.UI;
@@ -52,6 +53,59 @@ namespace CTecUtil.IO
 
         public static byte AckByte { get; set; }
         public static byte NakByte { get; set; }
+        
+        
+        /// <summary>
+        /// True if the comms link to the panel is alive.
+        /// </summary>
+        internal static bool IsAlive { get; set; }
+
+
+        /// <summary>
+        /// Set to true when the EventLogViewer page is active so that the correct KeepAlive byte is sent to the panel
+        /// </summary>
+        internal static bool LoggingMode { get; set; }
+
+
+        #region Keep Alive
+        private static System.Timers.Timer _keepAliveTimer;
+        private static CommsTimer _keepAliveResponseTimer = new();
+
+
+        private static byte[] _keepAliveCommand;
+        public static byte[] KeepAliveCommand
+        {
+            set
+            {
+                var start = _keepAliveCommand is null;
+                _keepAliveCommand = value;
+
+                if (start)
+                {
+                    _keepAliveTimer = new()
+                    {
+                        AutoReset = true,
+                        Enabled = true,
+                        Interval = 3000
+                    };
+                    _keepAliveTimer.Elapsed += new(sendKeepAlive);
+                }
+            }
+        }
+
+
+        private static void sendKeepAlive(object sender, ElapsedEventArgs e)
+        {
+            _keepAliveResponseTimer.Start(2000);
+            SendData(new Command() { CommandData = _keepAliveCommand, DataReceiver = keepAliveResponse });
+        }
+
+
+        private static void keepAliveResponse(byte[] incomingData, int index = -1)
+        {
+            IsAlive = !_keepAliveResponseTimer.TimedOut;
+        }
+        #endregion
 
 
         /// <summary>
@@ -190,30 +244,35 @@ namespace CTecUtil.IO
         }
 
 
-        private static void SendData(Command command)
+        private static object _sendLock = new();
+
+        public static void SendData(Command command)
         {
-            _lastException = null;
-
-            if (command != null)
+            lock (_sendLock)
             {
-                command.Tries++;
-                //Debug.WriteLine(DateTime.Now + " - SendData() - (try=" + command.Tries + ")  [" + command.ToString() + "]");
+                _lastException = null;
 
-                try
+                if (command != null)
                 {
-                    if (_port is null)
-                        _port = newSerialPort();
+                    command.Tries++;
+                    //Debug.WriteLine(DateTime.Now + " - SendData() - (try=" + command.Tries + ")  [" + command.ToString() + "]");
 
-                    if (!_port.IsOpen)
-                        _port.Open();
+                    try
+                    {
+                        if (_port is null)
+                            _port = newSerialPort();
 
-                    _port.DiscardInBuffer();
-                    _port.DiscardOutBuffer();
-                    _port.Write(command.CommandData, 0, command.CommandData.Length);
-                }
-                catch (Exception ex)
-                {
-                    error(Cultures.Resources.Error_Serial_Port, ex);
+                        if (!_port.IsOpen)
+                            _port.Open();
+
+                        _port.DiscardInBuffer();
+                        _port.DiscardOutBuffer();
+                        _port.Write(command.CommandData, 0, command.CommandData.Length);
+                    }
+                    catch (Exception ex)
+                    {
+                        error(Cultures.Resources.Error_Serial_Port, ex);
+                    }
                 }
             }
         }
