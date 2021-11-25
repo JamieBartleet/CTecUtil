@@ -20,6 +20,10 @@ namespace CTecUtil.IO
         }
 
 
+        public delegate void TimeoutHandler();
+        public TimeoutHandler OnTimedOut;
+
+
         private Timer _timer = new();
         
 
@@ -57,8 +61,9 @@ namespace CTecUtil.IO
         private void onTimedCommsEvent(object source, ElapsedEventArgs e)
         {
             Debug.WriteLine(DateTime.Now + " - ***** CommsTimer TimedOut *****");
-            TimedOut = true;
             _timer.Stop();
+            TimedOut = true;
+            OnTimedOut?.Invoke();
         }
 
 

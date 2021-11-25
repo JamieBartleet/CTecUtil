@@ -11,6 +11,7 @@ using System.Timers;
 using System.Windows;
 using System.Windows.Threading;
 using CTecUtil.UI;
+using static CTecUtil.IO.CommsTimer;
 
 namespace CTecUtil.IO
 {
@@ -20,6 +21,7 @@ namespace CTecUtil.IO
         {
             _settings = Registry.ReadSerialPortSettings();
             _progressBarWindow.OnCancel = CancelCommandQueue;
+            _keepAliveResponseTimer.OnTimedOut = new(() => { OnConnectionStatusChange?.Invoke(false); });
         }
 
 
@@ -68,6 +70,10 @@ namespace CTecUtil.IO
 
 
         #region Keep Alive
+        public delegate void ConnectionStatusChangeHandler(bool connected);
+        public static ConnectionStatusChangeHandler OnConnectionStatusChange;
+
+
         private static System.Timers.Timer _keepAliveTimer;
         private static CommsTimer _keepAliveResponseTimer = new();
 
@@ -291,6 +297,8 @@ namespace CTecUtil.IO
 
             try
             {
+                OnConnectionStatusChange?.Invoke(true);
+
                 var incoming = readIncomingData(port);
 
                 //Debug.WriteLine(DateTime.Now + " -   incoming: [" + Utils.ByteArrayToString(incoming) + "]");
@@ -364,7 +372,7 @@ namespace CTecUtil.IO
             try
             {
                 //1.5 sec timeout
-                _timer.Start(1500);
+                _timer.Start(51500);
 
                 //wait for buffering [sometimes dataReceived() is called by the port when BytesToRead is still zero]
                 while (port.BytesToRead == 0)
