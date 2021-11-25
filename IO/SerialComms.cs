@@ -58,7 +58,7 @@ namespace CTecUtil.IO
         /// <summary>
         /// True if the comms link to the panel is alive.
         /// </summary>
-        internal static bool IsAlive { get; set; }
+        internal static bool IsAlive { get => !_keepAliveResponseTimer.TimedOut; }
 
 
         /// <summary>
@@ -96,15 +96,15 @@ namespace CTecUtil.IO
 
         private static void sendKeepAlive(object sender, ElapsedEventArgs e)
         {
-            _keepAliveResponseTimer.Start(2000);
-            SendData(new Command() { CommandData = _keepAliveCommand, DataReceiver = keepAliveResponse });
+            _keepAliveResponseTimer.Start(5000);
+            SendData(new Command() { CommandData = _keepAliveCommand });
         }
 
 
-        private static void keepAliveResponse(byte[] incomingData, int index = -1)
-        {
-            IsAlive = !_keepAliveResponseTimer.TimedOut;
-        }
+        //private static void keepAliveResponse(byte[] incomingData, int index = -1)
+        //{
+        //    IsAlive = !_keepAliveResponseTimer.TimedOut;
+        //}
         #endregion
 
 
