@@ -27,6 +27,23 @@ namespace CTecUtil
         
         public static string ByteArrayToString(byte[] data)
         {
+            if (data is null) return "";
+            var result = new StringBuilder();
+            foreach (var b in data)
+            {
+                if (b >= 0x20 && b < 0x7f)
+                    result.Append((char)b);
+                else if (b == 0x0a)
+                    result.Append("\r");
+                else if (b == 0x0d)
+                    result.Append("\n");
+            }
+            return result.ToString();
+        }
+
+        
+        public static string ByteArrayToHexString(byte[] data)
+        {
             if (data is null) return "*empty*";
             var result = new StringBuilder();
             foreach (var b in data)

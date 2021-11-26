@@ -21,19 +21,39 @@ namespace CTecUtil.IO
         {
             _settings = Registry.ReadSerialPortSettings();
             _progressBarWindow.OnCancel = CancelCommandQueue;
-            _keepAliveResponseTimer.OnTimedOut = new(() => { OnConnectionStatusChange?.Invoke(false); });
+            _keepAliveResponseTimer.OnTimedOut = new(() => { OnConnectionStatusChange?.Invoke(ConnectionStatus.Disconnected); });
+        }
+
+
+        /// <summary>Status of the serial connection</summary>
+        public enum ConnectionStatus
+        {
+            /// <summary>Comms is disconnected</summary>
+            Disconnected,
+
+            /// <summary>Comms is in a listening state</summary>
+            Listening,
+
+            /// <summary>Comms is actively connected</summary>
+            Connected
         }
 
 
         public enum Direction { Idle, Up, Down }
 
 
-        private static SerialPort   _port;
+        private static SerialPort _port;
         private static CommandQueue _commandQueue = new();
-        private static CommsTimer   _timer = new();
-        private static Exception    _lastException = null;
+        private static CommsTimer _timer = new();
+        private static Exception _lastException = null;
 
         
+        public delegate void ReceivedResponseDataHandler(byte[] incomingData, int index = -1);
+
+        public delegate void ReceivedListenerDataHandler(byte[] incomingData);
+        public static ReceivedListenerDataHandler ListenerDataReceiver;
+
+
         public delegate void ProgressMaxSetter(int maxValue);
         public delegate void ProgressValueUpdater(int value);
 
@@ -55,22 +75,22 @@ namespace CTecUtil.IO
 
         public static byte AckByte { get; set; }
         public static byte NakByte { get; set; }
-        
-        
-        /// <summary>
-        /// True if the comms link to the panel is alive.
-        /// </summary>
-        internal static bool IsAlive { get => !_keepAliveResponseTimer.TimedOut; }
+
+
+        ///// <summary>
+        ///// True if the comms link to the panel is alive.
+        ///// </summary>
+        //internal static bool IsAlive { get => !_keepAliveResponseTimer.TimedOut; }
 
 
         /// <summary>
         /// Set to true when the EventLogViewer page is active so that the correct KeepAlive byte is sent to the panel
         /// </summary>
-        internal static bool LoggingMode { get; set; }
+        public static bool ListenerMode { get; set; }
 
 
         #region Keep Alive
-        public delegate void ConnectionStatusChangeHandler(bool connected);
+        public delegate void ConnectionStatusChangeHandler(ConnectionStatus status);
         public static ConnectionStatusChangeHandler OnConnectionStatusChange;
 
 
@@ -105,12 +125,6 @@ namespace CTecUtil.IO
             _keepAliveResponseTimer.Start(5000);
             SendData(new Command() { CommandData = _keepAliveCommand });
         }
-
-
-        //private static void keepAliveResponse(byte[] incomingData, int index = -1)
-        //{
-        //    IsAlive = !_keepAliveResponseTimer.TimedOut;
-        //}
         #endregion
 
 
@@ -176,7 +190,7 @@ namespace CTecUtil.IO
         /// <param name="commandData">The command data.</param>
         /// <param name="dataReceiver">Handler to which the response will be sent.</param>
         /// <param name="index">(Optional) the index of the item requested - for the case where the index is not included in the response data (e.g. devices).</param>
-        public static void EnqueueCommand(byte[] commandData, Command.ReceivedDataHandler dataReceiver, int? index = null)
+        public static void EnqueueCommand(byte[] commandData, ReceivedResponseDataHandler dataReceiver, int? index = null)
             => _commandQueue.Enqueue(new Command() { CommandData = commandData, DataReceiver = dataReceiver, Index = index });
 
 
@@ -189,7 +203,7 @@ namespace CTecUtil.IO
 
 
         public static void StartSendingCommandQueue(Task onStart, Task onEnd)
-        {            
+        {
             if (_commandQueue.TotalCommandCount > 2)
                 ShowProgressBarWindow(onStart, onEnd);
             else
@@ -201,7 +215,7 @@ namespace CTecUtil.IO
         {
             //Debug.WriteLine(DateTime.Now + " - CancelCommandQueue()");
             _timer.Stop();
-            _commandQueue?.Clear();            
+            _commandQueue?.Clear();
             Thread.Sleep(500);
         }
 
@@ -238,7 +252,7 @@ namespace CTecUtil.IO
                             error(_commandQueue.Direction == Direction.Up ? Cultures.Resources.Error_Upload_Timeout : Cultures.Resources.Error_Download_Timeout, _lastException);
                         else if (_lastException is FormatException)
                             error(Cultures.Resources.Error_Checksum_Fail, _lastException);
-                        else 
+                        else
                             error(_commandQueue.Direction == Direction.Up ? Cultures.Resources.Error_Uploading_Data : Cultures.Resources.Error_Downloading_Data, _lastException);
                     }
                     else
@@ -287,19 +301,26 @@ namespace CTecUtil.IO
         /// <summary>
         /// called by port on reception of data
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private static async void dataReceived(object sender, SerialDataReceivedEventArgs e)
+        private static void dataReceived(object sender, SerialDataReceivedEventArgs e)
         {
             var port = sender as SerialPort;
-            if (port == null || port.BytesToRead == 0)
+            if (port == null)
                 return;
 
+            if (ListenerMode)
+                ListenerDataReceived(port);
+            else
+                ResponseDataReceived(port);
+        }
+
+
+        private static async void ResponseDataReceived(SerialPort port)
+        {
             try
             {
-                OnConnectionStatusChange?.Invoke(true);
+                OnConnectionStatusChange?.Invoke(ConnectionStatus.Connected);
 
-                var incoming = readIncomingData(port);
+                var incoming = readIncomingResponse(port);
 
                 //Debug.WriteLine(DateTime.Now + " -   incoming: [" + Utils.ByteArrayToString(incoming) + "]");
 
@@ -367,7 +388,7 @@ namespace CTecUtil.IO
         }
 
 
-        private static byte[] readIncomingData(SerialPort port)
+        private static byte[] readIncomingResponse(SerialPort port)
         {
             try
             {
@@ -388,13 +409,11 @@ namespace CTecUtil.IO
                 if (isAck(header[0]) || isNak(header[0]))
                     return new byte[] { header[0] };
 
-               // if (header[0] != _commandQueue.Peek().CommandData[2])
-
 
                 //read payload length byte
                 while (port.BytesToRead == 0)
                 {
-                    Thread.Sleep(20);
+                    //Thread.Sleep(20);
                     if (_timer.TimedOut)
                         throw new TimeoutException();
                 }
@@ -413,11 +432,9 @@ namespace CTecUtil.IO
                     while (port.BytesToRead == 0)
                     {
                         //Debug.WriteLine(DateTime.Now + " -    wait - expecting " + payloadLength + " bytes payload");
-                        Thread.Sleep(20);
+                        //Thread.Sleep(20);
                         if (_timer.TimedOut)
                             throw new TimeoutException();
-                        //if (_commandQueue.TotalCommandCount == 0)
-                        //    return null;
                     }
 
                     //Debug.WriteLine(DateTime.Now + " -   read " + port.BytesToRead + " bytes");
@@ -431,6 +448,62 @@ namespace CTecUtil.IO
 
                 if (!CheckChecksum(buffer))
                     throw new FormatException();
+
+                return buffer;
+            }
+            finally
+            {
+                _timer.Stop();
+                port.DiscardInBuffer();
+            }
+        }
+
+
+        private static async void ListenerDataReceived(SerialPort port)
+        {
+            try
+            {
+                OnConnectionStatusChange?.Invoke(ConnectionStatus.Listening);
+
+                var incoming = readIncomingListenerData(port);
+
+                //Debug.WriteLine(DateTime.Now + " -   incoming: [" + Utils.ByteArrayToString(incoming) + "]");
+
+                if (incoming != null && ListenerDataReceiver != null)
+                {
+                    //send response to data receiver
+                    await Task.Run(new Action(() =>
+                    {
+                        ListenerDataReceiver?.Invoke(incoming);
+                    }));
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(DateTime.Now + " -   **Exception** " + ex.Message);
+                _lastException = ex;
+                ResendCommand();
+            }
+        }
+
+
+        private static byte[] readIncomingListenerData(SerialPort port)
+        {
+            try
+            {
+                //1.5 sec timeout
+                _timer.Start(2500);
+
+                //wait for buffering [sometimes dataReceived() is called by the port when BytesToRead is still zero]
+                while (port.BytesToRead == 0)
+                {
+                    if (_timer.TimedOut)
+                        throw new TimeoutException();
+                }
+
+                var numBytes = port.BytesToRead;
+                byte[] buffer = new byte[numBytes];
+                port.Read(buffer, 0, numBytes);
 
                 return buffer;
             }
@@ -490,8 +563,12 @@ namespace CTecUtil.IO
 
         private static void error(string message, Exception ex = null)
         {
+            //check quque - avoids erroring on KeepAlive fail
+            var showError = _commandQueue.TotalCommandCount > 0;
             CancelCommandQueue();
-            ShowErrorMessage?.Invoke(message + "\n\n" + ex?.Message);
+            OnConnectionStatusChange?.Invoke(ConnectionStatus.Disconnected);
+            if (showError)
+                ShowErrorMessage?.Invoke(message + "\n\n" + ex?.Message);
         }
 
 

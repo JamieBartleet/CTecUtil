@@ -8,9 +8,6 @@ namespace CTecUtil.IO
 {
     public class Command
     {
-        public delegate void ReceivedDataHandler(byte[] incomingData, int index = -1);
-
-
         /// <summary>The command data</summary>
         public byte[] CommandData { get; set; }
 
@@ -19,8 +16,8 @@ namespace CTecUtil.IO
         public int Tries { get; set; }
 
         /// <summary>Handler to which the response will be sent.</summary>
-        public ReceivedDataHandler DataReceiver { get; set; }
+        public SerialComms.ReceivedResponseDataHandler DataReceiver { get; set; }
 
-        public override string ToString() => Utils.ByteArrayToString(CommandData);
+        public override string ToString() => Utils.ByteArrayToHexString(CommandData);
     }
 }
