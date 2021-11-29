@@ -56,9 +56,11 @@ namespace CTecUtil.UI
         public CancelHandler OnCancel;
 
 
-        public void UpdateProgress(string subqueueName, int valueOverall, int valueSubqueue)
+        public void UpdateProgress(List<string> subqueueNames, int valueOverall, int valueSubqueue)
         {
-            txtSubqueueName.Text = subqueueName;
+            txtSubqueueName.Text           = subqueueNames.Count > 0 ? subqueueNames[0] : "";
+            txtNextSubqueueName.Text       = subqueueNames.Count > 1 ? subqueueNames[1] : "";
+            txtNextSubqueueNameButOne.Text = subqueueNames.Count > 2 ? subqueueNames[2] : "";
             pbProgressOverall.Value = (double)valueOverall / ProgressBarOverallMax * 100;
             pbProgressSubqueue.Value = valueSubqueue;
             txtProgressSubqueue.Text = valueSubqueue + " / " + ProgressBarSubqueueMax;

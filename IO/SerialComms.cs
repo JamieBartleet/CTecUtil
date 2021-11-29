@@ -21,13 +21,16 @@ namespace CTecUtil.IO
         {
             _settings = Registry.ReadSerialPortSettings();
             _progressBarWindow.OnCancel = CancelCommandQueue;
-            _keepAliveResponseTimer.OnTimedOut = new(() => { OnConnectionStatusChange?.Invoke(ConnectionStatus.Disconnected); });
+            _pingResponseTimer.OnTimedOut = new(() => { OnConnectionStatusChange?.Invoke(ConnectionStatus.Disconnected); });
         }
 
 
         /// <summary>Status of the serial connection</summary>
         public enum ConnectionStatus
         {
+            /// <summary>Comms status is unknown</summary>
+            Unknown,
+
             /// <summary>Comms is disconnected</summary>
             Disconnected,
 
@@ -77,53 +80,53 @@ namespace CTecUtil.IO
         public static byte NakByte { get; set; }
 
 
-        ///// <summary>
-        ///// True if the comms link to the panel is alive.
-        ///// </summary>
-        //internal static bool IsAlive { get => !_keepAliveResponseTimer.TimedOut; }
-
-
+        private static bool _listenerMode;
         /// <summary>
-        /// Set to true when the EventLogViewer page is active so that the correct KeepAlive byte is sent to the panel
+        /// Set to true when the EventLogViewer page is active so that the correct ping command is sent to the panel
         /// </summary>
-        public static bool ListenerMode { get; set; }
+        public static bool ListenerMode { get => _listenerMode; set { if (_listenerMode = value) OnConnectionStatusChange?.Invoke(ConnectionStatus.Listening); } }
 
 
-        #region Keep Alive
+        #region ping
         public delegate void ConnectionStatusChangeHandler(ConnectionStatus status);
         public static ConnectionStatusChangeHandler OnConnectionStatusChange;
 
 
-        private static System.Timers.Timer _keepAliveTimer;
-        private static CommsTimer _keepAliveResponseTimer = new();
+        private static System.Timers.Timer _pingTimer;
+        private static CommsTimer _pingResponseTimer = new();
 
 
-        private static byte[] _keepAliveCommand;
-        public static byte[] KeepAliveCommand
+        private static byte[] _pingCommand;
+        public static void SetPingCommand(byte[] command)
         {
-            set
-            {
-                var start = _keepAliveCommand is null;
-                _keepAliveCommand = value;
+            var start = _pingCommand is null;
+            _pingCommand = command;
 
-                if (start)
+            if (start)
+            {
+                _pingTimer = new()
                 {
-                    _keepAliveTimer = new()
-                    {
-                        AutoReset = true,
-                        Enabled = true,
-                        Interval = 3000
-                    };
-                    _keepAliveTimer.Elapsed += new(sendKeepAlive);
-                }
+                    AutoReset = true,
+                    Enabled = true,
+                    Interval = 3000
+                };
+                _pingTimer.Elapsed += new(sendPing);
             }
         }
 
 
-        private static void sendKeepAlive(object sender, ElapsedEventArgs e)
+        private static void sendPing(object sender, ElapsedEventArgs e)
         {
-            _keepAliveResponseTimer.Start(5000);
-            SendData(new Command() { CommandData = _keepAliveCommand });
+            //ping the panel if there is no active upload/download
+            if (_commandQueue.SubqueueCount == 0)
+            {
+                _pingResponseTimer.Start(5000);
+                SendData(new Command() { CommandData = _pingCommand });
+            }
+            else
+            {
+                _pingResponseTimer.Stop();
+            }
         }
         #endregion
 
@@ -242,7 +245,7 @@ namespace CTecUtil.IO
             {
                 Debug.WriteLine(DateTime.Now + " - ResendCommand()");
 
-                if (cmd.Tries > 9)
+                if (cmd.Tries > 19)
                 {
                     //the number of retries on the current command is excessive
                     // - report the last-noted exception (if any)
@@ -393,12 +396,12 @@ namespace CTecUtil.IO
             try
             {
                 //1.5 sec timeout
-                _timer.Start(51500);
+                _timer.Start(2000);
 
                 //wait for buffering [sometimes dataReceived() is called by the port when BytesToRead is still zero]
                 while (port.BytesToRead == 0)
                 {
-                    Thread.Sleep(20);
+                    Thread.Sleep(10);
                     if (_timer.TimedOut)
                         throw new TimeoutException();
                 }
@@ -563,7 +566,7 @@ namespace CTecUtil.IO
 
         private static void error(string message, Exception ex = null)
         {
-            //check quque - avoids erroring on KeepAlive fail
+            //check quque - avoids erroring on ping fail
             var showError = _commandQueue.TotalCommandCount > 0;
             CancelCommandQueue();
             OnConnectionStatusChange?.Invoke(ConnectionStatus.Disconnected);
@@ -651,7 +654,7 @@ namespace CTecUtil.IO
                 }
 
                 //report progress
-                Application.Current.Dispatcher.Invoke(new Action(() => _progressBarWindow.UpdateProgress(_commandQueue?.CurrentSubqueueName, _progressOverall, _progressWithinSubqueue)), DispatcherPriority.Normal);
+                Application.Current.Dispatcher.Invoke(new Action(() => _progressBarWindow.UpdateProgress(_commandQueue?.SubqueueNames, _progressOverall, _progressWithinSubqueue)), DispatcherPriority.Normal);
                 Thread.Sleep(100);
             }
             

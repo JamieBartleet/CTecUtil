@@ -39,6 +39,12 @@ namespace CTecUtil.IO
 
 
         /// <summary>
+        /// Name attached to the first subqueue (i.e. the one currently being serviced)
+        /// </summary>
+        public List<string> SubqueueNames { get => _subqueues.Select(sq => sq.Name).ToList(); }
+
+
+        /// <summary>
         /// Add a new subqueue to the queue
         /// </summary>
         /// <param name="commandQueue"></param>

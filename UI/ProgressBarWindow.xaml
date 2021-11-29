@@ -46,9 +46,11 @@
                     <TextBlock Name="txtProgressSubqueue" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="8"/>
                 </Grid>
 
-                    <TextBlock Name="txtSubqueueName" HorizontalAlignment="Center" FontSize="9"/>
+                <TextBlock Name="txtSubqueueName" HorizontalAlignment="Center" FontSize="9" Margin="0,-1,0,0"/>
+                <TextBlock Name="txtNextSubqueueName" HorizontalAlignment="Center" FontSize="8" Opacity="0.5" Margin="0,-2,0,0"/>
+                <TextBlock Name="txtNextSubqueueNameButOne" HorizontalAlignment="Center" FontSize="7" Opacity="0.3" Margin="0,-3,0,0"/>
 
-                <Grid HorizontalAlignment="Center" Margin="0,15,0,0">
+                <Grid HorizontalAlignment="Center" Margin="0,0,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
