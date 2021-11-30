@@ -182,6 +182,5 @@ namespace CTecUtil
                 _ => "*"
             };
         }
-
     }
 }

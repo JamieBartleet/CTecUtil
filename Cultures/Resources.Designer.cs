@@ -61,6 +61,33 @@ namespace CTecUtil.Cultures {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Connected.
+        /// </summary>
+        public static string Comms_Connected {
+            get {
+                return ResourceManager.GetString("Comms_Connected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Disconnected.
+        /// </summary>
+        public static string Comms_Disconnected {
+            get {
+                return ResourceManager.GetString("Comms_Disconnected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Listening for data.
+        /// </summary>
+        public static string Comms_Listening {
+            get {
+                return ResourceManager.GetString("Comms_Listening", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid data was received from the panel..
         /// </summary>
         public static string Error_Checksum_Fail {

@@ -58,9 +58,11 @@ namespace CTecUtil.UI
 
         public void UpdateProgress(List<string> subqueueNames, int valueOverall, int valueSubqueue)
         {
-            txtSubqueueName.Text           = subqueueNames.Count > 0 ? subqueueNames[0] : "";
-            txtNextSubqueueName.Text       = subqueueNames.Count > 1 ? subqueueNames[1] : "";
-            txtNextSubqueueNameButOne.Text = subqueueNames.Count > 2 ? subqueueNames[2] : "";
+            txtSubqueueName.Text = subqueueNames.Count > 0 ? subqueueNames[0] : "";
+            txtNext1.Text        = subqueueNames.Count > 1 ? subqueueNames[1] : "";
+            txtNext2.Text        = subqueueNames.Count > 2 ? subqueueNames[2] : "";
+            txtNext3.Text        = subqueueNames.Count > 3 ? subqueueNames[3] : "";
+            txtNext4.Text        = subqueueNames.Count > 4 ? subqueueNames[4] : "";
             pbProgressOverall.Value = (double)valueOverall / ProgressBarOverallMax * 100;
             pbProgressSubqueue.Value = valueSubqueue;
             txtProgressSubqueue.Text = valueSubqueue + " / " + ProgressBarSubqueueMax;

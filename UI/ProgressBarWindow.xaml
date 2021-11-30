@@ -10,7 +10,7 @@
         AllowsTransparency="True"
         WindowStyle="None"
         Style="{StaticResource CTecMessageBoxStyle}"
-        Width="250" Height="150"
+        Width="250" Height="142"
         Title="ProgressBarWindow">
     
     <Grid>
@@ -38,23 +38,30 @@
                     <ProgressBar Name="pbProgressOverall" Height="18" Width="200" Value="0" Minimum="0" Maximum="100" Foreground="DeepSkyBlue" BorderBrush="{StaticResource Brush06}"/>
 
                     <!-- Progress as a percentage - binds 'Value' property of ProgressBar control to TextBlock Text -->
-                    <TextBlock Name="txtProgress" Text="{Binding ElementName=pbProgressOverall, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <TextBlock Name="txtProgress" Text="{Binding ElementName=pbProgressOverall, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0"/>
                 </Grid>
 
                 <Grid Margin="0,5,0,0">
                     <ProgressBar Name="pbProgressSubqueue" Height="10" Width="200" Value="0" Minimum="0" Foreground="Orchid" BorderBrush="{StaticResource Brush06}"/>
-                    <TextBlock Name="txtProgressSubqueue" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="8"/>
+                    <TextBlock Name="txtProgressSubqueue" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="8" Margin="0"/>
                 </Grid>
 
-                <TextBlock Name="txtSubqueueName" HorizontalAlignment="Center" FontSize="9" Margin="0,-1,0,0"/>
-                <TextBlock Name="txtNextSubqueueName" HorizontalAlignment="Center" FontSize="8" Opacity="0.5" Margin="0,-2,0,0"/>
-                <TextBlock Name="txtNextSubqueueNameButOne" HorizontalAlignment="Center" FontSize="7" Opacity="0.3" Margin="0,-3,0,0"/>
+                <Grid>
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Name="txtSubqueueName" HorizontalAlignment="Center" FontSize="9" Margin="0,0,0,0"/>
+                        <!-- TODO: (couldn't get ListView to work here) -->
+                        <TextBlock Name="txtNext1" HorizontalAlignment="Center" FontSize="7.5" Opacity="0.5" Margin="0,-1,0,0"/>
+                        <TextBlock Name="txtNext2" HorizontalAlignment="Center" FontSize="7.5" Opacity="0.5" Margin="0,-2,0,0"/>
+                        <TextBlock Name="txtNext3" HorizontalAlignment="Center" FontSize="7.5" Opacity="0.5" Margin="0,-2,0,0"/>
+                        <TextBlock Name="txtNext4" HorizontalAlignment="Center" FontSize="7.5" Opacity="0.5" Margin="0,-2,0,0"/>
+                    </StackPanel>
 
-                <Grid HorizontalAlignment="Center" Margin="0,0,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <Button Content="{Binding Path=Option_Cancel, Source={StaticResource Resources}}" Click="Button_Click"/>
+                    <Grid HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Content="{Binding Path=Option_Cancel, Source={StaticResource Resources}}" Click="Button_Click" Height="26"/>
+                    </Grid>
                 </Grid>
 
             </StackPanel>

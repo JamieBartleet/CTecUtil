@@ -144,4 +144,13 @@
   <data name="Error_Uploading_Data" xml:space="preserve">
     <value>An error occurred while sending data to the panel.</value>
   </data>
+  <data name="Comms_Connected" xml:space="preserve">
+    <value>Connected</value>
+  </data>
+  <data name="Comms_Disconnected" xml:space="preserve">
+    <value>Disconnected</value>
+  </data>
+  <data name="Comms_Listening" xml:space="preserve">
+    <value>Listening for data</value>
+  </data>
 </root>
