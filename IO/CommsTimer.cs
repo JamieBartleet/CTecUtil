@@ -33,6 +33,9 @@ namespace CTecUtil.IO
         public bool  TimedOut { get; set; }
 
 
+        //public double Interval { get => _timer.Interval; set => _timer.Interval = value; }
+
+
         /// <summary>
         /// (Re)start the timer with the specified timeout period (ms)
         /// </summary>

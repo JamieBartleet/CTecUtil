@@ -21,7 +21,7 @@ namespace CTecUtil.IO
         {
             _settings = Registry.ReadSerialPortSettings();
             _progressBarWindow.OnCancel = CancelCommandQueue;
-            _pingResponseTimer.OnTimedOut = new(() => { OnConnectionStatusChange?.Invoke(ConnectionStatus.Disconnected); });
+            _responseTimer.OnTimedOut = new(() => OnConnectionStatusChange?.Invoke(ConnectionStatus.Disconnected));
         }
 
 
@@ -92,8 +92,11 @@ namespace CTecUtil.IO
         public static ConnectionStatusChangeHandler OnConnectionStatusChange;
 
 
+        /// <summary>Timer for pinging the panel every few seconds</summary>
         private static System.Timers.Timer _pingTimer;
-        private static CommsTimer _pingResponseTimer = new();
+
+        /// <summary>Timer on response to SendData; the OnTimedOut event us used to notify the connection status</summary>
+        private static CommsTimer _responseTimer = new();
 
 
         private static byte[] _pingCommand;
@@ -111,21 +114,24 @@ namespace CTecUtil.IO
                     Interval = 3000
                 };
                 _pingTimer.Elapsed += new(sendPing);
+
+                //_pingResponseTimer = new();
+                //_pingResponseTimer.OnTimedOut = new(() => { OnConnectionStatusChange?.Invoke(ConnectionStatus.Disconnected); });
             }
         }
 
 
         private static void sendPing(object sender, ElapsedEventArgs e)
         {
-            //ping the panel if there is no active upload/download
+            //only ping the panel if there is no active upload/download
             if (_commandQueue.SubqueueCount == 0)
             {
-                _pingResponseTimer.Start(5000);
+                //_pingResponseTimer.Start(5000);
                 SendData(new Command() { CommandData = _pingCommand });
             }
             else
             {
-                _pingResponseTimer.Stop();
+                _responseTimer.Stop();
             }
         }
         #endregion
@@ -291,6 +297,8 @@ namespace CTecUtil.IO
                         _port.DiscardInBuffer();
                         _port.DiscardOutBuffer();
                         _port.Write(command.CommandData, 0, command.CommandData.Length);
+                
+                        _responseTimer.Start(5000);
                     }
                     catch (Exception ex)
                     {
@@ -321,9 +329,11 @@ namespace CTecUtil.IO
         {
             try
             {
-                OnConnectionStatusChange?.Invoke(ConnectionStatus.Connected);
 
                 var incoming = readIncomingResponse(port);
+                
+                _responseTimer.Stop();
+                OnConnectionStatusChange?.Invoke(ConnectionStatus.Connected);
 
                 //Debug.WriteLine(DateTime.Now + " -   incoming: [" + Utils.ByteArrayToString(incoming) + "]");
 
@@ -665,7 +675,7 @@ namespace CTecUtil.IO
             //Debug.WriteLine(DateTime.Now + " - finished?");
 
             //hide progress window if it hasn't already done it itself
-            Application.Current.Dispatcher.Invoke(new Action(() => { hideProgressBarWindow(); }), DispatcherPriority.Normal);
+            Application.Current.Dispatcher.Invoke(new Action(() => { hideProgressBarWindow(); }), DispatcherPriority.ApplicationIdle);
         }
         #endregion
 

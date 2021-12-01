@@ -18,7 +18,7 @@ namespace CTecUtil.UI.ViewHelpers
                                                                                                         {
                                                                                                             SerialComms.ConnectionStatus.Connected    => new SolidColorBrush(Colors.LimeGreen),
                                                                                                             SerialComms.ConnectionStatus.Listening    => new SolidColorBrush(Colors.Goldenrod),
-                                                                                                            SerialComms.ConnectionStatus.Disconnected => new SolidColorBrush(Colors.Firebrick),
+                                                                                                            SerialComms.ConnectionStatus.Disconnected => new SolidColorBrush(Colors.OrangeRed),
                                                                                                             _                                         => new SolidColorBrush(Colors.Transparent),
                                                                                                         };
 
