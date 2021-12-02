@@ -22,6 +22,7 @@ namespace CTecUtil.IO
             _settings = Registry.ReadSerialPortSettings();
             _progressBarWindow.OnCancel = CancelCommandQueue;
             _responseTimer.OnTimedOut = new(() => OnConnectionStatusChange?.Invoke(ConnectionStatus.Disconnected));
+            _responseTimer.Start(5000);
         }
 
 
@@ -55,6 +56,9 @@ namespace CTecUtil.IO
 
         public delegate void ReceivedListenerDataHandler(byte[] incomingData);
         public static ReceivedListenerDataHandler ListenerDataReceiver;
+
+        /// <summary>Timer on response to SendData; the OnTimedOut event us used to notify the connection status</summary>
+        private static CommsTimer _responseTimer = new();
 
 
         public delegate void ProgressMaxSetter(int maxValue);
@@ -95,9 +99,6 @@ namespace CTecUtil.IO
         /// <summary>Timer for pinging the panel every few seconds</summary>
         private static System.Timers.Timer _pingTimer;
 
-        /// <summary>Timer on response to SendData; the OnTimedOut event us used to notify the connection status</summary>
-        private static CommsTimer _responseTimer = new();
-
 
         private static byte[] _pingCommand;
         public static void SetPingCommand(byte[] command)
@@ -114,9 +115,6 @@ namespace CTecUtil.IO
                     Interval = 3000
                 };
                 _pingTimer.Elapsed += new(sendPing);
-
-                //_pingResponseTimer = new();
-                //_pingResponseTimer.OnTimedOut = new(() => { OnConnectionStatusChange?.Invoke(ConnectionStatus.Disconnected); });
             }
         }
 
@@ -125,14 +123,9 @@ namespace CTecUtil.IO
         {
             //only ping the panel if there is no active upload/download
             if (_commandQueue.SubqueueCount == 0)
-            {
-                //_pingResponseTimer.Start(5000);
                 SendData(new Command() { CommandData = _pingCommand });
-            }
-            else
-            {
-                _responseTimer.Stop();
-            }
+            //else
+            //    _responseTimer.Stop();
         }
         #endregion
 
@@ -297,8 +290,6 @@ namespace CTecUtil.IO
                         _port.DiscardInBuffer();
                         _port.DiscardOutBuffer();
                         _port.Write(command.CommandData, 0, command.CommandData.Length);
-                
-                        _responseTimer.Start(5000);
                     }
                     catch (Exception ex)
                     {
@@ -318,6 +309,8 @@ namespace CTecUtil.IO
             if (port == null)
                 return;
 
+            _responseTimer.Start(5000);
+
             if (ListenerMode)
                 ListenerDataReceived(port);
             else
@@ -332,7 +325,6 @@ namespace CTecUtil.IO
 
                 var incoming = readIncomingResponse(port);
                 
-                _responseTimer.Stop();
                 OnConnectionStatusChange?.Invoke(ConnectionStatus.Connected);
 
                 //Debug.WriteLine(DateTime.Now + " -   incoming: [" + Utils.ByteArrayToString(incoming) + "]");
@@ -341,6 +333,10 @@ namespace CTecUtil.IO
                 {
                     Debug.WriteLine(DateTime.Now + " -   Nak");
                     ResendCommand();
+                }
+                else if (isPingResponse(incoming))
+                {
+
                 }
                 else if (_commandQueue.TotalCommandCount > 0)
                 {
@@ -532,6 +528,14 @@ namespace CTecUtil.IO
         private static bool isNak(byte[] data) => data != null && data.Length > 0 && isNak(data[0]);
         private static bool isAck(byte data) => data == AckByte;
         private static bool isNak(byte data) => data == NakByte;
+
+
+        private static bool isPingResponse(byte[] data)
+        {
+            if (data[0] == _pingCommand[1])
+                return true;
+            return false;
+        }
 
 
         public static byte CalcChecksum(byte[] data, bool outgoing = false, bool check = false)
