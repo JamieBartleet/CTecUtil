@@ -16,7 +16,8 @@ namespace CTecUtil.UI.ViewHelpers
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => (SerialComms.ConnectionStatus)value switch
                                                                                                         {
-                                                                                                            SerialComms.ConnectionStatus.Connected    => Cultures.Resources.Comms_Connected,
+                                                                                                            SerialComms.ConnectionStatus.ConnectedWriteable    => Cultures.Resources.Comms_Connected_Writeable,
+                                                                                                            SerialComms.ConnectionStatus.ConnectedReadOnly    => Cultures.Resources.Comms_Connected_ReadOnly,
                                                                                                             SerialComms.ConnectionStatus.Listening    => Cultures.Resources.Comms_Listening,
                                                                                                             SerialComms.ConnectionStatus.Disconnected => Cultures.Resources.Comms_Disconnected,
                                                                                                             _                                         => "",

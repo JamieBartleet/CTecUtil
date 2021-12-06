@@ -21,7 +21,7 @@ namespace CTecUtil.IO
         {
             _settings = Registry.ReadSerialPortSettings();
             _progressBarWindow.OnCancel = CancelCommandQueue;
-            _responseTimer.OnTimedOut = new(() => OnConnectionStatusChange?.Invoke(ConnectionStatus.Disconnected));
+            _responseTimer.OnTimedOut = new(() => { if (_connectionStatus != ConnectionStatus.Listening) NotifyConnectionStatus?.Invoke(_connectionStatus = ConnectionStatus.Unknown); });
             _responseTimer.Start(5000);
         }
 
@@ -38,8 +38,11 @@ namespace CTecUtil.IO
             /// <summary>Comms is in a listening state</summary>
             Listening,
 
-            /// <summary>Comms is actively connected</summary>
-            Connected
+            /// <summary>Comms is actively connected but panel data is read-only</summary>
+            ConnectedReadOnly,
+
+            /// <summary>Comms is actively connected panel is writeable</summary>
+            ConnectedWriteable
         }
 
 
@@ -88,23 +91,30 @@ namespace CTecUtil.IO
         /// <summary>
         /// Set to true when the EventLogViewer page is active so that the correct ping command is sent to the panel
         /// </summary>
-        public static bool ListenerMode { get => _listenerMode; set { if (_listenerMode = value) OnConnectionStatusChange?.Invoke(ConnectionStatus.Listening); } }
+        public static bool ListenerMode { get => _listenerMode; set { if (_listenerMode = value) NotifyConnectionStatus?.Invoke(_connectionStatus = ConnectionStatus.Listening); } }
 
 
         #region ping
-        public delegate void ConnectionStatusChangeHandler(ConnectionStatus status);
-        public static ConnectionStatusChangeHandler OnConnectionStatusChange;
+        public delegate void ConnectionStatusNotifier(ConnectionStatus status);
+        public static ConnectionStatusNotifier NotifyConnectionStatus;
+
+        //public delegate void WriteableStatusNotifier(bool writeable);
+        //public static WriteableStatusNotifier NotifyReadOnlyStatus;
 
 
         /// <summary>Timer for pinging the panel every few seconds</summary>
         private static System.Timers.Timer _pingTimer;
 
 
+        private static ConnectionStatus _connectionStatus = ConnectionStatus.Unknown;
         private static byte[] _pingCommand;
-        public static void SetPingCommand(byte[] command)
+        private static byte[] _checkWriteableCommand;
+
+        public static void SetPingCommands(byte[] pingCommand, byte[] checkWriteableCommand)
         {
             var start = _pingCommand is null;
-            _pingCommand = command;
+            _pingCommand = pingCommand;
+            _checkWriteableCommand = checkWriteableCommand;
 
             if (start)
             {
@@ -124,45 +134,18 @@ namespace CTecUtil.IO
             //only ping the panel if there is no active upload/download
             if (_commandQueue.SubqueueCount == 0)
                 SendData(new Command() { CommandData = _pingCommand });
-            //else
-            //    _responseTimer.Stop();
+        }
+
+        private static void sendWriteableCheck()
+        {
+            //only ping the panel if there is no active upload/download
+            if (_commandQueue.SubqueueCount == 0)
+                SendData(new Command() { CommandData = _checkWriteableCommand });
         }
         #endregion
 
 
-        /// <summary>
-        /// Discard any pending commands and close the serial port
-        /// </summary>
-        public static bool Close()
-        {
-            try
-            {
-                CancelCommandQueue();
-                if (_port?.IsOpen == true)
-                    _port?.Close();
-                _port?.Dispose();
-                _port = null;
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        ~SerialComms()
-        {
-            _port?.Close();
-            _port?.Dispose();
-        }
-
-
-        /// <summary>
-        /// Gets a list of serial ports available on the system
-        /// </summary>
-        public static List<string> GetAvailablePorts() => SerialPort.GetPortNames().ToList();
-
-
+        #region command queue
         /// <summary>
         /// Initialise new set of command command queues with the given process name.
         /// </summary>
@@ -264,8 +247,10 @@ namespace CTecUtil.IO
                     SendData(cmd);
             }
         }
+        #endregion
 
 
+        #region send/receive
         private static object _sendLock = new();
 
         public static void SendData(Command command)
@@ -322,11 +307,7 @@ namespace CTecUtil.IO
         {
             try
             {
-
                 var incoming = readIncomingResponse(port);
-                
-                OnConnectionStatusChange?.Invoke(ConnectionStatus.Connected);
-
                 //Debug.WriteLine(DateTime.Now + " -   incoming: [" + Utils.ByteArrayToString(incoming) + "]");
 
                 if (isNak(incoming))
@@ -334,12 +315,28 @@ namespace CTecUtil.IO
                     Debug.WriteLine(DateTime.Now + " -   Nak");
                     ResendCommand();
                 }
-                else if (isPingResponse(incoming))
+                else if (isAck(incoming))
                 {
 
                 }
+                else if (isPingResponse(incoming))
+                {
+                    //panel responded to ping, so request its read-only status
+                    sendWriteableCheck();
+                }
+                else if (isCheckWriteableResponse(incoming))
+                {
+                    //read-only response received
+                    var readOnly = incoming.Length > 2 && incoming[2] == 0;
+                    NotifyConnectionStatus?.Invoke(_connectionStatus = readOnly ? ConnectionStatus.ConnectedReadOnly : ConnectionStatus.ConnectedWriteable);
+                }
                 else if (_commandQueue.TotalCommandCount > 0)
                 {
+                    //data received, so status is one of the Connected statuses
+                    if (_connectionStatus != ConnectionStatus.ConnectedWriteable)
+                        _connectionStatus = ConnectionStatus.ConnectedReadOnly;
+                    NotifyConnectionStatus?.Invoke(_connectionStatus);
+
                     var cmd = _commandQueue.Peek();
 
                     if (incoming != null && cmd != null)
@@ -472,7 +469,7 @@ namespace CTecUtil.IO
         {
             try
             {
-                OnConnectionStatusChange?.Invoke(ConnectionStatus.Listening);
+                NotifyConnectionStatus?.Invoke(_connectionStatus = ConnectionStatus.Listening);
 
                 var incoming = readIncomingListenerData(port);
 
@@ -529,14 +526,9 @@ namespace CTecUtil.IO
         private static bool isAck(byte data) => data == AckByte;
         private static bool isNak(byte data) => data == NakByte;
 
-
-        private static bool isPingResponse(byte[] data)
-        {
-            if (data[0] == _pingCommand[1])
-                return true;
-            return false;
-        }
-
+        private static bool isPingResponse(byte[] data)           => data is not null && data.Length > 0 && data[0] == _pingCommand[1];
+        private static bool isCheckWriteableResponse(byte[] data) => data is not null && data.Length > 0 && data[0] == _checkWriteableCommand[1];
+        #endregion
 
         public static byte CalcChecksum(byte[] data, bool outgoing = false, bool check = false)
         {
@@ -550,6 +542,51 @@ namespace CTecUtil.IO
 
 
         private static bool CheckChecksum(byte[] data) => data.Length > 0 && CalcChecksum(data, false, true) == data[data.Length - 1];
+
+
+        private static void error(string message, Exception ex = null)
+        {
+            //check quque - avoids erroring on ping fail
+            var showError = _commandQueue.TotalCommandCount > 0;
+            CancelCommandQueue();
+            NotifyConnectionStatus?.Invoke(_connectionStatus = ConnectionStatus.Disconnected);
+            if (showError)
+                ShowErrorMessage?.Invoke(message + "\n\n" + ex?.Message);
+        }
+
+
+        #region port
+        /// <summary>
+        /// Discard any pending commands and close the serial port
+        /// </summary>
+        public static bool Close()
+        {
+            try
+            {
+                CancelCommandQueue();
+                if (_port?.IsOpen == true)
+                    _port?.Close();
+                _port?.Dispose();
+                _port = null;
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        ~SerialComms()
+        {
+            _port?.Close();
+            _port?.Dispose();
+        }
+
+
+        /// <summary>
+        /// Gets a list of serial ports available on the system
+        /// </summary>
+        public static List<string> GetAvailablePorts() => SerialPort.GetPortNames().ToList();
 
 
         /// <summary>
@@ -576,17 +613,7 @@ namespace CTecUtil.IO
             }
             return null;
         }
-
-
-        private static void error(string message, Exception ex = null)
-        {
-            //check quque - avoids erroring on ping fail
-            var showError = _commandQueue.TotalCommandCount > 0;
-            CancelCommandQueue();
-            OnConnectionStatusChange?.Invoke(ConnectionStatus.Disconnected);
-            if (showError)
-                ShowErrorMessage?.Invoke(message + "\n\n" + ex?.Message);
-        }
+        #endregion
 
 
         #region progress bar

@@ -61,11 +61,20 @@ namespace CTecUtil.Cultures {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Connected.
+        ///   Looks up a localized string similar to Connected - data is read-only.
         /// </summary>
-        public static string Comms_Connected {
+        public static string Comms_Connected_ReadOnly {
             get {
-                return ResourceManager.GetString("Comms_Connected", resourceCulture);
+                return ResourceManager.GetString("Comms_Connected_ReadOnly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connected - data may be written.
+        /// </summary>
+        public static string Comms_Connected_Writeable {
+            get {
+                return ResourceManager.GetString("Comms_Connected_Writeable", resourceCulture);
             }
         }
         

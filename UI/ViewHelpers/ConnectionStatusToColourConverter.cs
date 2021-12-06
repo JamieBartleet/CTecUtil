@@ -16,7 +16,8 @@ namespace CTecUtil.UI.ViewHelpers
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => (SerialComms.ConnectionStatus)value switch
                                                                                                         {
-                                                                                                            SerialComms.ConnectionStatus.Connected    => new SolidColorBrush(Colors.LimeGreen),
+                                                                                                            SerialComms.ConnectionStatus.ConnectedWriteable    => new SolidColorBrush(Colors.LimeGreen),
+                                                                                                            SerialComms.ConnectionStatus.ConnectedReadOnly    => new SolidColorBrush(Colors.LimeGreen),
                                                                                                             SerialComms.ConnectionStatus.Listening    => new SolidColorBrush(Colors.Goldenrod),
                                                                                                             SerialComms.ConnectionStatus.Disconnected => new SolidColorBrush(Colors.OrangeRed),
                                                                                                             _                                         => new SolidColorBrush(Colors.Transparent),

@@ -144,13 +144,16 @@
   <data name="Error_Uploading_Data" xml:space="preserve">
     <value>Une erreur s’est produite lors de l'envoi des données du panneau.</value>
   </data>
-  <data name="Comms_Connected" xml:space="preserve">
-    <value>Connecté</value>
+  <data name="Comms_Connected_Writeable" xml:space="preserve">
+    <value>Connecté - les données peuvent être écrites</value>
   </data>
   <data name="Comms_Disconnected" xml:space="preserve">
     <value>Déconnecté</value>
   </data>
   <data name="Comms_Listening" xml:space="preserve">
     <value>Attente des données</value>
+  </data>
+  <data name="Comms_Connected_ReadOnly" xml:space="preserve">
+    <value>Connecté - les données sont en lecture seule</value>
   </data>
 </root>
