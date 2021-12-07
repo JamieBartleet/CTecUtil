@@ -259,7 +259,7 @@ namespace CTecUtil.IO
             {
                 _lastException = null;
 
-                if (command != null)
+                if (command != null && command.CommandData != null)
                 {
                     command.Tries++;
                     //Debug.WriteLine(DateTime.Now + " - SendData() - (try=" + command.Tries + ")  [" + command.ToString() + "]");
@@ -307,6 +307,11 @@ namespace CTecUtil.IO
         {
             try
             {
+                //data received, so status is one of the Connected statuses
+                if (_connectionStatus != ConnectionStatus.ConnectedWriteable)
+                    _connectionStatus = ConnectionStatus.ConnectedReadOnly;
+                NotifyConnectionStatus?.Invoke(_connectionStatus);
+
                 var incoming = readIncomingResponse(port);
                 //Debug.WriteLine(DateTime.Now + " -   incoming: [" + Utils.ByteArrayToString(incoming) + "]");
 
@@ -317,7 +322,17 @@ namespace CTecUtil.IO
                 }
                 else if (isAck(incoming))
                 {
+                    if (_commandQueue.Dequeue())
+                    {
+                        //new queue - reset the count
+                        _progressWithinSubqueue = 0;
+                        Application.Current.Dispatcher.Invoke(new Action(() =>
+                        {
+                            _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.CommandsInCurrentSubqueue;
 
+                        }), DispatcherPriority.Normal);
+                    }
+                    SendNextCommandInQueue();
                 }
                 else if (isPingResponse(incoming))
                 {
@@ -332,11 +347,6 @@ namespace CTecUtil.IO
                 }
                 else if (_commandQueue.TotalCommandCount > 0)
                 {
-                    //data received, so status is one of the Connected statuses
-                    if (_connectionStatus != ConnectionStatus.ConnectedWriteable)
-                        _connectionStatus = ConnectionStatus.ConnectedReadOnly;
-                    NotifyConnectionStatus?.Invoke(_connectionStatus);
-
                     var cmd = _commandQueue.Peek();
 
                     if (incoming != null && cmd != null)
