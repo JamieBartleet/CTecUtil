@@ -262,7 +262,7 @@ namespace CTecUtil.IO
                 if (command != null && command.CommandData != null)
                 {
                     command.Tries++;
-                    //Debug.WriteLine(DateTime.Now + " - SendData() - (try=" + command.Tries + ")  [" + command.ToString() + "]");
+                    Debug.WriteLine(DateTime.Now + " - SendData() - (try=" + command.Tries + ")  [" + command.ToString() + "]");
 
                     try
                     {
@@ -322,6 +322,7 @@ namespace CTecUtil.IO
                 }
                 else if (isAck(incoming))
                 {
+                    Debug.WriteLine(DateTime.Now + " -   Ack");
                     if (_commandQueue.Dequeue())
                     {
                         //new queue - reset the count
@@ -636,7 +637,7 @@ namespace CTecUtil.IO
         public static void ShowProgressBarWindow(Action onStart, Action onEnd)
         {
             _onStartProgress = onStart;
-            _onEndProgress = onEnd;
+            _onEndProgress   = onEnd;
 
             try
             {
