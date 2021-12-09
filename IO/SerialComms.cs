@@ -217,7 +217,12 @@ namespace CTecUtil.IO
         }
 
 
-        private static void SendNextCommandInQueue() { SendData(_commandQueue.Peek()); }
+        private static void SendNextCommandInQueue()
+        {
+            _progressOverall++;
+            _progressWithinSubqueue++;
+            SendData(_commandQueue.Peek());
+        }
 
 
         private static void ResendCommand()
@@ -313,11 +318,22 @@ namespace CTecUtil.IO
                 NotifyConnectionStatus?.Invoke(_connectionStatus);
 
                 var incoming = readIncomingResponse(port);
-                //Debug.WriteLine(DateTime.Now + " -   incoming: [" + Utils.ByteArrayToString(incoming) + "]");
+                Debug.WriteLine(DateTime.Now + " -   incoming: [" + Utils.ByteArrayToString(incoming) + "]");
 
-                if (isNak(incoming))
+                if (isPingResponse(incoming))
                 {
-                    Debug.WriteLine(DateTime.Now + " -   Nak");
+                    //panel responded to ping, so request its read-only status
+                    sendWriteableCheck();
+                }
+                else if (isCheckWriteableResponse(incoming))
+                {
+                    //read-only response received
+                    var readOnly = incoming.Length > 2 && incoming[2] == 0;
+                    NotifyConnectionStatus?.Invoke(_connectionStatus = readOnly ? ConnectionStatus.ConnectedReadOnly : ConnectionStatus.ConnectedWriteable);
+                }
+                else if (isNak(incoming))
+                {
+                    Debug.WriteLine(DateTime.Now + " -   **NAK**");
                     ResendCommand();
                 }
                 else if (isAck(incoming))
@@ -335,17 +351,6 @@ namespace CTecUtil.IO
                     }
                     SendNextCommandInQueue();
                 }
-                else if (isPingResponse(incoming))
-                {
-                    //panel responded to ping, so request its read-only status
-                    sendWriteableCheck();
-                }
-                else if (isCheckWriteableResponse(incoming))
-                {
-                    //read-only response received
-                    var readOnly = incoming.Length > 2 && incoming[2] == 0;
-                    NotifyConnectionStatus?.Invoke(_connectionStatus = readOnly ? ConnectionStatus.ConnectedReadOnly : ConnectionStatus.ConnectedWriteable);
-                }
                 else if (_commandQueue.TotalCommandCount > 0)
                 {
                     var cmd = _commandQueue.Peek();
@@ -362,7 +367,7 @@ namespace CTecUtil.IO
 
                             }), DispatcherPriority.Normal);
                         }
-                        //Debug.WriteLine(DateTime.Now + " - dequeued         : Qs=" + _commandQueue.SubqueueCount + " this=" + _commandQueue.CurrentSubqueueName + "(" + _commandQueue.CommandsInCurrentSubqueue + ") tot=" + _commandQueue.TotalCommandCount);
+                        Debug.WriteLine(DateTime.Now + " - dequeued         : Qs=" + _commandQueue.SubqueueCount + " this=" + _commandQueue.CurrentSubqueueName + "(" + _commandQueue.CommandsInCurrentSubqueue + ") tot=" + _commandQueue.TotalCommandCount);
 
                         //send response to data receiver
                         await Task.Run(new Action(() =>
@@ -373,9 +378,7 @@ namespace CTecUtil.IO
                                 cmd.DataReceiver?.Invoke(incoming);
                         }));
 
-                        //Debug.WriteLine(DateTime.Now + " - progress: subq=" + _progressWithinSubqueue + " o/a=" + _progressOverall + "/" + _numCommandsToProcess);
-                        _progressOverall++;
-                        _progressWithinSubqueue++;
+                        Debug.WriteLine(DateTime.Now + " - progress: subq=" + _progressWithinSubqueue + " o/a=" + _progressOverall + "/" + _numCommandsToProcess);
                     }
 
                     //send next command, if any
@@ -677,6 +680,7 @@ namespace CTecUtil.IO
 
             Application.Current.Dispatcher.Invoke(new Action(() =>
             {
+                Debug.WriteLine(DateTime.Now + "---progress: max=" + _numCommandsToProcess + ", subQMax=" + commandsInSubqueue);
                 _progressBarWindow.ProgressBarLegend      = _commandQueue.OperationDesc;
                 _progressBarWindow.ProgressBarOverallMax  = _numCommandsToProcess;
                 _progressBarWindow.ProgressBarSubqueueMax = commandsInSubqueue;
@@ -702,6 +706,8 @@ namespace CTecUtil.IO
                     }), DispatcherPriority.Send);
                     break;
                 }
+
+                Debug.WriteLine(DateTime.Now + "---progress: " + _progressOverall + " (" + lastProgress + ")");
 
                 if (_progressOverall > lastProgress)
                 {
