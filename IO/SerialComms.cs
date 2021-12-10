@@ -51,7 +51,13 @@ namespace CTecUtil.IO
 
         private static SerialPort _port;
         private static CommandQueue _commandQueue = new();
-        private static CommsTimer _timer = new();
+
+        /// <summary>Timer for reading data; the OnTimedOut event means incomplete data was received</summary>
+        private static CommsTimer _incomingDataTimer = new();
+        
+        /// <summary>Timer on response to SendData; the OnTimedOut event is used to notify the connection status</summary>
+        private static CommsTimer _responseTimer = new();
+
         private static Exception _lastException = null;
 
         
@@ -59,9 +65,6 @@ namespace CTecUtil.IO
 
         public delegate void ReceivedListenerDataHandler(byte[] incomingData);
         public static ReceivedListenerDataHandler ListenerDataReceiver;
-
-        /// <summary>Timer on response to SendData; the OnTimedOut event us used to notify the connection status</summary>
-        private static CommsTimer _responseTimer = new();
 
 
         public delegate void ProgressMaxSetter(int maxValue);
@@ -199,7 +202,7 @@ namespace CTecUtil.IO
         public static void CancelCommandQueue()
         {
             //Debug.WriteLine(DateTime.Now + " - CancelCommandQueue()");
-            _timer.Stop();
+            _incomingDataTimer.Stop();
             _commandQueue?.Clear();
             //Thread.Sleep(500);
         }
@@ -299,7 +302,7 @@ namespace CTecUtil.IO
             if (port == null)
                 return;
 
-            _responseTimer.Start(5000);
+            _responseTimer.Start(10000);
 
             if (ListenerMode)
                 ListenerDataReceived(port);
@@ -413,13 +416,13 @@ namespace CTecUtil.IO
             try
             {
                 //1.5 sec timeout
-                _timer.Start(2000);
+                _incomingDataTimer.Start(2000);
 
                 //wait for buffering [sometimes dataReceived() is called by the port when BytesToRead is still zero]
                 while (port.BytesToRead == 0)
                 {
                     Thread.Sleep(10);
-                    if (_timer.TimedOut)
+                    if (_incomingDataTimer.TimedOut)
                         throw new TimeoutException();
                 }
 
@@ -434,7 +437,7 @@ namespace CTecUtil.IO
                 while (port.BytesToRead == 0)
                 {
                     //Thread.Sleep(20);
-                    if (_timer.TimedOut)
+                    if (_incomingDataTimer.TimedOut)
                         throw new TimeoutException();
                 }
 
@@ -453,7 +456,7 @@ namespace CTecUtil.IO
                     {
                         //Debug.WriteLine(DateTime.Now + " -    wait - expecting " + payloadLength + " bytes payload");
                         //Thread.Sleep(20);
-                        if (_timer.TimedOut)
+                        if (_incomingDataTimer.TimedOut)
                             throw new TimeoutException();
                     }
 
@@ -473,7 +476,7 @@ namespace CTecUtil.IO
             }
             finally
             {
-                _timer.Stop();
+                _incomingDataTimer.Stop();
                 port.DiscardInBuffer();
             }
         }
@@ -511,13 +514,13 @@ namespace CTecUtil.IO
         {
             try
             {
-                //1.5 sec timeout
-                _timer.Start(2500);
+                //2.5 sec timeout
+                _incomingDataTimer.Start(2500);
 
                 //wait for buffering [sometimes dataReceived() is called by the port when BytesToRead is still zero]
                 while (port.BytesToRead == 0)
                 {
-                    if (_timer.TimedOut)
+                    if (_incomingDataTimer.TimedOut)
                         throw new TimeoutException();
                 }
 
@@ -529,7 +532,7 @@ namespace CTecUtil.IO
             }
             finally
             {
-                _timer.Stop();
+                _incomingDataTimer.Stop();
                 port.DiscardInBuffer();
             }
         }
