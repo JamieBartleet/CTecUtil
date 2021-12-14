@@ -20,7 +20,7 @@ namespace CTecUtil.UI.ViewHelpers
                                                                                                             SerialComms.ConnectionStatus.ConnectedReadOnly  => new SolidColorBrush(Colors.LimeGreen),
                                                                                                             SerialComms.ConnectionStatus.Listening          => new SolidColorBrush(Colors.Goldenrod),
                                                                                                             SerialComms.ConnectionStatus.Disconnected       => new SolidColorBrush(Colors.OrangeRed),
-                                                                                                            _                                               => new SolidColorBrush(Colors.SaddleBrown),
+                                                                                                            _                                               => new SolidColorBrush(Colors.SlateGray),
                                                                                                         };
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => null;

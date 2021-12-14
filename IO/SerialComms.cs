@@ -524,6 +524,7 @@ namespace CTecUtil.IO
                         throw new TimeoutException();
                 }
 
+                Thread.Sleep(100);
                 var numBytes = port.BytesToRead;
                 byte[] buffer = new byte[numBytes];
                 port.Read(buffer, 0, numBytes);
