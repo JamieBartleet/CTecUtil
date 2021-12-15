@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -21,6 +22,23 @@ namespace CTecUtil
                 Buffer.BlockCopy(array, 0, result, offset, array.Length);
                 offset += array.Length;
             }
+            return result;
+        }
+
+
+        public static byte[] StringToByteArray(string value, int length, bool centred = false)
+        {
+            var result = new byte[length];
+            var strLen = Math.Min(value.Length, length);
+            var strStart = centred ? length / 2 - (strLen + 1) / 2 : 0;
+            var strEnd   = strStart + strLen;
+
+            for (int i = 0; i < strStart; i++)
+                result[i] = (byte)' ';
+            Buffer.BlockCopy(Encoding.ASCII.GetBytes(value), 0, result, strStart, strLen);
+            for (int i = strEnd; i < length; i++)
+                result[i] = (byte)' ';
+
             return result;
         }
 

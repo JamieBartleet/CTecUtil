@@ -105,6 +105,17 @@ namespace CTecUtil.IO
         }
 
 
+        public CommandQueue Clone()
+        {
+            CommandQueue result = new() { OperationDesc = OperationDesc };
+
+            foreach (var sq in _subqueues)
+                result.AddSubqueue(sq.Clone());
+
+            return result;
+        }
+
+
         /// <summary>
         /// Clear all command queues.
         /// </summary>

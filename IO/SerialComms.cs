@@ -21,7 +21,7 @@ namespace CTecUtil.IO
         {
             _settings = Registry.ReadSerialPortSettings();
             _progressBarWindow.OnCancel = CancelCommandQueue;
-            _responseTimer.OnTimedOut = new(() => { if (_connectionStatus != ConnectionStatus.Listening) NotifyConnectionStatus?.Invoke(_connectionStatus = ConnectionStatus.Unknown); });
+            _responseTimer.OnTimedOut = new(() => { responseTimerTimeout(); });
             _responseTimer.Start(5000);
         }
 
@@ -113,7 +113,7 @@ namespace CTecUtil.IO
         private static byte[] _pingCommand;
         private static byte[] _checkWriteableCommand;
 
-        public static void SetPingCommands(byte[] pingCommand, byte[] checkWriteableCommand)
+        public static void SetPingCommands(byte[] pingCommand, byte[] checkWriteableCommand = null)
         {
             var start = _pingCommand is null;
             _pingCommand = pingCommand;
@@ -142,8 +142,9 @@ namespace CTecUtil.IO
         private static void sendWriteableCheck()
         {
             //only ping the panel if there is no active upload/download
-            if (_commandQueue.SubqueueCount == 0)
-                SendData(new Command() { CommandData = _checkWriteableCommand });
+            if (_checkWriteableCommand is not null)
+                if (_commandQueue.SubqueueCount == 0)
+                    SendData(new Command() { CommandData = _checkWriteableCommand });
         }
         #endregion
 
@@ -274,15 +275,16 @@ namespace CTecUtil.IO
 
                     try
                     {
+
                         if (_port is null)
                             _port = newSerialPort();
 
-                        if (!_port.IsOpen)
-                            _port.Open();
+                        if (!_port?.IsOpen ?? false)
+                            _port?.Open();
 
-                        _port.DiscardInBuffer();
-                        _port.DiscardOutBuffer();
-                        _port.Write(command.CommandData, 0, command.CommandData.Length);
+                        _port?.DiscardInBuffer();
+                        _port?.DiscardOutBuffer();
+                        _port?.Write(command.CommandData, 0, command.CommandData.Length);
                     }
                     catch (Exception ex)
                     {
@@ -455,7 +457,7 @@ namespace CTecUtil.IO
                     while (port.BytesToRead == 0)
                     {
                         //Debug.WriteLine(DateTime.Now + " -    wait - expecting " + payloadLength + " bytes payload");
-                        //Thread.Sleep(20);
+                        Thread.Sleep(20);
                         if (_incomingDataTimer.TimedOut)
                             throw new TimeoutException();
                     }
@@ -545,8 +547,35 @@ namespace CTecUtil.IO
         private static bool isNak(byte data) => data == NakByte;
 
         private static bool isPingResponse(byte[] data)           => data is not null && data.Length > 0 && data[0] == _pingCommand[1];
-        private static bool isCheckWriteableResponse(byte[] data) => data is not null && data.Length > 0 && data[0] == _checkWriteableCommand[1];
+        private static bool isCheckWriteableResponse(byte[] data) => data is not null && _checkWriteableCommand is not null && data.Length > 0 && data[0] == _checkWriteableCommand[1];
         #endregion
+
+
+        private static void responseTimerTimeout()
+        {
+            if (_connectionStatus != ConnectionStatus.Listening)
+                NotifyConnectionStatus?.Invoke(_connectionStatus = ConnectionStatus.Disconnected);
+
+            //in case of disconnection cause port to be reopened
+            var save = _commandQueue.Clone();
+            //if (_port is not null)
+            //{
+            //    if (_port.IsOpen)
+            //    {
+            //        _port.DiscardInBuffer();
+            //        _port.DiscardOutBuffer();
+            //        _port.Close();
+            //    }
+            //    _port = null;
+            //}
+            ClosePort();
+
+            //try again...
+            _commandQueue = save.Clone();
+            ResendCommand();
+            _responseTimer.Start(5000);
+        }
+
 
         public static byte CalcChecksum(byte[] data, bool outgoing = false, bool check = false)
         {
@@ -564,7 +593,7 @@ namespace CTecUtil.IO
 
         private static void error(string message, Exception ex = null)
         {
-            //check quque - avoids erroring on ping fail
+            //check queue - avoids erroring on ping fail
             var showError = _commandQueue.TotalCommandCount > 0;
             CancelCommandQueue();
             NotifyConnectionStatus?.Invoke(_connectionStatus = ConnectionStatus.Disconnected);
@@ -577,7 +606,7 @@ namespace CTecUtil.IO
         /// <summary>
         /// Discard any pending commands and close the serial port
         /// </summary>
-        public static bool Close()
+        public static bool ClosePort()
         {
             try
             {

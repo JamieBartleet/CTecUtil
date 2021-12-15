@@ -30,6 +30,18 @@ namespace CTecUtil.IO
         public int     Count                    => _commandQueue.Count;
 
 
+        public CommandSubqueue Clone()
+        {
+            CommandSubqueue result = new(Direction, OnSubqueueComplete) { Name = Name };
+
+            foreach (var c in _commandQueue)
+            {
+                result._commandQueue.Append(c);
+            }
+            return result;
+        }
+
+
         public SerialComms.SubqueueCompletedHandler OnSubqueueComplete;
     }
 }
