@@ -553,26 +553,33 @@ namespace CTecUtil.IO
 
         private static void responseTimerTimeout()
         {
-            if (_connectionStatus != ConnectionStatus.Listening)
+            if (_connectionStatus != ConnectionStatus.Listening && _commandQueue.TotalCommandCount == 0)
+            {
                 NotifyConnectionStatus?.Invoke(_connectionStatus = ConnectionStatus.Disconnected);
 
-            //in case of disconnection cause port to be reopened
-            var save = _commandQueue.Clone();
-            //if (_port is not null)
-            //{
-            //    if (_port.IsOpen)
-            //    {
-            //        _port.DiscardInBuffer();
-            //        _port.DiscardOutBuffer();
-            //        _port.Close();
-            //    }
-            //    _port = null;
-            //}
-            ClosePort();
+                //in case of disconnection cause port to be reopened
+                //var save = _commandQueue.Clone();
+                //if (_port is not null)
+                //{
+                //    if (_port.IsOpen)
+                //    {
+                //        _port.DiscardInBuffer();
+                //        _port.DiscardOutBuffer();
+                //        _port.Close();
+                //    }
+                //    _port = null;
+                //}
+                //ClosePort();
+                //CancelCommandQueue();
+                //_commandQueue = save.Clone();
 
-            //try again...
-            _commandQueue = save.Clone();
-            ResendCommand();
+                if (_port?.IsOpen == true)
+                    _port?.Close();
+                _port = newSerialPort();
+
+                //try again...
+                ResendCommand();
+            }
             _responseTimer.Start(5000);
         }
 
@@ -718,7 +725,7 @@ namespace CTecUtil.IO
                 _progressBarWindow.ProgressBarOverallMax  = _numCommandsToProcess;
                 _progressBarWindow.ProgressBarSubqueueMax = commandsInSubqueue;
 
-            }), DispatcherPriority.ContextIdle);
+            }), DispatcherPriority.Render);
 
             //start the job
             SendFirstCommandInQueue();
