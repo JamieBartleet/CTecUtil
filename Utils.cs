@@ -33,8 +33,10 @@ namespace CTecUtil
             var strStart = centred ? length / 2 - (strLen + 1) / 2 : 0;
             var strEnd   = strStart + strLen;
 
+            //pad to length
             for (int i = 0; i < strStart; i++)
                 result[i] = (byte)' ';
+
             Buffer.BlockCopy(Encoding.ASCII.GetBytes(value), 0, result, strStart, strLen);
             for (int i = strEnd; i < length; i++)
                 result[i] = (byte)' ';

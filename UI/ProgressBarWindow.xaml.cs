@@ -30,8 +30,8 @@ namespace CTecUtil.UI
         {
             if (Application.Current.MainWindow != null)
             {
-                Top = Application.Current.MainWindow.Top + Application.Current.MainWindow.Height / 2 - Height / 2;
-                Left = Application.Current.MainWindow.Left + Application.Current.MainWindow.Width / 2 - Width / 2;
+                Top  = Application.Current.MainWindow.Top  + Application.Current.MainWindow.ActualHeight / 2 - Height / 2;
+                Left = Application.Current.MainWindow.Left + Application.Current.MainWindow.ActualWidth  / 2 - Width  / 2;
             }
             
             base.Owner = owner;
