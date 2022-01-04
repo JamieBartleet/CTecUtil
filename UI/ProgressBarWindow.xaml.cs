@@ -28,10 +28,10 @@ namespace CTecUtil.UI
 
         public void Show(Window owner)
         {
-            if (Application.Current.MainWindow != null)
+            if (owner != null)
             {
-                Top  = Application.Current.MainWindow.Top  + Application.Current.MainWindow.ActualHeight / 2 - Height / 2;
-                Left = Application.Current.MainWindow.Left + Application.Current.MainWindow.ActualWidth  / 2 - Width  / 2;
+                Top  = (owner.WindowState != WindowState.Maximized ? owner.Top  : owner.Top  <= -owner.Height / 2 ? -owner.ActualHeight : 0) + owner.ActualHeight / 2 - Height / 2;
+                Left = (owner.WindowState != WindowState.Maximized ? owner.Left : owner.Left <= -owner.Width  / 2 ? -owner.ActualWidth  : 0) + owner.ActualWidth  / 2 - Width  / 2;
             }
             
             base.Owner = owner;
