@@ -8,6 +8,16 @@ namespace CTecUtil.IO
 {
     public class Command
     {
+        public Command() { }
+
+        public Command(Command original)
+        {
+            CommandData = (byte[])original.CommandData.Clone();
+            Index = original.Index;
+            Tries = original.Tries;
+        }
+
+
         /// <summary>The command data</summary>
         public byte[] CommandData { get; set; }
 

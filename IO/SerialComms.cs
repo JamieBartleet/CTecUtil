@@ -558,7 +558,7 @@ namespace CTecUtil.IO
                 NotifyConnectionStatus?.Invoke(_connectionStatus = ConnectionStatus.Disconnected);
 
                 //in case of disconnection cause port to be reopened
-                //var save = _commandQueue.Clone();
+                //var save = new CommandQueue(_commandQueue);
                 //if (_port is not null)
                 //{
                 //    if (_port.IsOpen)
@@ -571,7 +571,7 @@ namespace CTecUtil.IO
                 //}
                 //ClosePort();
                 //CancelCommandQueue();
-                //_commandQueue = save.Clone();
+                //_commandQueue = new CommandQueue(save);
 
                 if (_port?.IsOpen == true)
                     _port?.Close();

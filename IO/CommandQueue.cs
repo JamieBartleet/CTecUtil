@@ -16,6 +16,17 @@ namespace CTecUtil.IO
     /// </summary>
     internal class CommandQueue
     {
+        public CommandQueue() { }
+
+        public CommandQueue(CommandQueue original)
+        {
+            OperationDesc = original.OperationDesc;
+
+            foreach (var sq in _subqueues)
+                AddSubqueue(new CommandSubqueue(sq));
+        }
+
+
         /// <summary>The queue of subqueues</summary>
         private Queue<CommandSubqueue> _subqueues = new();
 
@@ -102,17 +113,6 @@ namespace CTecUtil.IO
             {
                 return null;
             }
-        }
-
-
-        public CommandQueue Clone()
-        {
-            CommandQueue result = new() { OperationDesc = OperationDesc };
-
-            foreach (var sq in _subqueues)
-                result.AddSubqueue(sq.Clone());
-
-            return result;
         }
 
 

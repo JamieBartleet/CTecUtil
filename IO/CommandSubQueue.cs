@@ -8,6 +8,15 @@ namespace CTecUtil.IO
 {
     internal class CommandSubqueue
     {
+        public CommandSubqueue(CommandSubqueue original)
+        {
+            Direction          = original.Direction;
+            OnSubqueueComplete = original.OnSubqueueComplete;
+            Name               = original.Name;
+            foreach (var c in _commandQueue)
+                _commandQueue.Append(new Command(c));
+        }
+
         public CommandSubqueue(SerialComms.Direction direction, SerialComms.SubqueueCompletedHandler onCompletion)
         {
             Direction = direction;
@@ -28,18 +37,6 @@ namespace CTecUtil.IO
         public Command Peek()                   { try { return _commandQueue?.Peek(); } catch { return null; } }
         public void    Clear()                  => _commandQueue?.Clear();
         public int     Count                    => _commandQueue.Count;
-
-
-        public CommandSubqueue Clone()
-        {
-            CommandSubqueue result = new(Direction, OnSubqueueComplete) { Name = Name };
-
-            foreach (var c in _commandQueue)
-            {
-                result._commandQueue.Append(c);
-            }
-            return result;
-        }
 
 
         public SerialComms.SubqueueCompletedHandler OnSubqueueComplete;
