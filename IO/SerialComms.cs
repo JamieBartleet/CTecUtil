@@ -323,7 +323,7 @@ namespace CTecUtil.IO
                 NotifyConnectionStatus?.Invoke(_connectionStatus);
 
                 var incoming = readIncomingResponse(port);
-                Debug.WriteLine(DateTime.Now + " -   incoming: [" + Utils.ByteArrayToString(incoming) + "]");
+                Debug.WriteLine(DateTime.Now + " -   incoming: [" + Utils.ByteArrayToHexString(incoming) + "] --> '" + Utils.ByteArrayToString(incoming) + "'");
 
                 if (isPingResponse(incoming))
                 {
@@ -557,24 +557,13 @@ namespace CTecUtil.IO
             {
                 NotifyConnectionStatus?.Invoke(_connectionStatus = ConnectionStatus.Disconnected);
 
-                //in case of disconnection cause port to be reopened
-                //var save = new CommandQueue(_commandQueue);
-                //if (_port is not null)
-                //{
-                //    if (_port.IsOpen)
-                //    {
-                //        _port.DiscardInBuffer();
-                //        _port.DiscardOutBuffer();
-                //        _port.Close();
-                //    }
-                //    _port = null;
-                //}
-                //ClosePort();
-                //CancelCommandQueue();
-                //_commandQueue = new CommandQueue(save);
-
-                if (_port?.IsOpen == true)
-                    _port?.Close();
+                try
+                {
+                    if (_port?.IsOpen == true)
+                        _port?.Close();
+                }
+                catch { }
+            
                 _port = newSerialPort();
 
                 //try again...
