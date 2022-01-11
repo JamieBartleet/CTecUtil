@@ -46,6 +46,17 @@ namespace CTecUtil.IO
         }
 
 
+        /// <summary>Direction of the main data transfer</summary>
+        public enum CommsDirection
+        {
+            /// <summary>Upload to panel</summary>
+            Upload,
+
+            /// <summary>Download from panel</summary>
+            Download
+        }
+
+
         public enum Direction { Idle, Up, Down }
 
 
@@ -61,8 +72,7 @@ namespace CTecUtil.IO
         private static Exception _lastException = null;
 
         
-        public delegate void ReceivedResponseDataHandler(byte[] incomingData, int index = -1);
-
+        public delegate void ReceivedResponseDataHandler(byte[] incomingData);
         public delegate void ReceivedListenerDataHandler(byte[] incomingData);
         public static ReceivedListenerDataHandler ListenerDataReceiver;
 
@@ -94,7 +104,7 @@ namespace CTecUtil.IO
         /// <summary>
         /// Set to true when the EventLogViewer page is active so that the correct ping command is sent to the panel
         /// </summary>
-        public static bool ListenerMode { get => _listenerMode; set { if (_listenerMode = value) NotifyConnectionStatus?.Invoke(_connectionStatus = ConnectionStatus.Listening); } }
+        public static bool ListenerMode { get => _listenerMode; set { NotifyConnectionStatus?.Invoke(_connectionStatus = (_listenerMode = value) ? ConnectionStatus.Listening : ConnectionStatus.Unknown); } }
 
 
         #region ping
@@ -179,8 +189,8 @@ namespace CTecUtil.IO
         /// <param name="commandData">The command data.</param>
         /// <param name="dataReceiver">Handler to which the response will be sent.</param>
         /// <param name="index">(Optional) the index of the item requested - for the case where the index is not included in the response data (e.g. devices).</param>
-        public static void EnqueueCommand(byte[] commandData, ReceivedResponseDataHandler dataReceiver, int? index = null)
-            => _commandQueue.Enqueue(new Command() { CommandData = commandData, DataReceiver = dataReceiver, Index = index });
+        public static void EnqueueCommand(byte[] commandData, ReceivedResponseDataHandler dataReceiver)
+            => _commandQueue.Enqueue(new Command() { CommandData = commandData, DataReceiver = dataReceiver });
 
 
         /// <summary>
@@ -188,7 +198,7 @@ namespace CTecUtil.IO
         /// </summary>
         /// <param name="commandData">The command data.</param>
         /// <param name="index">(Optional) the index of the item requested - for the case where the index is not included in the response data (e.g. devices).</param>
-        public static void EnqueueCommand(byte[] commandData, int? index = null) => EnqueueCommand(commandData, null, index);
+        public static void EnqueueCommand(byte[] commandData) => EnqueueCommand(commandData, null);
 
 
         public static void StartSendingCommandQueue(Action onStart, Action onEnd)
@@ -202,7 +212,7 @@ namespace CTecUtil.IO
 
         public static void CancelCommandQueue()
         {
-            //Debug.WriteLine(DateTime.Now + " - CancelCommandQueue()");
+            //CTecUtil.Debug.WriteLine(DateTime.Now + " - CancelCommandQueue()");
             _incomingDataTimer.Stop();
             _commandQueue?.Clear();
             //Thread.Sleep(500);
@@ -211,6 +221,7 @@ namespace CTecUtil.IO
 
         private static void SendFirstCommandInQueue()
         {
+            CTecUtil.Debug.WriteLine("SendFirstCommandInQueue()");
             Application.Current.Dispatcher.Invoke(new Action(() =>
             {
                 _progressBarWindow.SubqueueCount = _commandQueue.SubqueueCount;
@@ -223,6 +234,7 @@ namespace CTecUtil.IO
 
         private static void SendNextCommandInQueue()
         {
+            CTecUtil.Debug.WriteLine("SendNextCommandInQueue()");
             _progressOverall++;
             _progressWithinSubqueue++;
             SendData(_commandQueue.Peek());
@@ -234,7 +246,7 @@ namespace CTecUtil.IO
             var cmd = _commandQueue.Peek();
             if (cmd != null)
             {
-                Debug.WriteLine(DateTime.Now + " - ResendCommand()");
+                CTecUtil.Debug.WriteLine("ResendCommand()");
 
                 if (cmd.Tries > 19)
                 {
@@ -271,7 +283,7 @@ namespace CTecUtil.IO
                 if (command != null && command.CommandData != null)
                 {
                     command.Tries++;
-                    Debug.WriteLine(DateTime.Now + " - SendData() - (try=" + command.Tries + ")  [" + command.ToString() + "]");
+                    CTecUtil.Debug.WriteLine("SendData() - (try=" + command.Tries + ")  [" + command.ToString() + "]");
 
                     try
                     {
@@ -323,7 +335,7 @@ namespace CTecUtil.IO
                 NotifyConnectionStatus?.Invoke(_connectionStatus);
 
                 var incoming = readIncomingResponse(port);
-                Debug.WriteLine(DateTime.Now + " -   incoming: [" + Utils.ByteArrayToHexString(incoming) + "] --> '" + Utils.ByteArrayToString(incoming) + "'");
+                CTecUtil.Debug.WriteLine("  incoming: [" + Utils.ByteArrayToHexString(incoming) + "] --> '" + Utils.ByteArrayToString(incoming) + "'");
 
                 if (isPingResponse(incoming))
                 {
@@ -338,12 +350,12 @@ namespace CTecUtil.IO
                 }
                 else if (isNak(incoming))
                 {
-                    Debug.WriteLine(DateTime.Now + " -   **NAK**");
+                    CTecUtil.Debug.WriteLine("**NAK**");
                     ResendCommand();
                 }
                 else if (isAck(incoming))
                 {
-                    Debug.WriteLine(DateTime.Now + " -   Ack");
+                    CTecUtil.Debug.WriteLine("  ACK");
                     if (_commandQueue.Dequeue())
                     {
                         //new queue - reset the count
@@ -372,18 +384,18 @@ namespace CTecUtil.IO
 
                             }), DispatcherPriority.Normal);
                         }
-                        Debug.WriteLine(DateTime.Now + " - dequeued         : Qs=" + _commandQueue.SubqueueCount + " this=" + _commandQueue.CurrentSubqueueName + "(" + _commandQueue.CommandsInCurrentSubqueue + ") tot=" + _commandQueue.TotalCommandCount);
+                        CTecUtil.Debug.WriteLine("dequeued         : Qs=" + _commandQueue.SubqueueCount + " this=" + _commandQueue.CurrentSubqueueName + "(" + _commandQueue.CommandsInCurrentSubqueue + ") tot=" + _commandQueue.TotalCommandCount);
 
                         //send response to data receiver
                         await Task.Run(new Action(() =>
                         {
-                            if (cmd.Index != null)
-                                cmd.DataReceiver?.Invoke(incoming, cmd.Index.Value);
-                            else
+                            //if (cmd.Index != null)
+                            //    cmd.DataReceiver?.Invoke(incoming, cmd.Index.Value);
+                            //else
                                 cmd.DataReceiver?.Invoke(incoming);
                         }));
 
-                        Debug.WriteLine(DateTime.Now + " - progress: subq=" + _progressWithinSubqueue + " o/a=" + _progressOverall + "/" + _numCommandsToProcess);
+                        CTecUtil.Debug.WriteLine("progress: subq=" + _progressWithinSubqueue + " o/a=" + _progressOverall + "/" + _numCommandsToProcess);
                     }
 
                     //send next command, if any
@@ -394,19 +406,19 @@ namespace CTecUtil.IO
             catch (FormatException ex)
             {
                 //checksum fail
-                Debug.WriteLine(DateTime.Now + " -   **FormatException** " + ex.Message);
+                CTecUtil.Debug.WriteLine("  **FormatException** " + ex.Message);
                 _lastException = ex;
                 ResendCommand();
             }
             catch (TimeoutException ex)
             {
-                Debug.WriteLine(DateTime.Now + " -   **TimeoutException** " + ex.Message);
+                CTecUtil.Debug.WriteLine("  **TimeoutException** " + ex.Message);
                 _lastException = ex;
                 ResendCommand();
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(DateTime.Now + " -   **Exception** " + ex.Message);
+                CTecUtil.Debug.WriteLine("  **Exception** " + ex.Message);
                 _lastException = ex;
                 ResendCommand();
             }
@@ -449,25 +461,25 @@ namespace CTecUtil.IO
                 //now we know how many more bytes to expect - i.e. header + payloadLength + 1 byte for checksum
                 byte[] buffer = new byte[header.Length + payloadLength + 1];
                 Buffer.BlockCopy(header, 0, buffer, 0, header.Length);
-                //Debug.WriteLine(DateTime.Now + " - buffer=" + Utils.ByteArrayToString(buffer));
+                //CTecUtil.Debug.WriteLine("buffer=" + Utils.ByteArrayToString(buffer));
 
                 int offset = header.Length;
                 while (offset < buffer.Length)
                 {
                     while (port.BytesToRead == 0)
                     {
-                        //Debug.WriteLine(DateTime.Now + " -    wait - expecting " + payloadLength + " bytes payload");
+                        //CTecUtil.Debug.WriteLine("   wait - expecting " + payloadLength + " bytes payload");
                         Thread.Sleep(20);
                         if (_incomingDataTimer.TimedOut)
                             throw new TimeoutException();
                     }
 
-                    //Debug.WriteLine(DateTime.Now + " -   read " + port.BytesToRead + " bytes");
+                    //CTecUtil.Debug.WriteLine("  read " + port.BytesToRead + " bytes");
 
                     //Read payload & checksum
                     var bytes = Math.Min(port.BytesToRead, buffer.Length - offset);
                     port.Read(buffer, offset, bytes);
-                    //Debug.WriteLine(DateTime.Now + " - buffer=" + Utils.ByteArrayToString(buffer));
+                    //CTecUtil.Debug.WriteLine("buffer=" + Utils.ByteArrayToString(buffer));
                     offset += bytes;
                 }
 
@@ -492,7 +504,7 @@ namespace CTecUtil.IO
 
                 var incoming = readIncomingListenerData(port);
 
-                //Debug.WriteLine(DateTime.Now + " -   incoming: [" + Utils.ByteArrayToString(incoming) + "]");
+                //CTecUtil.Debug.WriteLine("  incoming: [" + Utils.ByteArrayToString(incoming) + "]");
 
                 if (incoming != null && ListenerDataReceiver != null)
                 {
@@ -505,7 +517,7 @@ namespace CTecUtil.IO
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(DateTime.Now + " -   **Exception** " + ex.Message);
+                CTecUtil.Debug.WriteLine("  **Exception** " + ex.Message);
                 _lastException = ex;
                 ResendCommand();
             }
@@ -709,7 +721,7 @@ namespace CTecUtil.IO
 
             Application.Current.Dispatcher.Invoke(new Action(() =>
             {
-                Debug.WriteLine(DateTime.Now + "---progress: max=" + _numCommandsToProcess + ", subQMax=" + commandsInSubqueue);
+                CTecUtil.Debug.WriteLine("---progress: max=" + _numCommandsToProcess + ", subQMax=" + commandsInSubqueue);
                 _progressBarWindow.ProgressBarLegend      = _commandQueue.OperationDesc;
                 _progressBarWindow.ProgressBarOverallMax  = _numCommandsToProcess;
                 _progressBarWindow.ProgressBarSubqueueMax = commandsInSubqueue;
@@ -736,7 +748,7 @@ namespace CTecUtil.IO
                     break;
                 }
 
-                Debug.WriteLine(DateTime.Now + "---progress: " + _progressOverall + " (" + lastProgress + ")");
+                CTecUtil.Debug.WriteLine("---progress: " + _progressOverall + " (" + lastProgress + ")");
 
                 if (_progressOverall > lastProgress)
                 {
@@ -749,7 +761,7 @@ namespace CTecUtil.IO
                 Thread.Sleep(100);
             }
 
-            //Debug.WriteLine(DateTime.Now + " - finished?");
+            //CTecUtil.Debug.WriteLine("finished?");
 
             //hide progress window if it hasn't already done it itself
             Application.Current.Dispatcher.Invoke(new Action(() => { hideProgressBarWindow(); }), DispatcherPriority.ApplicationIdle);

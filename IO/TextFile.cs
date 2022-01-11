@@ -34,7 +34,7 @@ namespace CTecUtil.IO
             {
                 FilePath = dlgOpenFile.FileName;
                 FileFolder = dataFileDirectory();
-                Debug.WriteLine("Opening file: " + FilePath);
+                CTecUtil.Debug.WriteLine("Opening file: " + FilePath);
                 return true;
             }
 
@@ -52,7 +52,7 @@ namespace CTecUtil.IO
             else
             {
                 UIState.SetBusyState();
-                Debug.WriteLine("Writing file: " + FilePath);
+                CTecUtil.Debug.WriteLine("Writing file: " + FilePath);
                 using var Writer = new StreamWriter(FilePath);
                 Writer.Write(data);
             }

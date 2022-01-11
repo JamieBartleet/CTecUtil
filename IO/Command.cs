@@ -13,15 +13,12 @@ namespace CTecUtil.IO
         public Command(Command original)
         {
             CommandData = (byte[])original.CommandData.Clone();
-            Index = original.Index;
             Tries = original.Tries;
         }
 
 
         /// <summary>The command data</summary>
         public byte[] CommandData { get; set; }
-
-        public int? Index { get; set; }
 
         public int Tries { get; set; }
 

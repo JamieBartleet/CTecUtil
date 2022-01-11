@@ -54,9 +54,11 @@ namespace CTecUtil
                 if (b >= 0x20 && b < 0x7f)
                     result.Append((char)b);
                 else if (b == 0x0a)
-                    result.Append("\r");
+                    result.Append("\\r");
                 else if (b == 0x0d)
-                    result.Append("\n");
+                    result.Append("\\n");
+                else
+                    result.Append("▫");
             }
             return result.ToString();
         }
@@ -72,7 +74,6 @@ namespace CTecUtil
         }
 
 
-        public static bool IsNumeric(string text)  => new Regex("^[0-9]+").IsMatch(text);
-
+        public static bool IsNumeric(string text) => new Regex("^[0-9]+").IsMatch(text);
     }
 }
