@@ -151,7 +151,7 @@
     <value>Disconnected</value>
   </data>
   <data name="Comms_Listening" xml:space="preserve">
-    <value>Listening for data</value>
+    <value>Listening for logging data</value>
   </data>
   <data name="Comms_Connected_ReadOnly" xml:space="preserve">
     <value>Connected - data is read-only</value>

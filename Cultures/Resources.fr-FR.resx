@@ -151,7 +151,7 @@
     <value>Déconnecté</value>
   </data>
   <data name="Comms_Listening" xml:space="preserve">
-    <value>Attente des données</value>
+    <value>Attente des données de journalisation</value>
   </data>
   <data name="Comms_Connected_ReadOnly" xml:space="preserve">
     <value>Connecté - les données sont en lecture seule</value>

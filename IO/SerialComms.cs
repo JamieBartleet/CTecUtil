@@ -22,7 +22,7 @@ namespace CTecUtil.IO
             _settings = Registry.ReadSerialPortSettings();
             _progressBarWindow.OnCancel = CancelCommandQueue;
             _responseTimer.OnTimedOut = new(() => { responseTimerTimeout(); });
-            _responseTimer.Start(5000);
+            _responseTimer.Start(_responseTimerPeriod);
         }
 
 
@@ -46,18 +46,22 @@ namespace CTecUtil.IO
         }
 
 
-        /// <summary>Direction of the main data transfer</summary>
-        public enum CommsDirection
+        //direction of the current data
+        public enum Direction
         {
-            /// <summary>Upload to panel</summary>
+            /// <summary>No data transfer in progress</summary>
+            Idle,
+            
+            /// <summary>Uploading to panel</summary>
             Upload,
-
-            /// <summary>Download from panel</summary>
+        
+            /// <summary>Downloading from panel</summary>
             Download
         }
 
 
-        public enum Direction { Idle, Up, Down }
+        private const int _incomingDataTimerPeriod = 3000;
+        private const int _responseTimerPeriod     = 7500;
 
 
         private static SerialPort _port;
@@ -255,14 +259,14 @@ namespace CTecUtil.IO
                     if (_lastException != null)
                     {
                         if (_lastException is TimeoutException)
-                            error(_commandQueue.Direction == Direction.Up ? Cultures.Resources.Error_Upload_Timeout : Cultures.Resources.Error_Download_Timeout, _lastException);
+                            error(_commandQueue.Direction == Direction.Upload ? Cultures.Resources.Error_Upload_Timeout : Cultures.Resources.Error_Download_Timeout, _lastException);
                         else if (_lastException is FormatException)
                             error(Cultures.Resources.Error_Checksum_Fail, _lastException);
                         else
-                            error(_commandQueue.Direction == Direction.Up ? Cultures.Resources.Error_Uploading_Data : Cultures.Resources.Error_Downloading_Data, _lastException);
+                            error(_commandQueue.Direction == Direction.Upload ? Cultures.Resources.Error_Uploading_Data : Cultures.Resources.Error_Downloading_Data, _lastException);
                     }
                     else
-                        error(_commandQueue.Direction == Direction.Up ? Cultures.Resources.Error_Upload_Retries : Cultures.Resources.Error_Download_Retries);
+                        error(_commandQueue.Direction == Direction.Upload ? Cultures.Resources.Error_Upload_Retries : Cultures.Resources.Error_Download_Retries);
                 }
                 else
                     SendData(cmd);
@@ -316,7 +320,7 @@ namespace CTecUtil.IO
             if (port == null)
                 return;
 
-            _responseTimer.Start(10000);
+            _responseTimer.Start(_responseTimerPeriod);
 
             if (ListenerMode)
                 ListenerDataReceived(port);
@@ -430,7 +434,7 @@ namespace CTecUtil.IO
             try
             {
                 //1.5 sec timeout
-                _incomingDataTimer.Start(2000);
+                _incomingDataTimer.Start(_incomingDataTimerPeriod);
 
                 //wait for buffering [sometimes dataReceived() is called by the port when BytesToRead is still zero]
                 while (port.BytesToRead == 0)
@@ -529,7 +533,7 @@ namespace CTecUtil.IO
             try
             {
                 //2.5 sec timeout
-                _incomingDataTimer.Start(2500);
+                _incomingDataTimer.Start(_incomingDataTimerPeriod);
 
                 //wait for buffering [sometimes dataReceived() is called by the port when BytesToRead is still zero]
                 while (port.BytesToRead == 0)
@@ -581,7 +585,7 @@ namespace CTecUtil.IO
                 //try again...
                 ResendCommand();
             }
-            _responseTimer.Start(5000);
+            _responseTimer.Start(_responseTimerPeriod);
         }
 
 
@@ -742,7 +746,7 @@ namespace CTecUtil.IO
                     Application.Current.Dispatcher.Invoke(new Action(() =>
                     {
                         if (_commandQueue.Direction != Direction.Idle)
-                            error(_commandQueue.Direction == Direction.Up ? Cultures.Resources.Error_Upload_Timeout : Cultures.Resources.Error_Download_Timeout, new TimeoutException());
+                            error(_commandQueue.Direction == Direction.Upload ? Cultures.Resources.Error_Upload_Timeout : Cultures.Resources.Error_Download_Timeout, new TimeoutException());
 
                     }), DispatcherPriority.Send);
                     break;

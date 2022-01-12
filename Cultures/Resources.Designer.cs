@@ -88,7 +88,7 @@ namespace CTecUtil.Cultures {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Listening for data.
+        ///   Looks up a localized string similar to Listening for logging data.
         /// </summary>
         public static string Comms_Listening {
             get {
