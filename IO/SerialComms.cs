@@ -339,6 +339,7 @@ namespace CTecUtil.IO
                 NotifyConnectionStatus?.Invoke(_connectionStatus);
 
                 var incoming = readIncomingResponse(port);
+
                 CTecUtil.Debug.WriteLine("  incoming: [" + Utils.ByteArrayToHexString(incoming) + "] --> '" + Utils.ByteArrayToString(incoming) + "'");
 
                 if (isPingResponse(incoming))
@@ -532,7 +533,6 @@ namespace CTecUtil.IO
         {
             try
             {
-                //2.5 sec timeout
                 _incomingDataTimer.Start(_incomingDataTimerPeriod);
 
                 //wait for buffering [sometimes dataReceived() is called by the port when BytesToRead is still zero]
