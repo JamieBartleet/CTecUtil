@@ -33,11 +33,13 @@ namespace CTecUtil
             var strStart = centred ? length / 2 - (strLen + 1) / 2 : 0;
             var strEnd   = strStart + strLen;
 
-            //pad to length
+            //pad prefix if required
             for (int i = 0; i < strStart; i++)
                 result[i] = (byte)' ';
 
             Buffer.BlockCopy(Encoding.ASCII.GetBytes(value), 0, result, strStart, strLen);
+
+            //pad to length
             for (int i = strEnd; i < length; i++)
                 result[i] = (byte)' ';
 
@@ -50,16 +52,7 @@ namespace CTecUtil
             if (data is null) return "";
             var result = new StringBuilder();
             foreach (var b in data)
-            {
-                if (b >= 0x20 && b < 0x7f)
-                    result.Append((char)b);
-                else if (b == 0x0a)
-                    result.Append("\\r");
-                else if (b == 0x0d)
-                    result.Append("\\n");
-                else
-                    result.Append("▫");
-            }
+                result.Append(b switch { 0x0a => '\n', 0x0d => '\r', >0x1f and <0x7f => (char)b, _ => '▫' });
             return result.ToString();
         }
 
