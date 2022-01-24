@@ -52,6 +52,8 @@ namespace CTecUtil
         /// </summary>
         public static string AplhaNumericKeyToString(Key k)
         {
+            if (k == Key.Space)
+                return " ";
             if (k >= Key.A && k <= Key.Z)
                 return k.ToString();
             return DigitKeyToString(k);
