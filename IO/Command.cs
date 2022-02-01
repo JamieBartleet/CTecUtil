@@ -25,6 +25,7 @@ namespace CTecUtil.IO
         /// <summary>Handler to which the response will be sent.</summary>
         public SerialComms.ReceivedResponseDataHandler DataReceiver { get; set; }
 
+        /// <summary>Returns the string representation of the CommandData in hexadecimal format</summary>
         public override string ToString() => Utils.ByteArrayToHexString(CommandData);
     }
 }

@@ -219,7 +219,6 @@ namespace CTecUtil.IO
             //CTecUtil.Debug.WriteLine(DateTime.Now + " - CancelCommandQueue()");
             _incomingDataTimer.Stop();
             _commandQueue?.Clear();
-            //Thread.Sleep(500);
         }
 
 
@@ -282,30 +281,37 @@ namespace CTecUtil.IO
         {
             lock (_sendLock)
             {
-                _lastException = null;
-
-                if (command != null && command.CommandData != null)
+                try
                 {
-                    command.Tries++;
-                    CTecUtil.Debug.WriteLine("SendData() - (try=" + command.Tries + ")  [" + command.ToString() + "]");
+                    _lastException = null;
 
-                    try
+                    if (command != null && command.CommandData != null)
                     {
+                        command.Tries++;
+                        CTecUtil.Debug.WriteLine("SendData() - (try=" + command.Tries + ")  [" + command.ToString() + "]");
 
-                        if (_port is null)
-                            _port = newSerialPort();
+                        try
+                        {
 
-                        if (!_port?.IsOpen ?? false)
-                            _port?.Open();
+                            if (_port is null)
+                                _port = newSerialPort();
 
-                        _port?.DiscardInBuffer();
-                        _port?.DiscardOutBuffer();
-                        _port?.Write(command.CommandData, 0, command.CommandData.Length);
+                            if (!_port.IsOpen)
+                                _port.Open();
+
+                            _port.DiscardInBuffer();
+                            _port.DiscardOutBuffer();
+                            _port.Write(command.CommandData, 0, command.CommandData.Length);
+                        }
+                        catch (Exception ex)
+                        {
+                            error(Cultures.Resources.Error_Serial_Port, ex);
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        error(Cultures.Resources.Error_Serial_Port, ex);
-                    }
+                }
+                catch (Exception ex)
+                {
+                    CTecUtil.Debug.WriteLine("  **Exception** " + ex.Message);
                 }
             }
         }
@@ -316,16 +322,23 @@ namespace CTecUtil.IO
         /// </summary>
         private static void dataReceived(object sender, SerialDataReceivedEventArgs e)
         {
-            var port = sender as SerialPort;
-            if (port == null)
-                return;
+            try
+            {
+                var port = sender as SerialPort;
+                if (port == null)
+                    return;
 
-            _responseTimer.Start(_responseTimerPeriod);
+                _responseTimer.Start(_responseTimerPeriod);
 
-            if (ListenerMode)
-                ListenerDataReceived(port);
-            else
-                ResponseDataReceived(port);
+                if (ListenerMode)
+                    ListenerDataReceived(port);
+                else
+                    ResponseDataReceived(port);
+            }
+            catch (Exception ex)
+            {
+                CTecUtil.Debug.WriteLine("  **Exception** " + ex.Message);
+            }
         }
 
 
@@ -605,6 +618,8 @@ namespace CTecUtil.IO
 
         private static void error(string message, Exception ex = null)
         {
+            CTecUtil.Debug.WriteLine("  **Exception** " + ex?.Message);
+
             //check queue - avoids erroring on ping fail
             var showError = _commandQueue.TotalCommandCount > 0;
             CancelCommandQueue();
