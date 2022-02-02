@@ -34,8 +34,13 @@ namespace CTecUtil.UI
                 Left = (owner.WindowState != WindowState.Maximized ? owner.Left : owner.Left <= -owner.Width  / 2 ? -owner.ActualWidth  : 0) + owner.ActualWidth  / 2 - Width  / 2;
             }
             
-            base.Owner = owner;
-            base.Show();
+            Owner = owner;
+            Show();
+            Activate();                       //  ═╕
+            UpdateLayout();                   //   │
+            BringIntoView();                  //   ╞═ <-- this lot is to prevent the delay in the window's appearance
+            Visibility = Visibility.Visible;  //   │
+            Focus();                          //  ═╛
         }
 
 

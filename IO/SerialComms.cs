@@ -77,6 +77,7 @@ namespace CTecUtil.IO
 
         
         public delegate void ReceivedResponseDataHandler(byte[] incomingData);
+        public delegate bool ReceivedResponseDataHandler2(byte[] incomingData, byte[] requestCommand);
         public delegate void ReceivedListenerDataHandler(byte[] incomingData);
         public static ReceivedListenerDataHandler ListenerDataReceiver;
 
@@ -115,13 +116,8 @@ namespace CTecUtil.IO
         public delegate void ConnectionStatusNotifier(ConnectionStatus status);
         public static ConnectionStatusNotifier NotifyConnectionStatus;
 
-        //public delegate void WriteableStatusNotifier(bool writeable);
-        //public static WriteableStatusNotifier NotifyReadOnlyStatus;
-
-
         /// <summary>Timer for pinging the panel every few seconds</summary>
         private static System.Timers.Timer _pingTimer;
-
 
         private static ConnectionStatus _connectionStatus = ConnectionStatus.Unknown;
         private static byte[] _pingCommand;
@@ -144,7 +140,6 @@ namespace CTecUtil.IO
                 _pingTimer.Elapsed += new(sendPing);
             }
         }
-
 
         private static void sendPing(object sender, ElapsedEventArgs e)
         {
@@ -201,8 +196,18 @@ namespace CTecUtil.IO
         /// Queue a new command ready to send to the panel.
         /// </summary>
         /// <param name="commandData">The command data.</param>
+        /// <param name="dataReceiver">Handler to which the response will be sent.</param>
         /// <param name="index">(Optional) the index of the item requested - for the case where the index is not included in the response data (e.g. devices).</param>
-        public static void EnqueueCommand(byte[] commandData) => EnqueueCommand(commandData, null);
+        public static void EnqueueCommand(byte[] commandData, ReceivedResponseDataHandler2 dataReceiver)
+            => _commandQueue.Enqueue(new Command() { CommandData = commandData, DataReceiver2 = dataReceiver });
+
+
+        /// <summary>
+        /// Queue a new command ready to send to the panel.
+        /// </summary>
+        /// <param name="commandData">The command data.</param>
+        /// <param name="index">(Optional) the index of the item requested - for the case where the index is not included in the response data (e.g. devices).</param>
+        public static void EnqueueCommand(byte[] commandData) => EnqueueCommand(commandData, (ReceivedResponseDataHandler)null);
 
 
         public static void StartSendingCommandQueue(Action onStart, Action onEnd)
@@ -276,6 +281,7 @@ namespace CTecUtil.IO
 
         #region send/receive
         private static object _sendLock = new();
+
 
         public static void SendData(Command command)
         {
@@ -362,7 +368,7 @@ namespace CTecUtil.IO
                 }
                 else if (isCheckWriteableResponse(incoming))
                 {
-                    //read-only response received
+                    //read-only response received?
                     var readOnly = incoming.Length > 2 && incoming[2] == 0;
                     NotifyConnectionStatus?.Invoke(_connectionStatus = readOnly ? ConnectionStatus.ConnectedReadOnly : ConnectionStatus.ConnectedWriteable);
                 }
@@ -389,9 +395,12 @@ namespace CTecUtil.IO
                 else if (_commandQueue.TotalCommandCount > 0)
                 {
                     var cmd = _commandQueue.Peek();
+                    bool ok = true;
 
                     if (incoming != null && cmd != null)
                     {
+
+
                         if (_commandQueue.Dequeue())
                         {
                             //new queue - reset the count
@@ -404,21 +413,25 @@ namespace CTecUtil.IO
                         }
                         CTecUtil.Debug.WriteLine("dequeued         : Qs=" + _commandQueue.SubqueueCount + " this=" + _commandQueue.CurrentSubqueueName + "(" + _commandQueue.CommandsInCurrentSubqueue + ") tot=" + _commandQueue.TotalCommandCount);
 
+
                         //send response to data receiver
                         await Task.Run(new Action(() =>
                         {
-                            //if (cmd.Index != null)
-                            //    cmd.DataReceiver?.Invoke(incoming, cmd.Index.Value);
-                            //else
+                            if (cmd.DataReceiver2 is not null)
+                                ok = cmd.DataReceiver2.Invoke(incoming, cmd.CommandData);
+                            else
                                 cmd.DataReceiver?.Invoke(incoming);
                         }));
 
                         CTecUtil.Debug.WriteLine("progress: subq=" + _progressWithinSubqueue + " o/a=" + _progressOverall + "/" + _numCommandsToProcess);
                     }
 
-                    //send next command, if any
-                    if (_commandQueue.TotalCommandCount > 0)
-                        SendNextCommandInQueue();
+                    if (!ok)
+                        ResendCommand();
+                    else
+                        //send next command, if any
+                        if (_commandQueue.TotalCommandCount > 0)
+                            SendNextCommandInQueue();
                 }
             }
             catch (FormatException ex)
@@ -450,7 +463,7 @@ namespace CTecUtil.IO
                 //1.5 sec timeout
                 _incomingDataTimer.Start(_incomingDataTimerPeriod);
 
-                //wait for buffering [sometimes dataReceived() is called by the port when BytesToRead is still zero]
+                //wait for buffering [sometimes SerialPort.DataReceived is called by the port when BytesToRead is still zero]
                 while (port.BytesToRead == 0)
                 {
                     Thread.Sleep(10);
@@ -463,7 +476,6 @@ namespace CTecUtil.IO
                 port.Read(header, 0, 1);
                 if (isAck(header[0]) || isNak(header[0]))
                     return new byte[] { header[0] };
-
 
                 //read payload length byte
                 while (port.BytesToRead == 0)
@@ -548,7 +560,7 @@ namespace CTecUtil.IO
             {
                 _incomingDataTimer.Start(_incomingDataTimerPeriod);
 
-                //wait for buffering [sometimes dataReceived() is called by the port when BytesToRead is still zero]
+                //wait for buffering [sometimes SerialPort.DataReceived is called by the port when BytesToRead is still zero]
                 while (port.BytesToRead == 0)
                 {
                     if (_incomingDataTimer.TimedOut)
@@ -623,6 +635,7 @@ namespace CTecUtil.IO
             //check queue - avoids erroring on ping fail
             var showError = _commandQueue.TotalCommandCount > 0;
             CancelCommandQueue();
+            clearPort();
             NotifyConnectionStatus?.Invoke(_connectionStatus = ConnectionStatus.Disconnected);
             if (showError)
                 ShowErrorMessage?.Invoke(message + "\n\n" + ex?.Message);
@@ -686,6 +699,15 @@ namespace CTecUtil.IO
                 error(Cultures.Resources.Error_Serial_Port, ex);
             }
             return null;
+        }
+        
+        
+        private static void clearPort()
+        {
+            _port?.Close();
+            _port?.Dispose();
+            _port = null;
+            _sendLock = new();
         }
         #endregion
 
