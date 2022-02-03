@@ -38,7 +38,7 @@ namespace CTecUtil.UI
             Show();
             Activate();                       //  ═╕
             UpdateLayout();                   //   │
-            BringIntoView();                  //   ╞═ <-- this lot is to prevent the delay in the window's appearance
+            BringIntoView();                  //   ╞═ <-- this lot is to try to reduce the delay in the window's appearance
             Visibility = Visibility.Visible;  //   │
             Focus();                          //  ═╛
         }
