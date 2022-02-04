@@ -158,6 +158,11 @@ namespace CTecUtil.IO
 
 
         #region command queue
+        public delegate void OnFinishedHandler(bool wasCompleted);
+        public static OnFinishedHandler OnFinish;
+        private static bool _queueWasCompleted;
+
+
         /// <summary>
         /// Initialise new set of command command queues with the given process name.
         /// </summary>
@@ -197,11 +202,12 @@ namespace CTecUtil.IO
         //public static void EnqueueCommand(byte[] commandData, ReceivedResponseDataHandlerWithValidation dataReceiver)
         //    => _commandQueue.Enqueue(new Command() { CommandData = commandData, DataReceiverWithValidation = dataReceiver });
 
-
-        public static void StartSendingCommandQueue(Action onStart, Action onEnd)
+        public static void StartSendingCommandQueue(Action onStart, OnFinishedHandler onEnd)
         {
-            //arbitrarily don't show progress bar for short jobs (especially don't want to do that for firmware version request)
-            if (_commandQueue.TotalCommandCount < 3)
+            _queueWasCompleted = false;
+
+            //arbitrarily don't show progress bar for single jobs (especially don't want to do that for firmware version request)
+            if (_commandQueue.TotalCommandCount < 2)
                 SendFirstCommandInQueue();
             else
                 ShowProgressBarWindow(onStart, onEnd);
@@ -286,7 +292,6 @@ namespace CTecUtil.IO
 
                         try
                         {
-
                             if (_port is null)
                                 _port = newSerialPort();
 
@@ -338,8 +343,6 @@ namespace CTecUtil.IO
 
         private static async void ResponseDataReceived(SerialPort port)
         {
-            CTecUtil.Debug.WriteLine("ResponseDataReceived");
-
             try
             {
                 //data received, so status is one of the Connected statuses
@@ -419,6 +422,8 @@ namespace CTecUtil.IO
                         //send next command, if any
                         if (_commandQueue.TotalCommandCount > 0)
                             SendNextCommandInQueue();
+                        else
+                            _queueWasCompleted = true;
                     }
                     else
                     {
@@ -593,15 +598,6 @@ namespace CTecUtil.IO
             {
                 NotifyConnectionStatus?.Invoke(_connectionStatus = ConnectionStatus.Disconnected);
 
-                //try
-                //{
-                //    if (_port?.IsOpen == true)
-                //        _port?.Close();
-                //}
-                //catch { }
-            
-                //_port = newSerialPort();
-
                 //try again...
                 ResendCommand();
             }
@@ -630,7 +626,6 @@ namespace CTecUtil.IO
             //check queue - avoids erroring on ping fail
             var showError = _commandQueue.TotalCommandCount > 0;
             CancelCommandQueue();
-            clearPort();
             NotifyConnectionStatus?.Invoke(_connectionStatus = ConnectionStatus.Disconnected);
             if (showError)
                 ShowErrorMessage?.Invoke(message + "\n\n" + ex?.Message);
@@ -697,15 +692,6 @@ namespace CTecUtil.IO
             }
             return null;
         }
-        
-        
-        private static void clearPort()
-        {
-            _port?.Close();
-            _port?.Dispose();
-            _port = null;
-            _sendLock = new();
-        }
         #endregion
 
 
@@ -713,10 +699,11 @@ namespace CTecUtil.IO
         private static ProgressBarWindow _progressBarWindow = new();
         private static int _progressOverall, _progressWithinSubqueue, _numCommandsToProcess;
 
-        private static Action _onStartProgress, _onEndProgress;
+        private static Action _onStartProgress;
+        private static OnFinishedHandler _onEndProgress;
 
 
-        public static void ShowProgressBarWindow(Action onStart, Action onEnd)
+        public static void ShowProgressBarWindow(Action onStart, OnFinishedHandler onEnd)
         {
             _onStartProgress = onStart;
             _onEndProgress   = onEnd;
@@ -740,12 +727,11 @@ namespace CTecUtil.IO
         {
             CancelCommandQueue();
             _progressBarWindow.Hide();
-            _onEndProgress?.Invoke();
+            _onEndProgress?.Invoke(_queueWasCompleted);
         }
 
         private static void processAsynch(object sender, DoWorkEventArgs e)
         {
-            CTecUtil.Debug.WriteLine("processAsynch()");
             _numCommandsToProcess  = _commandQueue.TotalCommandCount;
             var commandsInSubqueue = _commandQueue.CommandsInCurrentSubqueue;
 
@@ -799,10 +785,8 @@ namespace CTecUtil.IO
                 Thread.Sleep(100);
             }
 
-            //CTecUtil.Debug.WriteLine("finished?");
-
             //hide progress window if it hasn't already done it itself
-            Application.Current.Dispatcher.Invoke(new Action(() => { hideProgressBarWindow(); }), DispatcherPriority.ApplicationIdle);
+            Application.Current.Dispatcher.Invoke(new Action(() => { hideProgressBarWindow(); }), DispatcherPriority.Normal);
         }
         #endregion
 
