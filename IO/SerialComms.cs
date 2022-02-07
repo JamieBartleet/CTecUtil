@@ -758,8 +758,19 @@ namespace CTecUtil.IO
             var startTime = DateTime.Now;
             int lastProgress = 0;
 
-            while (_commandQueue?.TotalCommandCount > 0)
+            while (true)
             {
+                try
+                {
+                    if (_commandQueue.TotalCommandCount == 0)
+                        break;
+                }
+                catch (Exception ex)
+                {
+                    CTecUtil.Debug.WriteLine("  **Exception** (ProcessAsync) " + ex.Message);
+                    continue;
+                }
+
                 //stop if progress hasn't changed for 10 secs
                 if (DateTime.Now > startTime.AddSeconds(10))
                 {
