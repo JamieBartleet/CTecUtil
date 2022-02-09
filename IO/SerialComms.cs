@@ -225,6 +225,13 @@ namespace CTecUtil.IO
         private static void SendFirstCommandInQueue()
         {
             CTecUtil.Debug.WriteLine("SendFirstCommandInQueue()");
+            CTecUtil.Debug.WriteLine("  _commandQueue.SubqueueCount " + _commandQueue.SubqueueCount);
+            if (_commandQueue.SubqueueCount > 0)
+            {
+                CTecUtil.Debug.WriteLine("    CommandsInCurrentSubqueue " + _commandQueue.CommandsInCurrentSubqueue);
+                CTecUtil.Debug.WriteLine("                 next command " + Utils.ByteArrayToHexString(_commandQueue.Peek().CommandData));
+            }
+
             Application.Current.Dispatcher.Invoke(new Action(() =>
             {
                 _progressBarWindow.SubqueueCount = _commandQueue.SubqueueCount;
@@ -288,7 +295,7 @@ namespace CTecUtil.IO
                     if (command != null && command.CommandData != null)
                     {
                         command.Tries++;
-                        CTecUtil.Debug.WriteLine("SendData() - (try=" + command.Tries + ")  [" + command.ToString() + "]");
+                        CTecUtil.Debug.WriteLine("SendData() - (try=" + command.Tries + ")   [" + command.ToString() + "]");
 
                         try
                         {
@@ -400,35 +407,30 @@ namespace CTecUtil.IO
                                 ok = cmd.DataReceiver?.Invoke(incoming) == true;
                             }));
 
-                            CTecUtil.Debug.WriteLine("progress: subq=" + _progressWithinSubqueue + " o/a=" + _progressOverall + "/" + _numCommandsToProcess);
-
-                            if (_commandQueue.Dequeue())
-                            {
-                                //new queue - reset the count
-                                _progressWithinSubqueue = 0;
-                                Application.Current.Dispatcher.Invoke(new Action(() =>
-                                {
-                                    _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.CommandsInCurrentSubqueue;
-
-                                }), DispatcherPriority.Normal);
-                            }
-                            CTecUtil.Debug.WriteLine("dequeued         : Qs=" + _commandQueue.SubqueueCount + " this=" + _commandQueue.CurrentSubqueueName + "(" + _commandQueue.CommandsInCurrentSubqueue + ") tot=" + _commandQueue.TotalCommandCount);
-
-                        }
+                            CTecUtil.Debug.WriteLine("progress: subq=" + _progressWithinSubqueue + " o/a=" + _progressOverall + "/" + _numCommandsToProcess);                        }
                     }
 
                     if (ok)
                     {
-                        //send next command, if any
-                        if (_commandQueue.TotalCommandCount > 0)
-                            SendNextCommandInQueue();
-                        else
-                            _queueWasCompleted = true;
+                        if (_commandQueue.Dequeue())
+                        {
+                            //new queue - reset the count
+                            _progressWithinSubqueue = 0;
+                            Application.Current.Dispatcher.Invoke(new Action(() =>
+                            {
+                                _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.CommandsInCurrentSubqueue;
+
+                            }), DispatcherPriority.Normal);
+                        }
+                        CTecUtil.Debug.WriteLine("dequeued         : Qs=" + _commandQueue.SubqueueCount + " this=" + _commandQueue.CurrentSubqueueName + "(" + _commandQueue.CommandsInCurrentSubqueue + ") tot=" + _commandQueue.TotalCommandCount);
                     }
+
+                    if (_commandQueue.TotalCommandCount == 0)
+                        _queueWasCompleted = true;
+                    else if (ok)
+                        SendNextCommandInQueue();
                     else
-                    {
                         ResendCommand();
-                    }
                 }
             }
             catch (FormatException ex)
@@ -621,7 +623,7 @@ namespace CTecUtil.IO
 
         private static void error(string message, Exception ex = null)
         {
-            CTecUtil.Debug.WriteLine("  **Exception** " + ex?.Message);
+            CTecUtil.Debug.WriteLine("  **Exception** ex: '" + ex?.Message + "'");
 
             //check queue - avoids erroring on ping fail
             var showError = _commandQueue.TotalCommandCount > 0;
