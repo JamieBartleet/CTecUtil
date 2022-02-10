@@ -16,15 +16,13 @@ namespace CTecUtil.IO
     /// </summary>
     internal class CommandQueue
     {
-        public CommandQueue() { }
+        public CommandQueue() => Id = ++_idCounter;
 
-        public CommandQueue(CommandQueue original)
-        {
-            OperationDesc = original.OperationDesc;
 
-            foreach (var sq in _subqueues)
-                AddSubqueue(new CommandSubqueue(sq));
-        }
+        private static int _idCounter = 0;
+
+
+        public int Id { get; private set; }
 
 
         /// <summary>The queue of subqueues</summary>

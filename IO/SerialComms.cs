@@ -76,7 +76,7 @@ namespace CTecUtil.IO
         private static Exception _lastException = null;
 
         
-        public delegate bool ReceivedResponseDataHandler(byte[] incomingData);
+        public delegate bool ReceivedResponseDataHandler(byte[] incomingData, int? index);
         public delegate void ReceivedListenerDataHandler(byte[] incomingData);
         public delegate void ProgressMaxSetter(int maxValue);
         public delegate void ProgressValueUpdater(int value);
@@ -170,8 +170,7 @@ namespace CTecUtil.IO
         /// E.g. 'Downloading from panel...'</param>
         public static void InitCommandQueue(string operationName)
         {
-            _commandQueue.Clear();
-            _commandQueue.OperationDesc = operationName;
+            _commandQueue = new() { OperationDesc = operationName };
         }
 
 
@@ -191,6 +190,8 @@ namespace CTecUtil.IO
         /// <param name="dataReceiver">Handler to which the response will be sent.</param>
         public static void EnqueueCommand(byte[] commandData, ReceivedResponseDataHandler dataReceiver = null)
             => _commandQueue.Enqueue(new Command() { CommandData = commandData, DataReceiver = dataReceiver });
+        public static void EnqueueCommand(byte[] commandData, int index, ReceivedResponseDataHandler dataReceiver = null)
+            => _commandQueue.Enqueue(new Command() { CommandData = commandData, Index = index, DataReceiver = dataReceiver });
 
 
         ///// <summary>
@@ -399,38 +400,43 @@ namespace CTecUtil.IO
 
                     if (cmd != null)
                     {
+                        var savedQueueId = _commandQueue.Id;
+
                         if (incoming != null)
                         {
                             //send response to data receiver
                             await Task.Run(new Action(() =>
                             {
-                                ok = cmd.DataReceiver?.Invoke(incoming) == true;
+                                ok = cmd.DataReceiver?.Invoke(incoming, cmd.Index) == true;
                             }));
 
-                            CTecUtil.Debug.WriteLine("progress: subq=" + _progressWithinSubqueue + " o/a=" + _progressOverall + "/" + _numCommandsToProcess);                        }
-                    }
-
-                    if (ok)
-                    {
-                        if (_commandQueue.Dequeue())
-                        {
-                            //new queue - reset the count
-                            _progressWithinSubqueue = 0;
-                            Application.Current.Dispatcher.Invoke(new Action(() =>
-                            {
-                                _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.CommandsInCurrentSubqueue;
-
-                            }), DispatcherPriority.Normal);
+                            CTecUtil.Debug.WriteLine("progress: subq=" + _progressWithinSubqueue + " o/a=" + _progressOverall + "/" + _numCommandsToProcess);
                         }
-                        CTecUtil.Debug.WriteLine("dequeued         : Qs=" + _commandQueue.SubqueueCount + " this=" + _commandQueue.CurrentSubqueueName + "(" + _commandQueue.CommandsInCurrentSubqueue + ") tot=" + _commandQueue.TotalCommandCount);
-                    }
 
-                    if (_commandQueue.TotalCommandCount == 0)
-                        _queueWasCompleted = true;
-                    else if (ok)
-                        SendNextCommandInQueue();
-                    else
-                        ResendCommand();
+
+                        if (ok)
+                        {
+                            //NB: cmd.DataReceiver may have started a new command queue, so check the Id before dequeueing
+                            if (_commandQueue.Id != savedQueueId || _commandQueue.Dequeue())
+                            {
+                                //new queue - reset the count
+                                _progressWithinSubqueue = 0;
+                                Application.Current.Dispatcher.Invoke(new Action(() =>
+                                {
+                                    _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.CommandsInCurrentSubqueue;
+
+                                }), DispatcherPriority.Normal);
+                            }
+                            CTecUtil.Debug.WriteLine("dequeued         : Qs=" + _commandQueue.SubqueueCount + " this=" + _commandQueue.CurrentSubqueueName + "(" + _commandQueue.CommandsInCurrentSubqueue + ") tot=" + _commandQueue.TotalCommandCount);
+                        }
+
+                        if (_commandQueue.TotalCommandCount == 0)
+                            _queueWasCompleted = true;
+                        else if (ok)
+                            SendNextCommandInQueue();
+                        else
+                            ResendCommand();
+                    }
                 }
             }
             catch (FormatException ex)
