@@ -417,7 +417,7 @@ namespace CTecUtil.IO
                         if (ok)
                         {
                             //NB: cmd.DataReceiver may have started a new command queue, so check the Id before dequeueing
-                            if (_commandQueue.Id != savedQueueId || _commandQueue.Dequeue())
+                            if (_commandQueue.Id == savedQueueId && _commandQueue.Dequeue())
                             {
                                 //new queue - reset the count
                                 _progressWithinSubqueue = 0;
@@ -602,7 +602,7 @@ namespace CTecUtil.IO
 
         private static void responseTimerTimeout()
         {
-            if (_connectionStatus != ConnectionStatus.Listening && _commandQueue.TotalCommandCount == 0)
+            if (_connectionStatus != ConnectionStatus.Listening && _commandQueue.TotalCommandCount > 0)
             {
                 NotifyConnectionStatus?.Invoke(_connectionStatus = ConnectionStatus.Disconnected);
 
