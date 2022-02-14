@@ -60,8 +60,9 @@ namespace CTecUtil.IO
         }
 
 
-        private const int _incomingDataTimerPeriod = 3000;
-        private const int _responseTimerPeriod     = 7500;
+        private const int _incomingDataTimerPeriod = 3500;
+        private const int _responseTimerPeriod     = 3500;
+        private const int _pingTimerPeriod         = 4000;
 
 
         private static SerialPort _port;
@@ -111,6 +112,9 @@ namespace CTecUtil.IO
         public static bool ListenerMode { get => _listenerMode; set { NotifyConnectionStatus?.Invoke(_connectionStatus = (_listenerMode = value) ? ConnectionStatus.Listening : ConnectionStatus.Unknown); } }
 
 
+        public static bool TransferInProgress() => _commandQueue.TotalCommandCount > 0;
+
+
         #region ping
         public delegate void ConnectionStatusNotifier(ConnectionStatus status);
         public static ConnectionStatusNotifier NotifyConnectionStatus;
@@ -134,7 +138,7 @@ namespace CTecUtil.IO
                 {
                     AutoReset = true,
                     Enabled = true,
-                    Interval = 3000
+                    Interval = _pingTimerPeriod
                 };
                 _pingTimer.Elapsed += new(sendPing);
             }
@@ -160,6 +164,7 @@ namespace CTecUtil.IO
         #region command queue
         public delegate void OnFinishedHandler(bool wasCompleted);
         public static OnFinishedHandler OnFinish;
+        //private static bool _transferInProgress;
         private static bool _queueWasCompleted;
 
 
@@ -168,10 +173,7 @@ namespace CTecUtil.IO
         /// </summary>
         /// <param name="operationName">Name of the process to be displayed in the progress bar window.<br/>
         /// E.g. 'Downloading from panel...'</param>
-        public static void InitCommandQueue(string operationName)
-        {
-            _commandQueue = new() { OperationDesc = operationName };
-        }
+        public static void InitCommandQueue(string operationName) => _commandQueue = new() { OperationDesc = operationName };
 
 
         /// <summary>
@@ -179,8 +181,7 @@ namespace CTecUtil.IO
         /// </summary>
         /// <param name="direction">Comms direction (Up/Down).</param>
         /// <param name="name">Name of the command queue, to be displayed in the progress bar window.</param>
-        public static void AddNewCommandSubqueue(Direction direction, string name, SubqueueCompletedHandler onCompletion)
-            => _commandQueue.AddSubqueue(new CommandSubqueue(direction, onCompletion) { Name = name });
+        public static void AddNewCommandSubqueue(Direction direction, string name, SubqueueCompletedHandler onCompletion) => _commandQueue.AddSubqueue(new CommandSubqueue(direction, onCompletion) { Name = name });
 
 
         /// <summary>
@@ -188,23 +189,16 @@ namespace CTecUtil.IO
         /// </summary>
         /// <param name="commandData">The command data.</param>
         /// <param name="dataReceiver">Handler to which the response will be sent.</param>
-        public static void EnqueueCommand(byte[] commandData, ReceivedResponseDataHandler dataReceiver = null)
-            => _commandQueue.Enqueue(new Command() { CommandData = commandData, DataReceiver = dataReceiver });
-        public static void EnqueueCommand(byte[] commandData, int index, ReceivedResponseDataHandler dataReceiver = null)
-            => _commandQueue.Enqueue(new Command() { CommandData = commandData, Index = index, DataReceiver = dataReceiver });
+        public static void EnqueueCommand(byte[] commandData, ReceivedResponseDataHandler dataReceiver = null)            => _commandQueue.Enqueue(new Command() { CommandData = commandData, DataReceiver = dataReceiver });
+        public static void EnqueueCommand(byte[] commandData, int index, ReceivedResponseDataHandler dataReceiver = null) => _commandQueue.Enqueue(new Command() { CommandData = commandData, Index = index, DataReceiver = dataReceiver });
 
-
-        ///// <summary>
-        ///// Queue a new command ready to send to the panel.
-        ///// </summary>
-        ///// <param name="commandData">The command data.</param>
-        ///// <param name="dataReceiver">Handler to which the response will be sent.</param>
-        ///// <param name="index">(Optional) the index of the item requested - for the case where the index is not included in the response data (e.g. devices).</param>
-        //public static void EnqueueCommand(byte[] commandData, ReceivedResponseDataHandlerWithValidation dataReceiver)
-        //    => _commandQueue.Enqueue(new Command() { CommandData = commandData, DataReceiverWithValidation = dataReceiver });
 
         public static void StartSendingCommandQueue(Action onStart, OnFinishedHandler onEnd)
         {
+            //if (_transferInProgress)
+            //    return;
+
+            //_transferInProgress = true;
             _queueWasCompleted = false;
 
             //arbitrarily don't show progress bar for single jobs (especially don't want to do that for firmware version request)
@@ -217,7 +211,6 @@ namespace CTecUtil.IO
 
         public static void CancelCommandQueue()
         {
-            //CTecUtil.Debug.WriteLine(DateTime.Now + " - CancelCommandQueue()");
             _incomingDataTimer.Stop();
             _commandQueue?.Clear();
         }
@@ -225,13 +218,7 @@ namespace CTecUtil.IO
 
         private static void SendFirstCommandInQueue()
         {
-            CTecUtil.Debug.WriteLine("SendFirstCommandInQueue()");
-            CTecUtil.Debug.WriteLine("  _commandQueue.SubqueueCount " + _commandQueue.SubqueueCount);
-            if (_commandQueue.SubqueueCount > 0)
-            {
-                CTecUtil.Debug.WriteLine("    CommandsInCurrentSubqueue " + _commandQueue.CommandsInCurrentSubqueue);
-                CTecUtil.Debug.WriteLine("                 next command " + Utils.ByteArrayToHexString(_commandQueue.Peek().CommandData));
-            }
+            CTecUtil.Debug.WriteLine("SendFirstCommandInQueue()   SubqueueCount " + _commandQueue.SubqueueCount);
 
             Application.Current.Dispatcher.Invoke(new Action(() =>
             {
@@ -248,7 +235,8 @@ namespace CTecUtil.IO
             CTecUtil.Debug.WriteLine("SendNextCommandInQueue()");
             _progressOverall++;
             _progressWithinSubqueue++;
-            SendData(_commandQueue.Peek());
+            if (_commandQueue.TotalCommandCount > 0)
+                SendData(_commandQueue.Peek());
         }
 
 
@@ -296,7 +284,7 @@ namespace CTecUtil.IO
                     if (command != null && command.CommandData != null)
                     {
                         command.Tries++;
-                        CTecUtil.Debug.WriteLine("SendData() - (try=" + command.Tries + ")   [" + command.ToString() + "]");
+                        CTecUtil.Debug.WriteLine("SendData() {try=" + command.Tries + "} [" + command.ToString() + "]");
 
                         try
                         {
@@ -360,7 +348,7 @@ namespace CTecUtil.IO
 
                 var incoming = readIncomingResponse(port);
 
-                CTecUtil.Debug.WriteLine("  incoming: [" + Utils.ByteArrayToHexString(incoming) + "] --> '" + Utils.ByteArrayToString(incoming) + "'");
+                CTecUtil.Debug.WriteLine("Receive data:      [" + Utils.ByteArrayToHexString(incoming) + "] --> \"" + Utils.ByteArrayToString(incoming) + "\"");
 
                 if (isPingResponse(incoming))
                 {
@@ -375,12 +363,12 @@ namespace CTecUtil.IO
                 }
                 else if (isNak(incoming))
                 {
-                    CTecUtil.Debug.WriteLine("**NAK**");
+                    CTecUtil.Debug.WriteLine((char)0x2718 + " NAK");
                     ResendCommand();
                 }
                 else if (isAck(incoming))
                 {
-                    CTecUtil.Debug.WriteLine("  ACK");
+                    CTecUtil.Debug.WriteLine((char)0x2714 + " ACK");
                     if (_commandQueue.Dequeue())
                     {
                         //new queue - reset the count
@@ -431,7 +419,10 @@ namespace CTecUtil.IO
                         }
 
                         if (_commandQueue.TotalCommandCount == 0)
+                        {
+                            //_transferInProgress = false;
                             _queueWasCompleted = true;
+                        }
                         else if (ok)
                             SendNextCommandInQueue();
                         else
@@ -735,6 +726,7 @@ namespace CTecUtil.IO
         {
             CancelCommandQueue();
             _progressBarWindow.Hide();
+            //_transferInProgress = false;
             _onEndProgress?.Invoke(_queueWasCompleted);
         }
 
@@ -779,8 +771,8 @@ namespace CTecUtil.IO
                     continue;
                 }
 
-                //stop if progress hasn't changed for 10 secs
-                if (DateTime.Now > startTime.AddSeconds(10))
+                //stop if progress hasn't changed for 20 secs
+                if (DateTime.Now > startTime.AddSeconds(20))
                 {
                     Application.Current.Dispatcher.Invoke(new Action(() =>
                     {

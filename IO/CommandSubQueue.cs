@@ -36,9 +36,8 @@ namespace CTecUtil.IO
         //public void    Dequeue()                => _commandQueue.Dequeue();
         public void Dequeue()
         {
-            CTecUtil.Debug.WriteLine("Dequeue() - _commandQueue.Count=" + _commandQueue.Count);
-            CTecUtil.Debug.WriteLine("Dequeue() - CommandData=" + Utils.ByteArrayToHexString(_commandQueue.Peek().CommandData));
             _commandQueue.Dequeue();
+            CTecUtil.Debug.WriteLine("Dequeue() - _commandQueue.Count=" + _commandQueue.Count);
         }
 
         public Command Peek()                   { try { return _commandQueue?.Peek(); } catch { return null; } }
