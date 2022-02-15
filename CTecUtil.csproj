@@ -39,10 +39,18 @@
       <Generator>PublicResXFileCodeGenerator</Generator>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
-    <EmbeddedResource Update="Cultures\Resources.fr-FR.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
+	  <EmbeddedResource Update="Cultures\Resources.fr-FR.resx">
+		  <Generator>PublicResXFileCodeGenerator</Generator>
+		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	  <EmbeddedResource Update="Cultures\Resources.ca-ES.resx">
+		  <Generator>PublicResXFileCodeGenerator</Generator>
+		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	  <EmbeddedResource Update="Cultures\Resources.ga-IE.resx">
+		  <Generator>PublicResXFileCodeGenerator</Generator>
+		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+	  </EmbeddedResource>
     <EmbeddedResource Update="Cultures\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
