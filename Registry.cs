@@ -85,7 +85,7 @@ namespace CTecUtil
 
 
         public static void SaveCulture(string cultureName) => writeSubKey(Keys.CultureKey, cultureName);
-        public static string ReadCulture() => (string)readSubKey(Keys.CultureKey);
+        public static string ReadCulture() => (string)readSubKey(Keys.CultureKey, "en-GB");
 
         
         public static void SaveSerialPortSettings(SerialPortSettings settings)
@@ -176,14 +176,14 @@ namespace CTecUtil
         /// Read registry entry from HKEY_CURRENT_USER.
         /// </summary>
         /// <param name="subkeyName"></param>
-        private static object readSubKey(string subkeyName)
+        private static object readSubKey(string subkeyName, object defaultValue = null)
         {
             if (!_initialised) throw new Exception("CTecUtil: the Registry class has not been initialised.");
 
             try
             {
                 RegistryKey key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(_rootKey + _productName);
-                var result = key.GetValue(subkeyName);
+                var result = key.GetValue(subkeyName, defaultValue);
                 key.Close();
                 return result;
             }

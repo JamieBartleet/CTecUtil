@@ -15,35 +15,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Cultures\Resources - Copy.Designer.cs">
-      <DependentUpon>Resources.Designer.cs</DependentUpon>
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-    </Compile>
-    <Compile Update="Cultures\Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Update="UI\ProgressBarWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="Cultures\Resources.de-DE.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Cultures\Resources.en-GB.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
 	  <EmbeddedResource Update="Cultures\Resources.fr-FR.resx">
-		  <Generator>PublicResXFileCodeGenerator</Generator>
-		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-	  </EmbeddedResource>
-	  <EmbeddedResource Update="Cultures\Resources.ca-ES.resx">
 		  <Generator>PublicResXFileCodeGenerator</Generator>
 		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
 	  </EmbeddedResource>
