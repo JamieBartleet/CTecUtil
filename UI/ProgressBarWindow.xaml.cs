@@ -12,6 +12,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace CTecUtil.UI
 {
@@ -35,12 +36,8 @@ namespace CTecUtil.UI
             }
             
             Owner = owner;
-            Show();
-            Activate();                       //  ═╕
-            UpdateLayout();                   //   │
-            BringIntoView();                  //   ╞═ <-- this lot is to try to reduce the delay in the window's appearance
-            Visibility = Visibility.Visible;  //   │
-            Focus();                          //  ═╛
+
+            Application.Current.Dispatcher.Invoke(new Action(() => { Show(); }), DispatcherPriority.Normal);
         }
 
 
