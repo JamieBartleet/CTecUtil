@@ -30,7 +30,7 @@
 
             <StackPanel Grid.Column="0" Grid.Row="0"
                         Orientation="Vertical" Margin="10"
-                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                        HorizontalAlignment="Center" VerticalAlignment="Bottom">
 
                 <TextBlock Name="txtOperationName" HorizontalAlignment="Center"/>
 
