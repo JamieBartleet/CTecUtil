@@ -59,16 +59,24 @@ namespace CTecUtil
 
                 if (size_pos.Length > 0)
                 {
-                    var w_h = parsePoint(size_pos[0]);
-                    window.Width = w_h.X;
-                    window.Height = w_h.Y;
+                    try
+                    {
+                        var w_h = parsePoint(size_pos[0]);
+                        window.Width = w_h.X;
+                        window.Height = w_h.Y;
+                    }
+                    catch { }
                 }
 
                 if (size_pos.Length > 1)
                 {
-                    var x_y = parsePoint(size_pos[1]);
-                    window.Left = x_y.X;
-                    window.Top = x_y.Y;
+                    try
+                    {
+                        var x_y = parsePoint(size_pos[1]);
+                        window.Left = x_y.X;
+                        window.Top = x_y.Y;
+                    }
+                    catch { }
                 }
 
                 if (size_pos.Length > 2)
