@@ -128,19 +128,27 @@ namespace CTecUtil.IO
 
         public static void SetPingCommands(byte[] pingCommand, byte[] checkWriteableCommand = null)
         {
-            var start = _pingCommand is null;
-            _pingCommand = pingCommand;
-            _checkWriteableCommand = checkWriteableCommand;
-
-            if (start)
+            if (pingCommand is not null)
             {
-                _pingTimer = new()
+                var start = _pingCommand is null;
+                _pingCommand = pingCommand;
+                _checkWriteableCommand = checkWriteableCommand;
+
+                if (start)
                 {
-                    AutoReset = true,
-                    Enabled = true,
-                    Interval = _pingTimerPeriod
-                };
-                _pingTimer.Elapsed += new(sendPing);
+                    _pingTimer = new()
+                    {
+                        AutoReset = true,
+                        Enabled = true,
+                        Interval = _pingTimerPeriod
+                    };
+                    _pingTimer.Elapsed += new(sendPing);
+                }
+            }
+            else
+            {
+                _pingTimer?.Stop();
+                _pingCommand = null;
             }
         }
 
