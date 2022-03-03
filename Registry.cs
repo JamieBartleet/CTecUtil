@@ -52,9 +52,6 @@ namespace CTecUtil
             var prevState = (string)readSubKey(Keys.WindowKey);
             if (prevState is not null)
             {
-                //if (prevState.StartsWith(_maximised))
-                //    return WindowState.Maximized;
-                
                 var size_pos = prevState.Split(new char[] { ';' });
 
                 if (size_pos.Length > 0)
@@ -72,9 +69,16 @@ namespace CTecUtil
                 {
                     try
                     {
+                        System.Drawing.Point topLeft;
+
                         var x_y = parsePoint(size_pos[1]);
-                        window.Left = x_y.X;
-                        window.Top = x_y.Y;
+                        topLeft = new((int)x_y.X, (int)x_y.Y);
+
+                        //ensure top-left of app screen is visible
+                        var loc = UI.WindowUtils.AdjustXY(new(topLeft.X, topLeft.Y), new((int)window.Width, (int)window.Height), 0, 0);
+
+                        window.Top  = loc.Y;
+                        window.Left = loc.X;
                     }
                     catch { }
                 }

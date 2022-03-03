@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace CTecUtil
 {
-    public class Utils
+    public class ByteArrayProcessing
     {
         /// <summary>
         /// Combine multiple byte arrays
@@ -46,14 +48,18 @@ namespace CTecUtil
             return result;
         }
 
-        
+
+        /// <summary>
+        /// Converts a byte array to an old-school ASCII text string, i.e. chars 0x40 to 0x7E plus CR and LF (any CRLF or LFCR combos are replaced with a single LF).<br/>
+        /// Any other characters are replaced by a placeholder.
+        /// </summary>
         public static string ByteArrayToString(byte[] data)
         {
             if (data is null) return "";
             var result = new StringBuilder();
             foreach (var b in data)
-                result.Append(b switch { 0x0a => '\n', 0x0d => '\r', >0x1f and <0x7f => (char)b, _ => '▫' });
-            return result.ToString();
+                result.Append(b switch { >0x1f and <0x7f or 0x0a or 0x0d => (char)b, _ => '·' });
+            return result.ToString().Replace("\r\n", "\n").Replace("\n\r", "\n");
         }
 
         
@@ -65,8 +71,5 @@ namespace CTecUtil
                 result.Append(string.Format("{0:X2} ", b));
             return result.ToString().Trim();
         }
-
-
-        public static bool IsNumeric(string text) => new Regex("^[0-9]+").IsMatch(text);
     }
 }

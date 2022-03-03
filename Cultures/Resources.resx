@@ -112,10 +112,10 @@
     <value>2.0</value>
   </resheader>
   <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Error_Checksum_Fail" xml:space="preserve">
     <value>Invalid data was received from the panel.</value>
@@ -155,5 +155,8 @@
   </data>
   <data name="Comms_Connected_ReadOnly" xml:space="preserve">
     <value>Connected - data is read-only</value>
+  </data>
+  <data name="Comms_Firmware_Not_Supported" xml:space="preserve">
+    <value>The panel's firmware version is not supported by this Programming Tool.</value>
   </data>
 </root>

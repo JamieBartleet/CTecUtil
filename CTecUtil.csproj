@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net5.0-windows</TargetFramework>
 	  <UseWPF>true</UseWPF>
+	  <UseWindowsForms>true</UseWindowsForms>
 	  <SourceRevisionId>Build=$([System.DateTime]::UtcNow.ToString("yyyy-MM-dd HH:mm:ss"))</SourceRevisionId>
 	  <AssemblyVersion>1.0.2.0</AssemblyVersion>
 	  <FileVersion>1.0.2.0</FileVersion>
@@ -15,6 +16,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Cultures\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Update="UI\ProgressBarWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>

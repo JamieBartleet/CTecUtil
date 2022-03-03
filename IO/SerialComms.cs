@@ -41,8 +41,11 @@ namespace CTecUtil.IO
             /// <summary>Comms is actively connected but panel data is read-only</summary>
             ConnectedReadOnly,
 
-            /// <summary>Comms is actively connected panel is writeable</summary>
-            ConnectedWriteable
+            /// <summary>Comms is actively connected, panel is writeable</summary>
+            ConnectedWriteable,
+
+            /// <summary>Comms is actively connected but panel firmware is not supported</summary>
+            FirmwareNotSupported
         }
 
 
@@ -116,6 +119,9 @@ namespace CTecUtil.IO
 
 
         #region ping
+        public delegate bool FirmwareVersionNotifier(byte[] firmwareResponse);
+        public static FirmwareVersionNotifier NotifyFirmwareVersion;
+
         public delegate void ConnectionStatusNotifier(ConnectionStatus status);
         public static ConnectionStatusNotifier NotifyConnectionStatus;
 
@@ -124,15 +130,17 @@ namespace CTecUtil.IO
 
         private static ConnectionStatus _connectionStatus = ConnectionStatus.Unknown;
         private static byte[] _pingCommand;
+        private static byte[] _checkFirmwareVersionCommand;
         private static byte[] _checkWriteableCommand;
 
-        public static void SetPingCommands(byte[] pingCommand, byte[] checkWriteableCommand = null)
+        public static void SetPingCommands(byte[] pingCommand, byte[] checkFirmwareVersionCommand = null, byte[] checkWriteableCommand = null)
         {
             if (pingCommand is not null)
             {
                 var start = _pingCommand is null;
-                _pingCommand = pingCommand;
-                _checkWriteableCommand = checkWriteableCommand;
+                _pingCommand                 = pingCommand;
+                _checkFirmwareVersionCommand = checkFirmwareVersionCommand;
+                _checkWriteableCommand       = checkWriteableCommand;
 
                 if (start)
                 {
@@ -157,6 +165,14 @@ namespace CTecUtil.IO
             //only ping the panel if there is no active upload/download
             if (_commandQueue.SubqueueCount == 0)
                 SendData(new Command() { CommandData = _pingCommand });
+        }
+
+        private static void sendFirmwareVersionCheck()
+        {
+            //only ping the panel if there is no active upload/download
+            if (_checkFirmwareVersionCommand is not null)
+                if (_commandQueue.SubqueueCount == 0)
+                    SendData(new Command() { CommandData = _checkFirmwareVersionCommand });
         }
 
         private static void sendWriteableCheck()
@@ -350,18 +366,30 @@ namespace CTecUtil.IO
             try
             {
                 //data received, so status is one of the Connected statuses
-                if (_connectionStatus != ConnectionStatus.ConnectedWriteable)
-                    _connectionStatus = ConnectionStatus.ConnectedReadOnly;
-                NotifyConnectionStatus?.Invoke(_connectionStatus);
+                //if (_connectionStatus != ConnectionStatus.ConnectedWriteable)
+                //    _connectionStatus = ConnectionStatus.ConnectedReadOnly;
+                //NotifyConnectionStatus?.Invoke(_connectionStatus);
 
                 var incoming = readIncomingResponse(port);
 
-                CTecUtil.Debug.WriteLine("Receive data:      [" + Utils.ByteArrayToHexString(incoming) + "] --> \"" + Utils.ByteArrayToString(incoming) + "\"");
+                CTecUtil.Debug.WriteLine("Receive data:      [" + ByteArrayProcessing.ByteArrayToHexString(incoming) + "] --> \"" + ByteArrayProcessing.ByteArrayToString(incoming) + "\"");
 
                 if (isPingResponse(incoming))
                 {
-                    //panel responded to ping, so request its read-only status
-                    sendWriteableCheck();
+                    //status is one of the Connected statuses: if not already thought to be writeable set it to read-only
+                    if (_connectionStatus != ConnectionStatus.ConnectedWriteable)
+                        _connectionStatus = ConnectionStatus.ConnectedReadOnly;
+
+                    //panel responded to ping, so request its firmware version
+                    sendFirmwareVersionCheck();
+                }
+                else if (isCheckFirmwareResponse(incoming))
+                {
+                    //panel responded to ping, so notify the version number and request its read-only status
+                    if (!NotifyFirmwareVersion?.Invoke(incoming) ?? true)
+                        NotifyConnectionStatus?.Invoke(_connectionStatus = ConnectionStatus.FirmwareNotSupported);
+                    else
+                        sendWriteableCheck();
                 }
                 else if (isCheckWriteableResponse(incoming))
                 {
@@ -595,6 +623,7 @@ namespace CTecUtil.IO
         private static bool isNak(byte data) => data == NakByte;
 
         private static bool isPingResponse(byte[] data)           => data is not null && data.Length > 0 && data[0] == _pingCommand[1];
+        private static bool isCheckFirmwareResponse(byte[] data)  => data is not null && _checkFirmwareVersionCommand is not null && data.Length > 0 && data[0] == _checkFirmwareVersionCommand[1];
         private static bool isCheckWriteableResponse(byte[] data) => data is not null && _checkWriteableCommand is not null && data.Length > 0 && data[0] == _checkWriteableCommand[1];
         #endregion
 

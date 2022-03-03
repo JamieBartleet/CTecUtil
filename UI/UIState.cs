@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Threading;
 
-namespace CTecUtil
+namespace CTecUtil.UI
 {
     /// <summary>
     /// Contains helper methods for UI, so far just one for showing a waitcursor

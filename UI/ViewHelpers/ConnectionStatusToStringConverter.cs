@@ -16,11 +16,12 @@ namespace CTecUtil.UI.ViewHelpers
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => (SerialComms.ConnectionStatus)value switch
                                                                                                         {
-                                                                                                            SerialComms.ConnectionStatus.ConnectedWriteable => Cultures.Resources.Comms_Connected_Writeable,
-                                                                                                            SerialComms.ConnectionStatus.ConnectedReadOnly  => Cultures.Resources.Comms_Connected_ReadOnly,
-                                                                                                            SerialComms.ConnectionStatus.Listening          => Cultures.Resources.Comms_Listening,
-                                                                                                            SerialComms.ConnectionStatus.Disconnected       => Cultures.Resources.Comms_Disconnected,
-                                                                                                            _                                               => "",
+                                                                                                            SerialComms.ConnectionStatus.ConnectedWriteable   => Cultures.Resources.Comms_Connected_Writeable,
+                                                                                                            SerialComms.ConnectionStatus.ConnectedReadOnly    => Cultures.Resources.Comms_Connected_ReadOnly,
+                                                                                                            SerialComms.ConnectionStatus.FirmwareNotSupported => Cultures.Resources.Comms_Firmware_Not_Supported,
+                                                                                                            SerialComms.ConnectionStatus.Listening            => Cultures.Resources.Comms_Listening,
+                                                                                                            SerialComms.ConnectionStatus.Disconnected         => Cultures.Resources.Comms_Disconnected,
+                                                                                                            _                                                 => "",
                                                                                                         };
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => null;

@@ -88,6 +88,15 @@ namespace CTecUtil.Cultures {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The panel&apos;s firmware version is not supported by this Programming Tool..
+        /// </summary>
+        public static string Comms_Firmware_Not_Supported {
+            get {
+                return ResourceManager.GetString("Comms_Firmware_Not_Supported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Listening for logging data.
         /// </summary>
         public static string Comms_Listening {

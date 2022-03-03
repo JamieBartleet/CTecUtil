@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -14,7 +15,10 @@ namespace CTecUtil
         /// <summary>The digit characters 0-9 as an array</summary>
         public static readonly char[] DigitChars = { '0','1','2','3','4','5','6','7','8','9' };
 
-        
+
+        public static bool IsNumeric(string text) => new Regex("^[0-9]+").IsMatch(text);
+
+
         public static bool IsNumericKey(Key k)
             => k switch
             {
