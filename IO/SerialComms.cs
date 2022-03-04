@@ -64,7 +64,7 @@ namespace CTecUtil.IO
 
 
         private const int _incomingDataTimerPeriod = 3500;
-        private const int _responseTimerPeriod     = 3500;
+        private const int _responseTimerPeriod     = 4500;
         private const int _pingTimerPeriod         = 4000;
 
 
@@ -224,12 +224,14 @@ namespace CTecUtil.IO
 
             //_transferInProgress = true;
             _queueWasCompleted = false;
+            CTecUtil.Debug.WriteLine("---StartSendingCommandQueue() 01");
 
             //arbitrarily don't show progress bar for single jobs (especially don't want to do that for firmware version request)
             if (_commandQueue.TotalCommandCount < 2)
                 SendFirstCommandInQueue();
             else
                 ShowProgressBarWindow(onStart, onEnd);
+            CTecUtil.Debug.WriteLine("---StartSendingCommandQueue() 02");
         }
 
 
@@ -421,6 +423,8 @@ namespace CTecUtil.IO
                 {
                     var ok = false;
                     var cmd = _commandQueue.Peek();
+
+                    NotifyConnectionStatus?.Invoke(_connectionStatus);
 
                     if (cmd != null)
                     {
@@ -630,13 +634,15 @@ namespace CTecUtil.IO
 
         private static void responseTimerTimeout()
         {
-            if (_connectionStatus != ConnectionStatus.Listening && _commandQueue.TotalCommandCount > 0)
+            if (_connectionStatus != ConnectionStatus.Listening)
             {
-                NotifyConnectionStatus?.Invoke(_connectionStatus = ConnectionStatus.Disconnected);
-
                 //try again...
-                ResendCommand();
+                if (_commandQueue.TotalCommandCount > 0)
+                    ResendCommand();
+                else
+                    NotifyConnectionStatus?.Invoke(_connectionStatus = ConnectionStatus.Disconnected);
             }
+
             _responseTimer.Start(_responseTimerPeriod);
         }
 
@@ -741,6 +747,7 @@ namespace CTecUtil.IO
 
         public static void ShowProgressBarWindow(Action onStart, OnFinishedHandler onEnd)
         {
+            CTecUtil.Debug.WriteLine("---ShowProgressBarWindow() 01");
             _onStartProgress = onStart;
             _onEndProgress   = onEnd;
 
@@ -751,12 +758,14 @@ namespace CTecUtil.IO
                 BackgroundWorker worker = new BackgroundWorker();
                 worker.WorkerReportsProgress = true;
                 worker.DoWork += processAsynch;
+                CTecUtil.Debug.WriteLine("---ShowProgressBarWindow() 02");
                 worker.RunWorkerAsync();
             }
             catch (Exception ex)
             {
                 error(ex.Message, ex);
             }
+            CTecUtil.Debug.WriteLine("---ShowProgressBarWindow() 03");
         }
 
         private static void hideProgressBarWindow()
@@ -769,28 +778,34 @@ namespace CTecUtil.IO
 
         private static void processAsynch(object sender, DoWorkEventArgs e)
         {
-            _numCommandsToProcess  = _commandQueue.TotalCommandCount;
+            CTecUtil.Debug.WriteLine("---processAsynch() 01");
+            _numCommandsToProcess = _commandQueue.TotalCommandCount;
             var commandsInSubqueue = _commandQueue.CommandsInCurrentSubqueue;
 
             Application.Current.Dispatcher.Invoke(new Action(() =>
             {
                 _onStartProgress?.Invoke();
+                CTecUtil.Debug.WriteLine("---processAsynch() 02 - start progress invoked");
 
                 //launch the progress bar window
                 _progressBarWindow.Show(OwnerWindow);
+                CTecUtil.Debug.WriteLine("---processAsynch() 03 - progress window shown");
 
             }), DispatcherPriority.Send);
+            CTecUtil.Debug.WriteLine("---processAsynch() 04");
 
             Application.Current.Dispatcher.Invoke(new Action(() =>
             {
-                CTecUtil.Debug.WriteLine("---progress: max=" + _numCommandsToProcess + ", subQMax=" + commandsInSubqueue);
+                CTecUtil.Debug.WriteLine("---processAsynch() 05 - progress: max=" + _numCommandsToProcess + ", subQMax=" + commandsInSubqueue);
                 _progressBarWindow.ProgressBarLegend      = _commandQueue.OperationDesc;
                 _progressBarWindow.SubqueueCount          = _commandQueue.SubqueueCount;
                 _progressBarWindow.ProgressBarOverallMax  = _numCommandsToProcess;
                 _progressBarWindow.ProgressBarSubqueueMax = commandsInSubqueue;
 
             }), DispatcherPriority.Render);
+            CTecUtil.Debug.WriteLine("---processAsynch() 06");
 
+            Application.Current.Dispatcher.Invoke(new Action(() => SendNextCommandInQueue()));
 
             var startTime = DateTime.Now;
             int lastProgress = 0;
@@ -807,10 +822,12 @@ namespace CTecUtil.IO
                     CTecUtil.Debug.WriteLine("  **Exception** (ProcessAsync) " + ex.Message);
                     continue;
                 }
+                CTecUtil.Debug.WriteLine("---processAsynch() 07");
 
                 //stop if progress hasn't changed for 20 secs
                 if (DateTime.Now > startTime.AddSeconds(20))
                 {
+                    CTecUtil.Debug.WriteLine("---processAsynch() 08");
                     Application.Current.Dispatcher.Invoke(new Action(() =>
                     {
                         if (_commandQueue.Direction != Direction.Idle)
@@ -820,21 +837,25 @@ namespace CTecUtil.IO
                     break;
                 }
 
-                CTecUtil.Debug.WriteLine("---progress: " + _progressOverall + " (" + lastProgress + ")");
+                CTecUtil.Debug.WriteLine("---processAsynch() 09 - " + _progressOverall + " (" + lastProgress + ")");
 
                 if (_progressOverall > lastProgress)
                 {
                     lastProgress = _progressOverall;
                     startTime = DateTime.Now;
                 }
+                CTecUtil.Debug.WriteLine("---processAsynch() 10");
 
                 //report progress
                 Application.Current.Dispatcher.Invoke(new Action(() => _progressBarWindow.UpdateProgress(_commandQueue?.SubqueueNames, _progressOverall, _progressWithinSubqueue)), DispatcherPriority.Normal);
+                CTecUtil.Debug.WriteLine("---processAsynch() 11");
                 Thread.Sleep(100);
             }
+            CTecUtil.Debug.WriteLine("---processAsynch() 12");
 
             //hide progress window if it hasn't already done it itself
             Application.Current.Dispatcher.Invoke(new Action(() => { hideProgressBarWindow(); }), DispatcherPriority.Normal);
+            CTecUtil.Debug.WriteLine("---processAsynch() 13");
         }
         #endregion
 
