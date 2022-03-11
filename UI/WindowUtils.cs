@@ -187,15 +187,12 @@ namespace CTecUtil.UI
 
             if (topLeft.Y + totalHeight > rect.Bottom)
             {
-                //topLeft.Y -= totalHeight - rect.Bottom;
                 topLeft.Y = Math.Max(rect.Bottom - maxSize.Y - 2 * offset - margin, rect.Top);
 
                 // If the screen dimensions exceed the height of the window
                 // set it just bellow the top bound.
                 if (topLeft.Y < rect.Top)
-                {
                     topLeft.Y = rect.Top + margin;
-                }
             }
 
             //int totalWidth = Math.Max(topLeft.X, 0) + Math.Max(maxSize.X, 0) + margin;
@@ -207,15 +204,12 @@ namespace CTecUtil.UI
             {
                 // Since we already set an offset remove it and add the offset to
                 // the other side of the mouse (2x) in addition include the margin.
-                //                topLeft.X -= maxSize.X + 2 * offset + margin;
                 topLeft.X = Math.Max(rect.Right - maxSize.X - 2 * offset - margin, rect.Left);
 
                 // If the screen dimensions exceed the width of the window
                 // don't exceed the left bound.
                 if (topLeft.X < rect.Left)
-                {
                     topLeft.X = rect.Left + margin;
-                }
             }
 
             return topLeft;
