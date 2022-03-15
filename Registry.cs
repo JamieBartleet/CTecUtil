@@ -39,7 +39,7 @@ namespace CTecUtil
             }
             else
             {
-                writeSubKey(Keys.WindowKey, window.Width + "," + window.Height + ";" + window.Left + "," + window.Top);
+                writeSubKey(Keys.WindowKey, (int)window.Width + "," + (int)window.Height + ";" + (int)window.Left + "," + (int)window.Top);
             }
         }
 
@@ -77,7 +77,7 @@ namespace CTecUtil
                         //ensure top-left of app screen is visible
                         var loc = UI.WindowUtils.AdjustXY(new(topLeft.X, topLeft.Y), new((int)window.Width, (int)window.Height), 0, 0);
 
-                        window.Top  = loc.Y;
+                        window.Top = loc.Y;
                         window.Left = loc.X;
                     }
                     catch { }
