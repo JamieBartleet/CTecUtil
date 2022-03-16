@@ -22,7 +22,7 @@ namespace CTecUtil.IO
         protected static string dataFileDirectory() => string.IsNullOrEmpty(FilePath) ? Environment.CurrentDirectory : Path.GetDirectoryName(FilePath);
 
 
-        public static bool OpenFile()
+        public static bool OpenFile(string fileExtension)
         {
             var dlgOpenFile = new OpenFileDialog()
             {
@@ -42,27 +42,28 @@ namespace CTecUtil.IO
         }
 
 
-        public static void SaveFile(string data)
+        public static string SaveFile(string data)
         {
             if (data is null)
-                return;
+                return null;
 
             if (string.IsNullOrEmpty(FilePath))
-                SaveFileAs(data);
+                return SaveFileAs(data);
             else
             {
                 UIState.SetBusyState();
                 CTecUtil.Debug.WriteLine("Writing file: " + FilePath);
                 using var Writer = new StreamWriter(FilePath);
                 Writer.Write(data);
+                return FilePath;
             }
         }
 
 
-        public static void SaveFileAs(string data)
+        public static string SaveFileAs(string data)
         {
             if (data is null)
-                return;
+                return null;
 
             SaveFileDialog dlgSaveFile = new SaveFileDialog()
             {
@@ -75,8 +76,9 @@ namespace CTecUtil.IO
             {
                 FilePath = dlgSaveFile.FileName;
                 FileFolder = dataFileDirectory();
-                SaveFile(data);
+                return SaveFile(data);
             }
+            return null;
         }
 
     }
