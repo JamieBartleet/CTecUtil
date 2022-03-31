@@ -544,7 +544,7 @@ namespace CTecUtil.IO
                     offset += bytes;
                 }
 
-                if (!CheckChecksum(buffer))
+                if (!checkChecksum(buffer))
                     throw new FormatException();
 
                 return buffer;
@@ -658,7 +658,7 @@ namespace CTecUtil.IO
         }
 
 
-        private static bool CheckChecksum(byte[] data) => data.Length > 0 && CalcChecksum(data, false, true) == data[data.Length - 1];
+        private static bool checkChecksum(byte[] data) => data.Length > 0 && CalcChecksum(data, false, true) == data[data.Length - 1];
 
 
         private static void error(string message, Exception ex = null)
