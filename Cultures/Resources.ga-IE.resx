@@ -156,4 +156,7 @@
   <data name="Comms_Connected_ReadOnly" xml:space="preserve">
     <value>Ceangailte - léitear sonraí amháin</value>
   </data>
+  <data name="File_Save_As" xml:space="preserve">
+    <value>Sábháil Mar...</value>
+  </data>
 </root>

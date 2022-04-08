@@ -626,7 +626,7 @@ namespace CTecUtil.IO
         private static bool isAck(byte data) => data == AckByte;
         private static bool isNak(byte data) => data == NakByte;
 
-        private static bool isPingResponse(byte[] data)           => data is not null && data.Length > 0 && data[0] == _pingCommand[1];
+        private static bool isPingResponse(byte[] data)           => data is not null && data.Length > 0 && data[0] == _pingCommand?[1];
         private static bool isCheckFirmwareResponse(byte[] data)  => data is not null && _checkFirmwareVersionCommand is not null && data.Length > 0 && data[0] == _checkFirmwareVersionCommand[1];
         private static bool isCheckWriteableResponse(byte[] data) => data is not null && _checkWriteableCommand is not null && data.Length > 0 && data[0] == _checkWriteableCommand[1];
         #endregion

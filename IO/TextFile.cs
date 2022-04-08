@@ -14,6 +14,15 @@ namespace CTecUtil.IO
 {
     public class TextFile
     {
+        public enum FileOpenResult
+        {
+            OK,
+            CouldNotParseFile,
+            DataIsWrongType,
+            ErrorReadingFile,
+        }
+
+
         public static string FileFolder { get; set; }
         public static string FilePath { get; set; }
         public static string FileName { get => Path.GetFileName(FilePath); }
@@ -22,7 +31,7 @@ namespace CTecUtil.IO
         protected static string dataFileDirectory() => string.IsNullOrEmpty(FilePath) ? Environment.CurrentDirectory : Path.GetDirectoryName(FilePath);
 
 
-        public static bool OpenFile(string fileExtension)
+        public static bool OpenFile()
         {
             var dlgOpenFile = new OpenFileDialog()
             {
@@ -69,7 +78,8 @@ namespace CTecUtil.IO
             {
                 Filter           = Filter,
                 InitialDirectory = FileFolder,
-                FileName         = FileName
+                FileName         = FileName,
+                Title            = Cultures.Resources.File_Save_As
             };
 
             if (dlgSaveFile.ShowDialog() == true)
