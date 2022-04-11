@@ -14,9 +14,9 @@ namespace CTecUtil.IO
 {
     public class TextFile
     {
-        public enum FileOpenResult
+        public enum FileReadResult
         {
-            OK,
+            Ok,
             CouldNotParseFile,
             DataIsWrongType,
             ErrorReadingFile,

@@ -94,6 +94,23 @@ namespace CTecUtil
 
 
         /// <summary>
+        /// Writes a category name, message and exception details to the trace listeners in the System.Diagnostics.Debug.Listeners collection.
+        /// </summary>
+        /// <param name="message">A message to write.</param>
+        /// <param name="ex">An Exception that was thrown.</param>
+        public static void WriteLine(string message, Exception ex) => System.Diagnostics.Debug.WriteLine(debugPrefix + message + "\n" + ex.ToString());
+
+
+        /// <summary>
+        /// Writes a category name, message and exception details to the trace listeners in the System.Diagnostics.Debug.Listeners collection.
+        /// </summary>
+        /// <param name="message">A message to write.</param>
+        /// <param name="ex">An Exception that was thrown.</param>
+        /// <param name="category">A category name used to organize the output.</param>
+        public static void WriteLine(string message, Exception ex, string category) => System.Diagnostics.Debug.WriteLine(debugPrefix + message + "\n" + ex.ToString(), category);
+
+
+        /// <summary>
         /// Writes a category name and message to the trace listeners in the System.Diagnostics.Debug.Listeners collection.
         /// </summary>
         /// <param name="message">A message to write.</param>
