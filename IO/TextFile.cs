@@ -23,10 +23,11 @@ namespace CTecUtil.IO
         }
 
 
-        public static string FileFolder { get; set; }
         public static string FilePath { get; set; }
-        public static string FileName { get => Path.GetFileName(FilePath); }
         public static string Filter { get; set; }
+
+        internal static string FileFolder { get; set; }
+        internal static string FileName { get => Path.GetFileName(FilePath); }
 
         protected static string dataFileDirectory() => string.IsNullOrEmpty(FilePath) ? Environment.CurrentDirectory : Path.GetDirectoryName(FilePath);
 

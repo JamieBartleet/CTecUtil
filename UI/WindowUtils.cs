@@ -8,7 +8,7 @@ using System.Windows.Forms;
 
 namespace CTecUtil.UI
 {
-    public class WindowUtils
+    internal class WindowUtils
     {
         /// <summary>
         /// Adjust the window position to avoid it going out of screen bounds.<br/>
@@ -167,7 +167,7 @@ namespace CTecUtil.UI
         /// <param name="offset">The offset of the topLeft postion</param>
         /// <param name="margin">The margin from the screen</param>
         /// <returns>The adjusted position of the window</returns>
-        public static Point AdjustXY(Point topLeft, Point maxSize, int offset, int margin)
+        internal static Point AdjustXY(Point topLeft, Point maxSize, int offset, int margin)
         {
             Screen currentScreen = Screen.FromPoint(topLeft);
             Rectangle rect = currentScreen.WorkingArea;

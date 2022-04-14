@@ -27,7 +27,7 @@ namespace CTecUtil.UI
         }
 
 
-        public void Show(Window owner)
+        internal void Show(Window owner)
         {
             if (owner != null)
             {
@@ -41,24 +41,24 @@ namespace CTecUtil.UI
         }
 
 
-        public string ProgressBarLegend { set => txtOperationName.Text = value; }
+        internal string ProgressBarLegend { set => txtOperationName.Text = value; }
 
-        public int ProgressBarOverallMax  { get; set; }
+        internal int ProgressBarOverallMax  { get; set; }
 
-        public int ProgressBarSubqueueMax { get => (int)pbProgressSubqueue.Maximum; set => pbProgressSubqueue.Maximum = value; }
+        internal int ProgressBarSubqueueMax { get => (int)pbProgressSubqueue.Maximum; set => pbProgressSubqueue.Maximum = value; }
 
-        public int SubqueueCount { set => pbProgressSubqueue.Visibility = txtProgressSubqueue.Visibility = value > 1 ? Visibility.Visible : Visibility.Collapsed; }
+        internal int SubqueueCount { set => pbProgressSubqueue.Visibility = txtProgressSubqueue.Visibility = value > 1 ? Visibility.Visible : Visibility.Collapsed; }
 
 
-        public delegate void CancelHandler();
+        internal delegate void CancelHandler();
 
         /// <summary>
         /// Delegate called when Cancel button is clicked - assign this if any clean-up is required on cancellation.
         /// </summary>
-        public CancelHandler OnCancel;
+        internal CancelHandler OnCancel;
 
 
-        public void UpdateProgress(List<string> subqueueNames, int valueOverall, int valueSubqueue)
+        internal void UpdateProgress(List<string> subqueueNames, int valueOverall, int valueSubqueue)
         {
             txtSubqueueName.Text = subqueueNames.Count > 0 ? subqueueNames[0] : "";
             txtNext1.Text        = subqueueNames.Count > 1 ? subqueueNames[1] : "";

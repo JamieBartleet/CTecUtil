@@ -8,7 +8,7 @@ namespace CTecUtil.IO
 {
     internal class CommandSubqueue
     {
-        public CommandSubqueue(CommandSubqueue original)
+        internal CommandSubqueue(CommandSubqueue original)
         {
             Direction          = original.Direction;
             OnSubqueueComplete = original.OnSubqueueComplete;
@@ -17,7 +17,7 @@ namespace CTecUtil.IO
                 _commandQueue.Append(new Command(c));
         }
 
-        public CommandSubqueue(SerialComms.Direction direction, SerialComms.SubqueueCompletedHandler onCompletion)
+        internal CommandSubqueue(SerialComms.Direction direction, SerialComms.SubqueueCompletedHandler onCompletion)
         {
             Direction = direction;
             OnSubqueueComplete = onCompletion;
@@ -27,24 +27,24 @@ namespace CTecUtil.IO
         private Queue<Command> _commandQueue = new();
 
 
-        public string Name { get; set; }
+        internal string Name { get; set; }
 
-        public SerialComms.Direction Direction { get; set; }
+        internal SerialComms.Direction Direction { get; set; }
 
 
-        public void    Enqueue(Command command) => _commandQueue.Enqueue(command);
+        internal void    Enqueue(Command command) => _commandQueue.Enqueue(command);
         //public void    Dequeue()                => _commandQueue.Dequeue();
-        public void Dequeue()
+        internal void Dequeue()
         {
             _commandQueue.Dequeue();
             CTecUtil.Debug.WriteLine("Dequeue() - _commandQueue.Count=" + _commandQueue.Count);
         }
 
-        public Command Peek()                   { try { return _commandQueue?.Peek(); } catch { return null; } }
-        public void    Clear()                  => _commandQueue?.Clear();
-        public int     Count                    => _commandQueue.Count;
+        internal Command Peek()                   { try { return _commandQueue?.Peek(); } catch { return null; } }
+        internal void    Clear()                  => _commandQueue?.Clear();
+        internal int     Count                    => _commandQueue.Count;
 
 
-        public SerialComms.SubqueueCompletedHandler OnSubqueueComplete;
+        internal SerialComms.SubqueueCompletedHandler OnSubqueueComplete;
     }
 }

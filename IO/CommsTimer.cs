@@ -8,9 +8,9 @@ using System.Timers;
 
 namespace CTecUtil.IO
 {
-    public class CommsTimer
+    internal class CommsTimer
     {
-        public CommsTimer()
+        internal CommsTimer()
         {
             TimedOut = false;
             _timer.AutoReset = false;
@@ -20,26 +20,26 @@ namespace CTecUtil.IO
         }
 
 
-        public delegate void TimeoutHandler();
-        public TimeoutHandler OnTimedOut;
+        internal delegate void TimeoutHandler();
+        internal TimeoutHandler OnTimedOut;
 
 
         private Timer _timer = new();
-        
+
 
         /// <summary>
         /// 
         /// </summary>
-        public bool  TimedOut { get; set; }
+        internal bool TimedOut { get; set; }
 
 
-        //public double Interval { get => _timer.Interval; set => _timer.Interval = value; }
+        //internal double Interval { get => _timer.Interval; set => _timer.Interval = value; }
 
 
         /// <summary>
         /// (Re)start the timer with the specified timeout period (ms)
         /// </summary>
-        public void Start(double timeoutperiod)
+        internal void Start(double timeoutperiod)
         {
             _timer.Stop();
             _timer.Interval = timeoutperiod;
@@ -51,7 +51,7 @@ namespace CTecUtil.IO
         /// <summary>
         /// Stop the timer; reset TimedOut
         /// </summary>
-        public void Stop()
+        internal void Stop()
         {
             _timer.Stop();
             TimedOut = false;

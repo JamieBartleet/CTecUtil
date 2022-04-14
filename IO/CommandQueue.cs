@@ -16,13 +16,13 @@ namespace CTecUtil.IO
     /// </summary>
     internal class CommandQueue
     {
-        public CommandQueue() => Id = ++_idCounter;
+        internal CommandQueue() => Id = ++_idCounter;
 
 
         private static int _idCounter = 0;
 
 
-        public int Id { get; private set; }
+        internal int Id { get; private set; }
 
 
         /// <summary>The queue of subqueues</summary>
@@ -33,32 +33,32 @@ namespace CTecUtil.IO
 
 
         /// <summary>The comms direction of the current subqueue (Up/Down; or Idle if there is nothing queued)</summary>
-        public SerialComms.Direction Direction { get => _subqueues.Count > 0 ? _subqueues.Peek()?.Direction ?? SerialComms.Direction.Idle : SerialComms.Direction.Idle; }
+        internal SerialComms.Direction Direction { get => _subqueues.Count > 0 ? _subqueues.Peek()?.Direction ?? SerialComms.Direction.Idle : SerialComms.Direction.Idle; }
 
 
         /// <summary>
         /// The description of the overall operation - e.g. 'Downloading from panel...'
         /// </summary>
-        public string OperationDesc { get; set; }
+        internal string OperationDesc { get; set; }
 
 
         /// <summary>
         /// Name attached to the first subqueue (i.e. the one currently being serviced)
         /// </summary>
-        public string CurrentSubqueueName { get => _subqueues.Count > 0 && _subqueues.Peek()?.Count > 0 ? _subqueues.Peek()?.Name : null; }
+        internal string CurrentSubqueueName { get => _subqueues.Count > 0 && _subqueues.Peek()?.Count > 0 ? _subqueues.Peek()?.Name : null; }
 
 
         /// <summary>
         /// Name attached to the first subqueue (i.e. the one currently being serviced)
         /// </summary>
-        public List<string> SubqueueNames { get => _subqueues.Select(sq => sq.Name).ToList(); }
+        internal List<string> SubqueueNames { get => _subqueues.Select(sq => sq.Name).ToList(); }
 
 
         /// <summary>
         /// Add a new subqueue to the queue
         /// </summary>
         /// <param name="commandQueue"></param>
-        public void AddSubqueue(CommandSubqueue commandQueue) => _subqueues.Enqueue(_currentQueue = commandQueue);
+        internal void AddSubqueue(CommandSubqueue commandQueue) => _subqueues.Enqueue(_currentQueue = commandQueue);
 
 
         /// <summary>
@@ -66,14 +66,14 @@ namespace CTecUtil.IO
         /// NB: AddSubQueue() must have been called prior to this to initialise the queue that is actively being added to.
         /// </summary>
         /// <param name="command"></param>
-        public void Enqueue(Command command) => _currentQueue?.Enqueue(command);
+        internal void Enqueue(Command command) => _currentQueue?.Enqueue(command);
 
 
         /// <summary>
         /// Dequeue the first command in the first subqueue.
         /// </summary>
         /// <returns>True if a new subqueue was started (or there are none left to process).</returns>
-        public bool Dequeue()
+        internal bool Dequeue()
         {
             //CTecUtil.Debug.WriteLine("Dequeue() - _subqueues.Count=" + _subqueues.Count);
 
@@ -101,7 +101,7 @@ namespace CTecUtil.IO
         /// <summary>
         /// Returns the first command in the first subqueue.
         /// </summary>
-        public Command Peek()
+        internal Command Peek()
         {
             try
             {
@@ -117,7 +117,7 @@ namespace CTecUtil.IO
         /// <summary>
         /// Clear all command queues.
         /// </summary>
-        public void Clear()
+        internal void Clear()
         {
             foreach (var q in _subqueues)
                 q.Clear();
@@ -128,19 +128,19 @@ namespace CTecUtil.IO
         /// <summary>
         /// Total count of all commands in all subqueues.
         /// </summary>
-        public int TotalCommandCount { get => _subqueues.Select(q => q.Count)?.Sum() ?? 0; }
+        internal int TotalCommandCount { get => _subqueues.Select(q => q.Count)?.Sum() ?? 0; }
 
 
         /// <summary>
         /// Count of subqueues.
         /// </summary>
-        public int SubqueueCount { get => _subqueues.Count; }
+        internal int SubqueueCount { get => _subqueues.Count; }
 
 
         /// <summary>
         /// Count of commands in current subqueue.
         /// </summary>
-        public int CommandsInCurrentSubqueue { get => _subqueues.Count > 0 ? _subqueues.Peek()?.Count ?? 0 : 0; }
+        internal int CommandsInCurrentSubqueue { get => _subqueues.Count > 0 ? _subqueues.Peek()?.Count ?? 0 : 0; }
 
 
         public override string ToString()

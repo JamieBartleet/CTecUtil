@@ -12,8 +12,8 @@ namespace CTecUtil
 {
     public class TextProcessing
     {
-        /// <summary>The digit characters 0-9 as an array</summary>
-        public static readonly char[] DigitChars = { '0','1','2','3','4','5','6','7','8','9' };
+        ///// <summary>The digit characters 0-9 as an array</summary>
+        //public static readonly char[] DigitChars = { '0','1','2','3','4','5','6','7','8','9' };
 
 
         public static bool IsNumeric(string text) => new Regex("^[0-9]+").IsMatch(text);

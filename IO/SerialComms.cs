@@ -109,6 +109,7 @@ namespace CTecUtil.IO
 
 
         private static bool _listenerMode;
+
         /// <summary>
         /// Set to true when the EventLogViewer page is active so that the correct ping command is sent to the panel
         /// </summary>
@@ -299,7 +300,7 @@ namespace CTecUtil.IO
         #region send/receive
         private static object _sendLock = new();
 
-        public static void SendData(Command command)
+        internal static void SendData(Command command)
         {
             lock (_sendLock)
             {
@@ -745,7 +746,7 @@ namespace CTecUtil.IO
         private static OnFinishedHandler _onEndProgress;
 
 
-        public static void ShowProgressBarWindow(Action onStart, OnFinishedHandler onEnd)
+        internal static void ShowProgressBarWindow(Action onStart, OnFinishedHandler onEnd)
         {
             CTecUtil.Debug.WriteLine("---ShowProgressBarWindow() 01");
             _onStartProgress = onStart;

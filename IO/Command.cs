@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace CTecUtil.IO
 {
-    public class Command
+    internal class Command
     {
-        public Command() { }
+        internal Command() { }
 
-        public Command(Command original)
+        internal Command(Command original)
         {
             CommandData = (byte[])original.CommandData.Clone();
             Index = original.Index;
@@ -19,15 +19,15 @@ namespace CTecUtil.IO
 
 
         /// <summary>The command data</summary>
-        public byte[] CommandData { get; set; }
+        internal byte[] CommandData { get; set; }
 
-        public int Index { get; set; }
+        internal int Index { get; set; }
 
-        public int Tries { get; set; }
+        internal int Tries { get; set; }
 
 
         /// <summary>Handler to which the response will be sent.</summary>
-        public SerialComms.ReceivedResponseDataHandler DataReceiver { get; set; }
+        internal SerialComms.ReceivedResponseDataHandler DataReceiver { get; set; }
 
         /// <summary>Returns the string representation of the CommandData in hexadecimal format</summary>
         public override string ToString() => ByteArrayProcessing.ByteArrayToHexString(CommandData);
