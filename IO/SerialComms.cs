@@ -85,7 +85,7 @@ namespace CTecUtil.IO
         public delegate void ProgressMaxSetter(int maxValue);
         public delegate void ProgressValueUpdater(int value);
 
-        public static ReceivedListenerDataHandler ListenerDataReceiver;
+        public static ReceivedListenerDataHandler ListenerDataReceiver { get; set; }
 
 
         public static Window OwnerWindow { get; set; }
@@ -101,7 +101,7 @@ namespace CTecUtil.IO
 
 
         /// <summary>Set this to provide house style message box for any error messages generated during serial comms</summary>
-        public static ErrorMessageHandler ShowErrorMessage;
+        public static ErrorMessageHandler ShowErrorMessage { get; set; }
 
 
         public static byte AckByte { get; set; }
@@ -121,10 +121,10 @@ namespace CTecUtil.IO
 
         #region ping
         public delegate bool FirmwareVersionNotifier(byte[] firmwareResponse);
-        public static FirmwareVersionNotifier NotifyFirmwareVersion;
+        public static FirmwareVersionNotifier NotifyFirmwareVersion { get; set; }
 
         public delegate void ConnectionStatusNotifier(ConnectionStatus status);
-        public static ConnectionStatusNotifier NotifyConnectionStatus;
+        public static ConnectionStatusNotifier NotifyConnectionStatus { get; set; }
 
         /// <summary>Timer for pinging the panel every few seconds</summary>
         private static System.Timers.Timer _pingTimer;
@@ -188,7 +188,7 @@ namespace CTecUtil.IO
 
         #region command queue
         public delegate void OnFinishedHandler(bool wasCompleted);
-        public static OnFinishedHandler OnFinish;
+        public static OnFinishedHandler OnFinish { get; set; }
         //private static bool _transferInProgress;
         private static bool _queueWasCompleted;
 
@@ -229,7 +229,7 @@ namespace CTecUtil.IO
 
             //arbitrarily don't show progress bar for single jobs (especially don't want to do that for firmware version request)
             if (_commandQueue.TotalCommandCount < 2)
-                SendFirstCommandInQueue();
+                sendFirstCommandInQueue();
             else
                 ShowProgressBarWindow(onStart, onEnd);
             CTecUtil.Debug.WriteLine("---StartSendingCommandQueue() 02");
@@ -243,7 +243,7 @@ namespace CTecUtil.IO
         }
 
 
-        private static void SendFirstCommandInQueue()
+        private static void sendFirstCommandInQueue()
         {
             CTecUtil.Debug.WriteLine("SendFirstCommandInQueue()   SubqueueCount " + _commandQueue.SubqueueCount);
 
@@ -257,7 +257,7 @@ namespace CTecUtil.IO
         }
 
 
-        private static void SendNextCommandInQueue()
+        private static void sendNextCommandInQueue()
         {
             CTecUtil.Debug.WriteLine("SendNextCommandInQueue()");
             _progressOverall++;
@@ -267,7 +267,7 @@ namespace CTecUtil.IO
         }
 
 
-        private static void ResendCommand()
+        private static void resendCommand()
         {
             var cmd = _commandQueue.Peek();
             if (cmd != null)
@@ -346,16 +346,15 @@ namespace CTecUtil.IO
         {
             try
             {
-                var port = sender as SerialPort;
-                if (port == null)
+                if (sender is not SerialPort port)
                     return;
 
                 _responseTimer.Start(_responseTimerPeriod);
 
                 if (ListenerMode)
-                    ListenerDataReceived(port);
+                    listenerDataReceived(port);
                 else
-                    ResponseDataReceived(port);
+                    responseDataReceived(port);
             }
             catch (Exception ex)
             {
@@ -364,7 +363,7 @@ namespace CTecUtil.IO
         }
 
 
-        private static async void ResponseDataReceived(SerialPort port)
+        private static async void responseDataReceived(SerialPort port)
         {
             try
             {
@@ -403,7 +402,7 @@ namespace CTecUtil.IO
                 else if (isNak(incoming))
                 {
                     CTecUtil.Debug.WriteLine((char)0x2718 + " NAK");
-                    ResendCommand();
+                    resendCommand();
                 }
                 else if (isAck(incoming))
                 {
@@ -418,7 +417,7 @@ namespace CTecUtil.IO
 
                         }), DispatcherPriority.Normal);
                     }
-                    SendNextCommandInQueue();
+                    sendNextCommandInQueue();
                 }
                 else if (_commandQueue.TotalCommandCount > 0)
                 {
@@ -465,9 +464,9 @@ namespace CTecUtil.IO
                             _queueWasCompleted = true;
                         }
                         else if (ok)
-                            SendNextCommandInQueue();
+                            sendNextCommandInQueue();
                         else
-                            ResendCommand();
+                            resendCommand();
                     }
                 }
             }
@@ -476,19 +475,19 @@ namespace CTecUtil.IO
                 //checksum fail
                 CTecUtil.Debug.WriteLine("  **FormatException** (ResponseDataReceived) " + ex.Message);
                 _lastException = ex;
-                ResendCommand();
+                resendCommand();
             }
             catch (TimeoutException ex)
             {
                 CTecUtil.Debug.WriteLine("  **TimeoutException** (ResponseDataReceived) " + ex.Message);
                 _lastException = ex;
-                ResendCommand();
+                resendCommand();
             }
             catch (Exception ex)
             {
                 CTecUtil.Debug.WriteLine("  **Exception** (ResponseDataReceived) " + ex.Message);
                 _lastException = ex;
-                ResendCommand();
+                resendCommand();
             }
         }
 
@@ -563,7 +562,7 @@ namespace CTecUtil.IO
         }
 
 
-        private static async void ListenerDataReceived(SerialPort port)
+        private static async void listenerDataReceived(SerialPort port)
         {
             try
             {
@@ -584,7 +583,7 @@ namespace CTecUtil.IO
             {
                 CTecUtil.Debug.WriteLine("  **Exception** (ListenerDataReceived) " + ex.Message);
                 _lastException = ex;
-                ResendCommand();
+                resendCommand();
             }
         }
 
@@ -639,7 +638,7 @@ namespace CTecUtil.IO
             {
                 //try again...
                 if (_commandQueue.TotalCommandCount > 0)
-                    ResendCommand();
+                    resendCommand();
                 else
                     NotifyConnectionStatus?.Invoke(_connectionStatus = ConnectionStatus.Disconnected);
             }
@@ -659,7 +658,7 @@ namespace CTecUtil.IO
         }
 
 
-        private static bool checkChecksum(byte[] data) => data.Length > 0 && CalcChecksum(data, false, true) == data[data.Length - 1];
+        private static bool checkChecksum(byte[] data) => data.Length > 0 && CalcChecksum(data, false, true) == data[^1];
 
 
         private static void error(string message, Exception ex = null)
@@ -717,9 +716,11 @@ namespace CTecUtil.IO
         {
             try
             {
-                var port = new SerialPort(Settings.PortName, Settings.BaudRate, Settings.Parity, Settings.DataBits, Settings.StopBits);
-                port.ReadTimeout  = Settings.ReadTimeout;
-                port.WriteTimeout = Settings.WriteTimeout;
+                var port = new SerialPort(Settings.PortName, Settings.BaudRate, Settings.Parity, Settings.DataBits, Settings.StopBits)
+                {
+                    ReadTimeout  = Settings.ReadTimeout,
+                    WriteTimeout = Settings.WriteTimeout
+                };
 
                 var available = GetAvailablePorts();
                 if (available.Count > 0 && !available.Contains(port.PortName))
@@ -756,8 +757,7 @@ namespace CTecUtil.IO
             {
                 _progressOverall = _progressWithinSubqueue = 0;
                 //use background worker to run work method asynchronously
-                BackgroundWorker worker = new BackgroundWorker();
-                worker.WorkerReportsProgress = true;
+                BackgroundWorker worker = new BackgroundWorker { WorkerReportsProgress = true };
                 worker.DoWork += processAsynch;
                 CTecUtil.Debug.WriteLine("---ShowProgressBarWindow() 02");
                 worker.RunWorkerAsync();
@@ -806,7 +806,7 @@ namespace CTecUtil.IO
             }), DispatcherPriority.Render);
             CTecUtil.Debug.WriteLine("---processAsynch() 06");
 
-            Application.Current.Dispatcher.Invoke(new Action(() => SendNextCommandInQueue()));
+            Application.Current.Dispatcher.Invoke(new Action(() => sendNextCommandInQueue()));
 
             var startTime = DateTime.Now;
             int lastProgress = 0;

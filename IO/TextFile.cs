@@ -12,6 +12,7 @@ using CTecUtil.UI;
 
 namespace CTecUtil.IO
 {
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
     public class TextFile
     {
         public enum FileReadResult
