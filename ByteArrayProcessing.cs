@@ -28,6 +28,8 @@ namespace CTecUtil
         }
 
 
+        public static byte[] StringToByteArray(string value, bool centred = false) => StringToByteArray(value, value.Length, centred);
+
         public static byte[] StringToByteArray(string value, int length, bool centred = false)
         {
             var result = new byte[length];
@@ -53,7 +55,7 @@ namespace CTecUtil
         /// Converts a byte array to an old-school ASCII text string, i.e. chars 0x40 to 0x7E plus CR and LF (any CRLF or LFCR combos are replaced with a single LF).<br/>
         /// Any other characters are replaced by a placeholder.
         /// </summary>
-        public static string ByteArrayToString(byte[] data) => ByteArrayToString(data, 0, data.Length - 1);
+        public static string ByteArrayToString(byte[] data) => data != null ? ByteArrayToString(data, 0, data.Length - 1) : "";
 
         /// <summary>
         /// Converts a byte array to an old-school ASCII text string, i.e. chars 0x40 to 0x7E plus CR and LF (any CRLF or LFCR combos are replaced with a single LF).<br/>
@@ -65,8 +67,7 @@ namespace CTecUtil
         /// <returns></returns>
         public static string ByteArrayToString(byte[] data, int startByte, int endByte)
         {
-            if (data is null)
-                return "";
+            if (data is null) return "";
             var result = new StringBuilder();
             for (int i = startByte; i < endByte; i++)
                 result.Append(data[i] switch { >0x1f and <0x7f or 0x0a or 0x0d => (char)data[i], _ => '·' });
@@ -94,6 +95,21 @@ namespace CTecUtil
         public static int IndexOf(byte[] data, byte targetByte, int startIndex = 0)
         {
             for (int i = startIndex; i < data.Length; i++)
+                if (data[i] == targetByte)
+                    return i;
+            return -1;
+        }
+
+
+        /// <summary>
+        /// Find the last occurrence of targetByte in data.
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="target"></param>
+        /// <returns></returns>
+        public static int LastIndexOf(byte[] data, byte targetByte)
+        {
+            for (int i = data.Length - 1; i > 0; i--)
                 if (data[i] == targetByte)
                     return i;
             return -1;
