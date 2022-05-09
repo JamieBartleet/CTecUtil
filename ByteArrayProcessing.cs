@@ -28,6 +28,16 @@ namespace CTecUtil
         }
 
 
+        public static byte[] SubArray(byte[] data, int startByte, int? endByte = null)
+        {
+            endByte = endByte ?? data.Length - 1;
+            var count = endByte.Value - startByte + 1;
+            var result = new byte[count];
+            Buffer.BlockCopy(data, startByte, result, 0, count);
+            return result;
+        }
+
+
         public static byte[] StringToByteArray(string value, bool centred = false) => StringToByteArray(value, value.Length, centred);
 
         public static byte[] StringToByteArray(string value, int length, bool centred = false)
