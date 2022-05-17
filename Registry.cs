@@ -25,21 +25,44 @@ namespace CTecUtil
 
 
         /// <summary>
+        /// Save the main application window's size and position.
+        /// </summary>
+        public static void SaveMainWindowState(Window window) => saveWindowState(window, RegistryKeyNames.MainWindowKey);
+
+        /// <summary>
+        /// Retrieve the main application saved window state and set the window's size and position accordingly.
+        /// </summary>
+        public static WindowState RestoreMainWindowState(Window window) => restoreWindowState(window, RegistryKeyNames.MainWindowKey);
+
+
+        /// <summary>
+        /// Save the serial monitor window's size and position.
+        /// </summary>
+        public static void SaveSerialMonitorWindowState(Window window) => saveWindowState(window, RegistryKeyNames.MonitorKey);
+
+        /// <summary>
+        /// Retrieve the serial monitor's saved window state and set the window's size and position accordingly.
+        /// </summary>
+        public static WindowState RestoreSerialMonitorWindowState(Window window) => restoreWindowState(window, RegistryKeyNames.MonitorKey);
+
+
+
+        /// <summary>
         /// Save the window's size and position.
         /// </summary>
-        public static void SaveWindowState(Window window)
+        private static void saveWindowState(Window window, string windowKey)
         {
             if (window.WindowState == WindowState.Maximized)
             {
-                var prevState = (string)readSubKey(Keys.WindowKey);
+                var prevState = (string)readSubKey(windowKey);
                 if (prevState != null && prevState.EndsWith(_maximised))
-                    writeSubKey(Keys.WindowKey, prevState);
+                    writeSubKey(windowKey, prevState);
                 else
-                    writeSubKey(Keys.WindowKey, prevState + ";" + _maximised);
+                    writeSubKey(windowKey, prevState + ";" + _maximised);
             }
             else
             {
-                writeSubKey(Keys.WindowKey, (int)window.Width + "," + (int)window.Height + ";" + (int)window.Left + "," + (int)window.Top);
+                writeSubKey(windowKey, (int)window.Width + "," + (int)window.Height + ";" + (int)window.Left + "," + (int)window.Top);
             }
         }
 
@@ -47,9 +70,9 @@ namespace CTecUtil
         /// <summary>
         /// Retrieve the window state and set the window's size and position accordingly.
         /// </summary>
-        public static WindowState RestoreWindowState(Window window)
+        public static WindowState restoreWindowState(Window window, string windowKey)
         {
-            var prevState = (string)readSubKey(Keys.WindowKey);
+            var prevState = (string)readSubKey(windowKey);
             if (prevState is not null)
             {
                 var size_pos = prevState.Split(new char[] { ';' });
@@ -92,16 +115,16 @@ namespace CTecUtil
         }
 
 
-        public static void SaveZoomLevel(float zoomLevel) => writeSubKey(Keys.ZoomKey, zoomLevel.ToString("F2", CultureInfo.InvariantCulture));
-        public static float? ReadZoomLevel() => float.TryParse((string)readSubKey(Keys.ZoomKey), NumberStyles.Float, CultureInfo.InvariantCulture, out float zoomLevel) ? zoomLevel : null;
+        public static void SaveZoomLevel(float zoomLevel) => writeSubKey(RegistryKeyNames.ZoomKey, zoomLevel.ToString("F2", CultureInfo.InvariantCulture));
+        public static float? ReadZoomLevel() => float.TryParse((string)readSubKey(RegistryKeyNames.ZoomKey), NumberStyles.Float, CultureInfo.InvariantCulture, out float zoomLevel) ? zoomLevel : null;
 
 
-        public static void SaveCulture(string cultureName) => writeSubKey(Keys.CultureKey, cultureName);
-        public static string ReadCulture() => (string)readSubKey(Keys.CultureKey, "en-GB");
+        public static void SaveCulture(string cultureName) => writeSubKey(RegistryKeyNames.CultureKey, cultureName);
+        public static string ReadCulture() => (string)readSubKey(RegistryKeyNames.CultureKey, "en-GB");
 
         
         public static void SaveSerialPortSettings(SerialPortSettings settings)
-            => writeSubKey(Keys.SerialPortKey, "Port=" + settings.PortName
+            => writeSubKey(RegistryKeyNames.SerialPortKey, "Port=" + settings.PortName
                                                        //+ ",Baud=" + settings.BaudRate
                                                        //+ ",Handshake=" + settings.Handshake
                                                        //+ ",Parity=" + settings.Parity
@@ -115,7 +138,7 @@ namespace CTecUtil
         {
             SerialPortSettings result = new();
 
-            var keyData = (string)readSubKey(Keys.SerialPortKey);
+            var keyData = (string)readSubKey(RegistryKeyNames.SerialPortKey);
             if (!string.IsNullOrEmpty(keyData))
             {
                 var settings = keyData.Split(new char[] { ',' });
@@ -147,16 +170,6 @@ namespace CTecUtil
         private static Handshake parseHandshake(string value) { return (Handshake.TryParse(value, out Handshake h)) ? h : Handshake.None; }
         private static Parity    parseParity(string value)    { return (Parity.TryParse(value, out Parity h)) ? h : Parity.None; }
         private static StopBits  parseStopBits(string value)  { return (StopBits.TryParse(value, out StopBits s)) ? s : StopBits.None; }
-
-
-        internal class Keys
-        {
-            public const string ZoomKey       = @"ZoomLevel";
-            public const string CultureKey    = @"Culture";
-            public const string WindowKey     = @"Window";
-            public const string MessageBoxKey = @"MsgBox";
-            public const string SerialPortKey = @"SerialPort";
-        }
 
 
         private static bool   _initialised;
