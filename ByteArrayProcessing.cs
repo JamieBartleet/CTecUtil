@@ -67,6 +67,31 @@ namespace CTecUtil
         /// </summary>
         public static string ByteArrayToString(byte[] data) => data != null ? ByteArrayToString(data, 0, data.Length - 1) : "";
 
+
+        /// <summary>
+        /// Converts a byte array to an old-school ASCII text string, i.e. chars 0x40 to 0x7E plus CR and LF (any CRLF or LFCR combos are replaced with a single LF).<br/>
+        /// Bytes are space separated. Any other characters are replaced by a placeholder.
+        /// </summary>
+        public static string ByteArrayToFormattedString(byte[] data)
+        {
+            if (data is null)
+                return "";
+            
+            var str = ByteArrayToString(data, 0, data.Length - 1);
+
+            StringBuilder sb = new StringBuilder();
+
+            for (int i = 0; i < str.Length; i += 2)
+            {
+                sb.Append(" " + str[i]);
+                if (i + 1 < str.Length)
+                    sb.Append(str[i + 1]);
+            }
+
+            return sb.ToString().Trim();
+        }
+
+
         /// <summary>
         /// Converts a byte array to an old-school ASCII text string, i.e. chars 0x40 to 0x7E plus CR and LF (any CRLF or LFCR combos are replaced with a single LF).<br/>
         /// Any other characters are replaced by a placeholder.
@@ -79,7 +104,7 @@ namespace CTecUtil
         {
             if (data is null) return "";
             var result = new StringBuilder();
-            for (int i = startByte; i < endByte; i++)
+            for (int i = startByte; i <= endByte; i++)
                 result.Append(data[i] switch { >0x1f and <0x7f or 0x0a or 0x0d => (char)data[i], _ => '·' });
             return result.ToString().Replace("\r\n", "\n").Replace("\n\r", "\n");
         }
