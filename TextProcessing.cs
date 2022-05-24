@@ -32,6 +32,25 @@ namespace CTecUtil
 
 
         /// <summary>
+        /// Converts alpha and digit Key to a string.<br/>E.g. Key.A -> "A"; Key.D1 or Key.Numpad1 -> "1".
+        /// </summary>
+        public static string KeyToString(Key k)
+        {
+            if (k == Key.Space)
+                return " ";
+            if (k >= Key.A && k <= Key.Z)
+                return k.ToString();
+            if (IsNumericKey(k))
+                return DigitKeyToString(k);
+            if (k == Key.Add || k == Key.OemPlus)
+                return "+";
+            if (k == Key.Subtract || k == Key.OemMinus)
+                return "-";
+            return "";
+        }
+
+
+        /// <summary>
         /// Converts digit Key to a string.<br/>E.g. Key.D1 or Key.Numpad1 -> "1".
         /// </summary>
         public static string DigitKeyToString(Key k)
