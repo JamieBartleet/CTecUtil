@@ -63,9 +63,9 @@ namespace CTecUtil.IO
         }
 
 
-        private const int _incomingDataTimerPeriod = 3500;
-        private const int _responseTimerPeriod     = 4500;
-        private const int _pingTimerPeriod         = 4000;
+        private const int _incomingDataTimerPeriod = 4500;
+        private const int _responseTimerPeriod     = 5500;
+        private const int _pingTimerPeriod         = 5000;
 
 
         private static SerialPort _port;
@@ -113,7 +113,21 @@ namespace CTecUtil.IO
         /// <summary>
         /// Set to true when the EventLogViewer page is active so that the correct ping command is sent to the panel
         /// </summary>
-        public static bool ListenerMode { get => _listenerMode; set { NotifyConnectionStatus?.Invoke(_connectionStatus = (_listenerMode = value) ? ConnectionStatus.Listening : ConnectionStatus.Unknown); } }
+        public static bool ListenerMode
+        {
+            get => _listenerMode;
+            set
+            {
+                var changedMode = _listenerMode != value;
+                _listenerMode = value;
+                if (changedMode)
+                {
+                    if (ListenerMode)
+                        _prevConnectionStatus = _connectionStatus;
+                    NotifyConnectionStatus?.Invoke(setConnectionStatus(_listenerMode ? ConnectionStatus.Listening : _prevConnectionStatus));
+                }
+            }
+        }
 
 
         public static bool TransferInProgress() => _commandQueue.TotalCommandCount > 0;
@@ -129,10 +143,13 @@ namespace CTecUtil.IO
         /// <summary>Timer for pinging the panel every few seconds</summary>
         private static System.Timers.Timer _pingTimer;
 
-        private static ConnectionStatus _connectionStatus = ConnectionStatus.Unknown;
+        private static ConnectionStatus _connectionStatus     = ConnectionStatus.Unknown;
+        private static ConnectionStatus _prevConnectionStatus = ConnectionStatus.Unknown;
         private static byte[] _pingCommand;
         private static byte[] _checkFirmwareVersionCommand;
         private static byte[] _checkWriteableCommand;
+
+        private static ConnectionStatus setConnectionStatus(ConnectionStatus status) => _connectionStatus = status;
 
         public static void SetPingCommands(byte[] pingCommand, byte[] checkFirmwareVersionCommand = null, byte[] checkWriteableCommand = null)
         {
@@ -380,7 +397,7 @@ namespace CTecUtil.IO
                 {
                     //status is one of the Connected statuses: if not already thought to be writeable set it to read-only
                     if (_connectionStatus != ConnectionStatus.ConnectedWriteable)
-                        _connectionStatus = ConnectionStatus.ConnectedReadOnly;
+                        setConnectionStatus(ConnectionStatus.ConnectedReadOnly);
 
                     //panel responded to ping, so request its firmware version
                     sendFirmwareVersionCheck();
@@ -389,7 +406,7 @@ namespace CTecUtil.IO
                 {
                     //panel responded to ping, so notify the version number and request its read-only status
                     if (!NotifyFirmwareVersion?.Invoke(incoming) ?? true)
-                        NotifyConnectionStatus?.Invoke(_connectionStatus = ConnectionStatus.FirmwareNotSupported);
+                        NotifyConnectionStatus?.Invoke(setConnectionStatus(ConnectionStatus.FirmwareNotSupported));
                     else
                         sendWriteableCheck();
                 }
@@ -397,7 +414,7 @@ namespace CTecUtil.IO
                 {
                     //read-only response received?
                     var readOnly = incoming.Length > 2 && incoming[2] == 0;
-                    NotifyConnectionStatus?.Invoke(_connectionStatus = readOnly ? ConnectionStatus.ConnectedReadOnly : ConnectionStatus.ConnectedWriteable);
+                    NotifyConnectionStatus?.Invoke(setConnectionStatus(readOnly ? ConnectionStatus.ConnectedReadOnly : ConnectionStatus.ConnectedWriteable));
                 }
                 else if (isNak(incoming))
                 {
@@ -544,6 +561,8 @@ namespace CTecUtil.IO
                     offset += bytes;
                 }
 
+                CTecUtil.Debug.WriteLine("         incoming: [" + ByteArrayProcessing.ByteArrayToHexString(buffer) + "]");
+
                 if (!checkChecksum(buffer))
                     throw new FormatException();
 
@@ -566,7 +585,7 @@ namespace CTecUtil.IO
         {
             try
             {
-                NotifyConnectionStatus?.Invoke(_connectionStatus = ConnectionStatus.Listening);
+                NotifyConnectionStatus?.Invoke(setConnectionStatus(ConnectionStatus.Listening));
 
                 var incoming = readIncomingListenerData(port);
 
@@ -640,7 +659,7 @@ namespace CTecUtil.IO
                 if (_commandQueue.TotalCommandCount > 0)
                     resendCommand();
                 else
-                    NotifyConnectionStatus?.Invoke(_connectionStatus = ConnectionStatus.Disconnected);
+                    NotifyConnectionStatus?.Invoke(setConnectionStatus(ConnectionStatus.Disconnected));
             }
 
             _responseTimer.Start(_responseTimerPeriod);
@@ -668,7 +687,7 @@ namespace CTecUtil.IO
             //check queue - avoids erroring on ping fail
             var showError = _commandQueue.TotalCommandCount > 0;
             CancelCommandQueue();
-            NotifyConnectionStatus?.Invoke(_connectionStatus = ConnectionStatus.Disconnected);
+            NotifyConnectionStatus?.Invoke(setConnectionStatus(ConnectionStatus.Disconnected));
             if (showError)
                 ShowErrorMessage?.Invoke(message + "\n\n" + ex?.Message);
         }
