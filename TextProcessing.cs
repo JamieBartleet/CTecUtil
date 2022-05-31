@@ -32,22 +32,67 @@ namespace CTecUtil
 
 
         /// <summary>
-        /// Converts alpha and digit Key to a string.<br/>E.g. Key.A -> "A"; Key.D1 or Key.Numpad1 -> "1".
+        /// Converts non-OEM Key to a string.<br/>E.g. Key.A -> "A"; Key.D1 or Key.Numpad1 -> "1"; Key.Div
         /// </summary>
         public static string KeyToString(Key k)
-        {
-            if (k == Key.Space)
-                return " ";
-            if (k >= Key.A && k <= Key.Z)
-                return k.ToString();
-            if (IsNumericKey(k))
-                return DigitKeyToString(k);
-            if (k == Key.Add || k == Key.OemPlus)
-                return "+";
-            if (k == Key.Subtract || k == Key.OemMinus)
-                return "-";
-            return "";
-        }
+            => k >= Key.A && k <= Key.Z ? k.ToString()
+            : IsNumericKey(k) ? DigitKeyToString(k)
+            : k switch
+            {
+                Key.Add => "+",
+                Key.Back => "BackSpace",
+                Key.Decimal => ".",         // ???
+                Key.Delete => "Del",
+                Key.Divide => "/",
+                Key.Down => "Down",
+                Key.End => "End",
+                Key.Enter => "Enter",
+                Key.Escape => "Esc",
+                Key.F1 => "F1",
+                Key.F2 => "F2",
+                Key.F3 => "F3",
+                Key.F4 => "F4",
+                Key.F5 => "F5",
+                Key.F6 => "F6",
+                Key.F7 => "F7",
+                Key.F8 => "F8",
+                Key.F9 => "F9",
+                Key.F10 => "F10",
+                Key.F11 => "F11",
+                Key.F12 => "F12",
+                Key.Home => "Home",
+                Key.Insert => "Ins",
+                Key.Left => "Left",
+                Key.Multiply => "*",
+                //Key.Oem1 => "",
+                //Key.Oem2 => "",
+                //Key.Oem3 => "",
+                //Key.Oem4 => "",
+                //Key.Oem5 => "",
+                //Key.Oem6 => "",
+                //Key.Oem7 => "",
+                //Key.Oem8 => "",
+                //Key.OemBackslash => "\\",
+                //Key.OemCloseBrackets => "]",
+                //Key.OemComma => ",",
+                //Key.OemMinus => "-",
+                //Key.OemOpenBrackets => "[",
+                //Key.OemPeriod => ".",
+                //Key.OemPipe => "|",
+                //Key.OemPlus => "+",
+                //Key.OemQuestion => "?",
+                //Key.OemQuotes => "\"",
+                //Key.OemSemicolon => ";",
+                //Key.OemTilde => "~",
+                Key.PageDown => "PgDn",
+                Key.PageUp => "PgUp",
+                Key.PrintScreen  => "PrtScrn",
+                Key.Right => "Right",
+                Key.Space => " ",
+                Key.Subtract => "-",
+                Key.Up  => "Up",
+                _ => "",
+            };
 
 
         /// <summary>
