@@ -128,9 +128,10 @@ namespace CTecUtil
         /// <returns></returns>
         public static int IndexOf(byte[] data, byte targetByte, int startIndex = 0)
         {
-            for (int i = startIndex; i < data.Length; i++)
-                if (data[i] == targetByte)
-                    return i;
+            if (startIndex >= 0)
+                for (int i = startIndex; i < data.Length; i++)
+                    if (data[i] == targetByte)
+                        return i;
             return -1;
         }
 
