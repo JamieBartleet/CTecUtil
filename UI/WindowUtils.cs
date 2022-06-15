@@ -2,14 +2,54 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Interop;
+using static CTecUtil.API.User32API;
 
 namespace CTecUtil.UI
 {
-    internal class WindowUtils
+    public class WindowUtils
     {
+        /// <summary>
+        /// Ensure that a window maximises to the correct size when its Shell:WindowChrome 
+        /// has been overridden, otherwise the extremities may be clipped.
+        /// </summary>
+        /// <param name="window"></param>
+        public static void PreventClipWhenMaximised(System.Windows.Window window) => ((HwndSource)System.Windows.PresentationSource.FromVisual(window)).AddHook(HookGetMinMaxInfo);
+
+        public static IntPtr HookGetMinMaxInfo(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg == WM_GETMINMAXINFO)
+            {
+                // We need to tell the system what our size should be when maximized so the extremities aren't clipped
+                MINMAXINFO mmi = (MINMAXINFO)Marshal.PtrToStructure(lParam, typeof(MINMAXINFO));
+
+                // Adjust the maximized size and position to fit the work area of the correct monitor
+                IntPtr monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+
+                if (monitor != IntPtr.Zero)
+                {
+                    MONITORINFO monitorInfo = new MONITORINFO { cbSize = Marshal.SizeOf(typeof(MONITORINFO)) };
+                    GetMonitorInfo(monitor, ref monitorInfo);
+                    RECT rcWorkArea = monitorInfo.rcWork;
+                    RECT rcMonitorArea = monitorInfo.rcMonitor;
+                    mmi.ptMaxPosition.X = Math.Abs(rcWorkArea.Left - rcMonitorArea.Left);
+                    mmi.ptMaxPosition.Y = Math.Abs(rcWorkArea.Top - rcMonitorArea.Top);
+                    mmi.ptMaxSize.X = Math.Abs(rcWorkArea.Right - rcWorkArea.Left);
+                    mmi.ptMaxSize.Y = Math.Abs(rcWorkArea.Bottom - rcWorkArea.Top) + 3;
+                }
+
+                Marshal.StructureToPtr(mmi, lParam, true);
+            }
+
+            return IntPtr.Zero;
+        }
+
+
+        #region AdjustXY
         /// <summary>
         /// Adjust the window position to avoid it going out of screen bounds.<br/>
         /// Works for multi screens - with different aspect ratios.
@@ -214,5 +254,6 @@ namespace CTecUtil.UI
 
             return topLeft;
         }
+        #endregion
     }
 }
