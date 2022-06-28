@@ -328,7 +328,7 @@ namespace CTecUtil.IO
                     if (command != null && command.CommandData != null)
                     {
                         command.Tries++;
-                        CTecUtil.Debug.WriteLine("SendData() {try=" + command.Tries + "} [" + command.ToString() + "]");
+                        //CTecUtil.Debug.WriteLine("SendData() {try=" + command.Tries + "} [" + command.ToString() + "]");
 
                         try
                         {
@@ -391,7 +391,7 @@ namespace CTecUtil.IO
 
                 var incoming = readIncomingResponse(port);
 
-                CTecUtil.Debug.WriteLine("Receive data:      [" + ByteArrayProcessing.ByteArrayToHexString(incoming) + "] --> \"" + ByteArrayProcessing.ByteArrayToString(incoming) + "\"");
+                //CTecUtil.Debug.WriteLine("Receive data:      [" + ByteArrayProcessing.ByteArrayToHexString(incoming) + "] --> \"" + ByteArrayProcessing.ByteArrayToString(incoming) + "\"");
 
                 if (isPingResponse(incoming))
                 {
@@ -561,7 +561,7 @@ namespace CTecUtil.IO
                     offset += bytes;
                 }
 
-                CTecUtil.Debug.WriteLine("         incoming: [" + ByteArrayProcessing.ByteArrayToHexString(buffer) + "]");
+                //CTecUtil.Debug.WriteLine("         incoming: [" + ByteArrayProcessing.ByteArrayToHexString(buffer) + "]");
 
                 if (!checkChecksum(buffer))
                     throw new FormatException();
