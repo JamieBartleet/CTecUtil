@@ -14,5 +14,6 @@ namespace CTecUtil
         public const string MessageBoxKey = @"MsgBox";
         public const string SerialPortKey = @"SerialPort";
         public const string MonitorKey    = @"Monitor";
+        public const string ModeKey       = @"Mode";
     }
 }

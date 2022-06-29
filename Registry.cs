@@ -115,24 +115,37 @@ namespace CTecUtil
         }
 
 
-        public static void SaveZoomLevel(float zoomLevel) => writeSubKey(RegistryKeyNames.ZoomKey, zoomLevel.ToString("F2", CultureInfo.InvariantCulture));
-        public static float? ReadZoomLevel() => float.TryParse((string)readSubKey(RegistryKeyNames.ZoomKey), NumberStyles.Float, CultureInfo.InvariantCulture, out float zoomLevel) ? zoomLevel : null;
+        //public static void SaveZoomLevel(float zoomLevel) => writeSubKey(RegistryKeyNames.ZoomKey, zoomLevel.ToString("F2", CultureInfo.InvariantCulture));
+        //public static float? ReadZoomLevel() => float.TryParse((string)readSubKey(RegistryKeyNames.ZoomKey), NumberStyles.Float, CultureInfo.InvariantCulture, out float zoomLevel) ? zoomLevel : null;
 
 
-        public static void SaveCulture(string cultureName) => writeSubKey(RegistryKeyNames.CultureKey, cultureName);
-        public static string ReadCulture() => (string)readSubKey(RegistryKeyNames.CultureKey, "en-GB");
+        //public static void SaveMode(string modeName) => writeSubKey(RegistryKeyNames.ModeKey, modeName);
+        //public static string ReadMode() => (string)readSubKey(RegistryKeyNames.ModeKey);
 
-        
+
+        //public static void SaveCulture(string cultureName) => writeSubKey(RegistryKeyNames.CultureKey, cultureName);
+        //public static string ReadCulture() => (string)readSubKey(RegistryKeyNames.CultureKey, "en-GB");
+
+
+        private const string _portSetting = "port";
+        //private const string _baudSetting = "baud";
+        //private const string _handshakeSetting = "handshake";
+        //private const string _paritySetting = "parity";
+        //private const string _dataBitsSetting = "databits";
+        //private const string _stopBitsSetting = "stopbits";
+        //private const string _readTimeoutSetting = "readtimeout";
+        //private const string _writeTimeoutSetting = "writetimeout";
+
         public static void SaveSerialPortSettings(SerialPortSettings settings)
-            => writeSubKey(RegistryKeyNames.SerialPortKey, "Port=" + settings.PortName
-                                                       //+ ",Baud=" + settings.BaudRate
-                                                       //+ ",Handshake=" + settings.Handshake
-                                                       //+ ",Parity=" + settings.Parity
-                                                       //+ ",DataBits=" + settings.DataBits
-                                                       //+ ",StopBits=" + settings.StopBits
-                                                       //+ ",ReadTimeout=" + settings.ReadTimeout
-                                                       //+ ",WriteTimeout=" + settings.WriteTimeout
-                                                    );
+            => writeSubKey(RegistryKeyNames.SerialPortKey, _portSetting + "=" + settings.PortName
+                                                        // + ","+ _baudSetting + "=" + settings.BaudRate
+                                                        // + ","+ _handshakeSetting + "=" + settings.Handshake
+                                                        // + ","+ _paritySetting + "=" + settings.Parity
+                                                        // + ","+ _dataBitsSetting + "=" + settings.DataBits
+                                                        // + ","+ _stopBitsSetting + "=" + settings.StopBits
+                                                        // + ","+ _readTimeoutSetting + "=" + settings.ReadTimeout
+                                                        // + ","+ _writeTimeoutSetting + "=" + settings.WriteTimeout
+                                                        );
 
         public static SerialPortSettings ReadSerialPortSettings()
         {
@@ -150,14 +163,14 @@ namespace CTecUtil
                     {
                         switch (param?[0].ToLower())
                         {
-                            case "port":         result.PortName     = param[1]; break;
-                            //case "baud":         result.BaudRate     = parseInt(param[1], 9600); break;
-                            //case "handshake":    result.Handshake    = parseHandshake(param[1]); break;
-                            //case "parity":       result.Parity       = parseParity(param[1]); break;
-                            //case "databits":     result.DataBits     = parseInt(param[1], 8); break;
-                            //case "stopbits":     result.StopBits     = parseStopBits(param[1]); break;
-                            //case "readtimeout":  result.ReadTimeout  = parseInt(param[1], 500); break;
-                            //case "writetimeout": result.WriteTimeout = parseInt(param[1], 500); break;
+                            case _portSetting:         result.PortName     = param[1]; break;
+                            //case _baudSetting:         result.BaudRate     = parseInt(param[1], 9600); break;
+                            //case _handshakeSetting:    result.Handshake    = parseHandshake(param[1]); break;
+                            //case _paritySetting:       result.Parity       = parseParity(param[1]); break;
+                            //case _dataBitsSetting:     result.DataBits     = parseInt(param[1], 8); break;
+                            //case _stopBitsSetting:     result.StopBits     = parseStopBits(param[1]); break;
+                            //case _readTimeoutSetting:  result.ReadTimeout  = parseInt(param[1], 500); break;
+                            //case _writeTimeoutSetting: result.WriteTimeout = parseInt(param[1], 500); break;
                         }
                     }
                 }

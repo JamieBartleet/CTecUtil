@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Interop;
 using static CTecUtil.API.User32API;
@@ -46,6 +47,37 @@ namespace CTecUtil.UI
             }
 
             return IntPtr.Zero;
+        }
+
+
+        /// <summary>
+        /// Retrieve the window state and set the window's size and position accordingly.
+        /// </summary>
+        public static WindowState SetWindowState(Window window, System.Windows.Point? location, System.Windows.Size? size, bool isMaximised)
+        {
+            if (size is not null)
+            {
+                window.Width = size.Value.Width;
+                window.Left  = size.Value.Height;
+            }
+            
+            if (location is not null)
+            {
+                try
+                {
+                    //ensure top-left of app screen is visible
+                    var loc = AdjustXY(new((int)location.Value.X, (int)location.Value.Y), new((int)window.Width, (int)window.Height), 0, 0);
+
+                    window.Top  = loc.Y;
+                    window.Left = loc.X;
+                }
+                catch { }
+            }
+
+            if (isMaximised)
+                return window.WindowState = WindowState.Maximized;
+
+            return WindowState.Normal;
         }
 
 
@@ -207,7 +239,7 @@ namespace CTecUtil.UI
         /// <param name="offset">The offset of the topLeft postion</param>
         /// <param name="margin">The margin from the screen</param>
         /// <returns>The adjusted position of the window</returns>
-        internal static Point AdjustXY(Point topLeft, Point maxSize, int offset, int margin)
+        internal static System.Drawing.Point AdjustXY(System.Drawing.Point topLeft, System.Drawing.Point maxSize, int offset, int margin)
         {
             Screen currentScreen = Screen.FromPoint(topLeft);
             Rectangle rect = currentScreen.WorkingArea;

@@ -44,7 +44,6 @@ namespace CTecUtil.Cultures
             System.Threading.Thread.CurrentThread.CurrentUICulture = culture; 
             Cultures.Resources.Culture = culture;
             ResourceProvider.Refresh();
-            Registry.SaveCulture(culture.Name);
         }
     }
 }

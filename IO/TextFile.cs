@@ -7,7 +7,6 @@ using System.IO;
 using System.Text;
 using System.Windows;
 using Microsoft.Win32;
-using Newtonsoft.Json;
 using CTecUtil.UI;
 
 namespace CTecUtil.IO
@@ -22,6 +21,9 @@ namespace CTecUtil.IO
             DataIsWrongType,
             ErrorReadingFile,
         }
+
+
+        public static string JsonFileExt = ".json";
 
 
         public static string FilePath { get; set; }
@@ -62,12 +64,31 @@ namespace CTecUtil.IO
                 return SaveFileAs(data);
             else
             {
-                UIState.SetBusyState();
                 CTecUtil.Debug.WriteLine("Writing file: " + FilePath);
                 using var Writer = new StreamWriter(FilePath);
                 Writer.Write(data);
                 return FilePath;
             }
+        }
+
+        public static string SaveFile(string data, string filePath)
+        {
+            if (data is null || string.IsNullOrEmpty(filePath))
+                return null;
+
+            CTecUtil.Debug.WriteLine("Writing file: " + filePath);
+            try
+            {
+                using var Writer = new StreamWriter(filePath);
+                Writer.Write(data);
+                return FilePath;
+            }
+            catch (Exception ex)
+            {
+                CTecUtil.Debug.WriteLine(ex.Message);
+            }
+
+            return null;
         }
 
 
@@ -91,6 +112,17 @@ namespace CTecUtil.IO
                 return SaveFile(data);
             }
             return null;
+        }
+
+
+        /// <summary>
+        /// Ensure FilePath's extension is .json
+        /// </summary>
+        protected static string JsonFileName(string filePath)
+        {
+            var ext = Path.GetExtension(filePath);
+            var idx = FilePath.LastIndexOf(ext);
+            return FilePath.Substring(0, idx) + JsonFileExt;
         }
 
     }
