@@ -19,7 +19,7 @@ namespace CTecUtil.IO
     {
         static SerialComms()
         {
-            _settings = Registry.ReadSerialPortSettings();
+            _settings = ApplicationConfig.SerialPortSettings;
             _progressBarWindow.OnCancel = CancelCommandQueue;
             _responseTimer.OnTimedOut = new(() => { responseTimerTimeout(); });
             _responseTimer.Start(_responseTimerPeriod);

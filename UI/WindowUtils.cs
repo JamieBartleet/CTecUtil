@@ -51,30 +51,30 @@ namespace CTecUtil.UI
 
 
         /// <summary>
-        /// Retrieve the window state and set the window's size and position accordingly.
+        /// Set the window's size, position and state.
         /// </summary>
-        public static WindowState SetWindowState(Window window, System.Windows.Point? location, System.Windows.Size? size, bool isMaximised)
+        public static WindowState SetWindowDimensions(Window window, WindowSizeParams? dimensions)
         {
-            if (size is not null)
+            if (dimensions?.Size is not null)
             {
-                window.Width = size.Value.Width;
-                window.Left  = size.Value.Height;
+                window.Width = dimensions.Size.Value.Width;
+                window.Left = dimensions.Size.Value.Height;
             }
-            
-            if (location is not null)
+
+            if (dimensions?.Location is not null)
             {
                 try
                 {
                     //ensure top-left of app screen is visible
-                    var loc = AdjustXY(new((int)location.Value.X, (int)location.Value.Y), new((int)window.Width, (int)window.Height), 0, 0);
+                    var loc = AdjustXY(new((int)dimensions.Location.Value.X, (int)dimensions.Location.Value.Y), new((int)window.Width, (int)window.Height), 0, 0);
 
-                    window.Top  = loc.Y;
+                    window.Top = loc.Y;
                     window.Left = loc.X;
                 }
                 catch { }
             }
 
-            if (isMaximised)
+            if (dimensions?.IsMaximised ?? false)
                 return window.WindowState = WindowState.Maximized;
 
             return WindowState.Normal;
