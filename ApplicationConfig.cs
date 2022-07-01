@@ -17,16 +17,18 @@ namespace CTecUtil
         /// <summary>
         /// Initialise the CTecUtil.ApplicationConfig class.
         /// </summary>
-        /// <param name="productName">The software's name ("QuantecTools", XFPTools", etc.)</param>
+        /// <param name="productName">The software's name ("Quantec Programming Tools", etc.)</param>
         public static void InitConfigSettings(string productName)
         {
+            _initialised = true;
             Directory.CreateDirectory(_appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), _companyName));
             _configFilePath = Path.Combine(_appDataFolder, productName + TextFile.JsonFileExt);
             readSettings();
         }
 
 
-        private const string _companyName = "C-Tec";
+        private const  string _companyName = "C-Tec";
+        private static bool   _initialised = false;
         private static string _appDataFolder;
         private static string _configFilePath;
         private static ApplicationConfigData _config = new();
@@ -34,6 +36,9 @@ namespace CTecUtil
 
         private static void readSettings()
         {
+            if (!_initialised)
+                notInitialisedError();
+
             try
             {
                 using FileStream stream = new(_configFilePath, FileMode.Open, FileAccess.Read);
@@ -52,10 +57,30 @@ namespace CTecUtil
             catch (UnauthorizedAccessException ex) { Debug.WriteLine(ex.Message); }
             catch (IOException ex) { Debug.WriteLine(ex.Message); }
             catch (Exception ex) { Debug.WriteLine(ex.Message); }
+
+            if (string.IsNullOrEmpty(_config.SerialPort.PortName))
+            {
+                //try legacy registry settings (only ever in pre-release test versions)
+                Registry.Initialise("QuantecTools");
+                _config.SerialPort = Registry.ReadSerialPortSettings();
+            }
         }
 
 
-        public static void SaveSettings() => TextFile.SaveFile(JsonConvert.SerializeObject(_config, Formatting.Indented), _configFilePath);
+        public static void SaveSettings()
+        {
+            if (!_initialised)
+                notInitialisedError();
+
+            TextFile.SaveFile(JsonConvert.SerializeObject(_config, Formatting.Indented), _configFilePath);
+        }
+
+
+        private static void notInitialisedError()
+        {
+            MessageBox.Show("***Code error***\n\nThe ApplicationConfig class has not been initialised.\nCall ApplicationConfig.InitConfigSettings(<productName>).", _companyName);
+            Environment.Exit(0);
+        }
 
 
         /// <summary>
@@ -73,10 +98,10 @@ namespace CTecUtil
         /// <summary>
         /// Save the main application window's size and position.
         /// </summary>
-        public static void SaveMainWindowState(Window window)
+        public static void UpdateMainWindowParams(Window window, bool saveSettings = false)
         {
-            var newLocation = new Point(window.Left, window.Top);
-            var newSize     = new Size(window.Width, window.Height);
+            var newLocation = new Point((int)window.Left, (int)window.Top);
+            var newSize     = new Size((int)window.Width, (int)window.Height);
 
             if (_config.MainWindow is null)
                 _config.MainWindow = new() { Location = newLocation, Size = newSize, IsMaximised = window.WindowState == WindowState.Maximized };
@@ -85,16 +110,19 @@ namespace CTecUtil
                 _config.MainWindow.Location = newLocation;
                 _config.MainWindow.Size = newSize;
             }
+
+            if (saveSettings)
+                SaveSettings();
         }
 
 
         /// <summary>
         /// Save the Configurator Monitor window's size and position.
         /// </summary>
-        public static void SaveMonitorWindowState(Window window)
+        public static void UpdateMonitorWindowParams(Window window, bool saveSettings = false)
         {
-            var newLocation = new Point(window.Left, window.Top);
-            var newSize = new Size(window.Width, window.Height);
+            var newLocation = new Point((int)window.Left, (int)window.Top);
+            var newSize     = new Size((int)window.Width, (int)window.Height);
 
             if (_config.MonitorWindow is null)
                 _config.MonitorWindow = new() { Location = newLocation, Size = newSize, IsMaximised = window.WindowState == WindowState.Maximized };
@@ -103,6 +131,9 @@ namespace CTecUtil
                 _config.MonitorWindow.Location = newLocation;
                 _config.MonitorWindow.Size = newSize;
             }
+
+            if (saveSettings)
+                SaveSettings();
         }
 
 
