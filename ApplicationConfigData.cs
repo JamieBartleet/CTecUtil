@@ -10,7 +10,7 @@ namespace CTecUtil
 {
     public class ApplicationConfigData
     {
-        public Modes              Mode;
+        public Layouts            Layout;
         public string             CultureName = "en-GB";
         public WindowSizeParams   MainWindow;
         public WindowSizeParams   MonitorWindow;
@@ -19,7 +19,7 @@ namespace CTecUtil
     }
 
 
-    public enum Modes { Standard, Classic };
+    public enum Layouts { Standard, Classic };
 
 
     public class WindowSizeParams

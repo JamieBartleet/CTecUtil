@@ -60,7 +60,7 @@ namespace CTecUtil
 
             if (string.IsNullOrEmpty(_config.SerialPort.PortName))
             {
-                //try legacy registry settings (only ever in pre-release test versions)
+                //try legacy registry settings (only ever used in pre-release test versions)
                 Registry.Initialise("QuantecTools");
                 _config.SerialPort = Registry.ReadSerialPortSettings();
             }
@@ -157,10 +157,10 @@ namespace CTecUtil
         }
 
 
-        public static bool IsClassicMode
+        public static bool IsClassicLayout
         {
-            get => _config.Mode == Modes.Classic;
-            set  { _config.Mode = value ? Modes.Classic : Modes.Standard; SaveSettings(); }
+            get => _config.Layout == Layouts.Classic;
+            set  { _config.Layout = value ? Layouts.Classic : Layouts.Standard; SaveSettings(); }
         }
 
 
