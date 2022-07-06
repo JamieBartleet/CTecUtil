@@ -100,19 +100,10 @@ namespace CTecUtil
         /// </summary>
         public static void UpdateMainWindowParams(Window window, bool saveSettings = false)
         {
-            var newLocation = new Point((int)window.Left, (int)window.Top);
-            var newSize     = new Size((int)window.Width, (int)window.Height);
-
             if (_config.MainWindow is null)
-                _config.MainWindow = new() { Location = newLocation, Size = newSize, IsMaximised = window.WindowState == WindowState.Maximized };
-            else
-            {
-                _config.MainWindow.Location = newLocation;
-                _config.MainWindow.Size = newSize;
-            }
+                _config.MainWindow = new();
 
-            if (saveSettings)
-                SaveSettings();
+            updateWindowParams(window, _config.MonitorWindow, saveSettings);
         }
 
 
@@ -121,16 +112,21 @@ namespace CTecUtil
         /// </summary>
         public static void UpdateMonitorWindowParams(Window window, bool saveSettings = false)
         {
+            if (_config.MonitorWindow is null)
+                _config.MonitorWindow = new();
+
+            updateWindowParams(window, _config.MonitorWindow, saveSettings);
+        }
+
+
+        private static void updateWindowParams(Window window, WindowSizeParams dimensions, bool saveSettings)
+        {
             var newLocation = new Point((int)window.Left, (int)window.Top);
             var newSize     = new Size((int)window.Width, (int)window.Height);
 
-            if (_config.MonitorWindow is null)
-                _config.MonitorWindow = new() { Location = newLocation, Size = newSize, IsMaximised = window.WindowState == WindowState.Maximized };
-            else
-            {
-                _config.MonitorWindow.Location = newLocation;
-                _config.MonitorWindow.Size = newSize;
-            }
+            dimensions.Location    = newLocation;
+            dimensions.Size        = newSize;
+            dimensions.IsMaximised = window.WindowState == WindowState.Maximized;
 
             if (saveSettings)
                 SaveSettings();

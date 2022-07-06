@@ -35,12 +35,12 @@ namespace CTecUtil.UI
                 {
                     MONITORINFO monitorInfo = new MONITORINFO { cbSize = Marshal.SizeOf(typeof(MONITORINFO)) };
                     GetMonitorInfo(monitor, ref monitorInfo);
-                    RECT rcWorkArea = monitorInfo.rcWork;
-                    RECT rcMonitorArea = monitorInfo.rcMonitor;
+                    RECT rcWorkArea     = monitorInfo.rcWork;
+                    RECT rcMonitorArea  = monitorInfo.rcMonitor;
                     mmi.ptMaxPosition.X = Math.Abs(rcWorkArea.Left - rcMonitorArea.Left);
                     mmi.ptMaxPosition.Y = Math.Abs(rcWorkArea.Top - rcMonitorArea.Top);
-                    mmi.ptMaxSize.X = Math.Abs(rcWorkArea.Right - rcWorkArea.Left);
-                    mmi.ptMaxSize.Y = Math.Abs(rcWorkArea.Bottom - rcWorkArea.Top) + 3;
+                    mmi.ptMaxSize.X     = Math.Abs(rcWorkArea.Right - rcWorkArea.Left);
+                    mmi.ptMaxSize.Y     = Math.Abs(rcWorkArea.Bottom - rcWorkArea.Top) + 3;
                 }
 
                 Marshal.StructureToPtr(mmi, lParam, true);
@@ -58,7 +58,7 @@ namespace CTecUtil.UI
             if (dimensions?.Size is not null)
             {
                 window.Width = dimensions.Size.Value.Width;
-                window.Left = dimensions.Size.Value.Height;
+                window.Left  = dimensions.Size.Value.Height;
             }
 
             if (dimensions?.Location is not null)
@@ -68,7 +68,7 @@ namespace CTecUtil.UI
                     //ensure top-left of app screen is visible
                     var loc = AdjustXY(new((int)dimensions.Location.Value.X, (int)dimensions.Location.Value.Y), new((int)window.Width, (int)window.Height), 0, 0);
 
-                    window.Top = loc.Y;
+                    window.Top  = loc.Y;
                     window.Left = loc.X;
                 }
                 catch { }
