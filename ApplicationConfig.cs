@@ -103,7 +103,7 @@ namespace CTecUtil
             if (_config.MainWindow is null)
                 _config.MainWindow = new();
 
-            updateWindowParams(window, _config.MonitorWindow, saveSettings);
+            updateWindowParams(window, _config.MainWindow, saveSettings);
         }
 
 
