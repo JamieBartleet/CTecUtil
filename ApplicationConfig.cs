@@ -121,11 +121,14 @@ namespace CTecUtil
 
         private static void updateWindowParams(Window window, WindowSizeParams dimensions, bool saveSettings)
         {
-            var newLocation = new Point((int)window.Left, (int)window.Top);
-            var newSize     = new Size((int)window.Width, (int)window.Height);
+            if (window.WindowState != WindowState.Maximized)
+            {
+                var newLocation = new Point((int)window.Left, (int)window.Top);
+                var newSize     = new Size((int)window.Width, (int)window.Height);
 
-            dimensions.Location    = newLocation;
-            dimensions.Size        = newSize;
+                dimensions.Location    = newLocation;
+                dimensions.Size        = newSize;
+            }
             dimensions.IsMaximised = window.WindowState == WindowState.Maximized;
 
             if (saveSettings)

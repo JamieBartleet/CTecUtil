@@ -57,8 +57,8 @@ namespace CTecUtil.UI
         {
             if (dimensions?.Size is not null)
             {
-                window.Width = dimensions.Size.Value.Width;
-                window.Left  = dimensions.Size.Value.Height;
+                window.Width  = dimensions.Size.Value.Width;
+                window.Height = dimensions.Size.Value.Height;
             }
 
             if (dimensions?.Location is not null)
