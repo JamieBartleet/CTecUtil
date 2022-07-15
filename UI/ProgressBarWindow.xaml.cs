@@ -29,6 +29,7 @@ namespace CTecUtil.UI
 
         internal void Show(Window owner)
         {
+            CTecUtil.Debug.WriteLine(">>> ProgressBarWindow.Show() <<<");
             if (owner != null)
             {
                 Top  = (owner.WindowState != WindowState.Maximized ? owner.Top  : owner.Top  <= -owner.Height / 2 ? -owner.ActualHeight : 0) + owner.ActualHeight / 2 - Height / 2;
@@ -37,7 +38,8 @@ namespace CTecUtil.UI
             
             Owner = owner;
 
-            Application.Current.Dispatcher.Invoke(new Action(() => { Show(); }), DispatcherPriority.Normal);
+            //Application.Current.Dispatcher.Invoke(new Action(() => { Show(); }), DispatcherPriority.Send);
+            Show();
         }
 
 
