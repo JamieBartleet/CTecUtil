@@ -38,7 +38,6 @@ namespace CTecUtil.UI
             
             Owner = owner;
 
-            //Application.Current.Dispatcher.Invoke(new Action(() => { Show(); }), DispatcherPriority.Send);
             Show();
         }
 
@@ -62,11 +61,13 @@ namespace CTecUtil.UI
 
         internal void UpdateProgress(List<string> subqueueNames, int valueOverall, int valueSubqueue)
         {
-            txtSubqueueName.Text = subqueueNames.Count > 0 ? subqueueNames[0] : "";
-            txtNext1.Text        = subqueueNames.Count > 1 ? subqueueNames[1] : "";
-            txtNext2.Text        = subqueueNames.Count > 2 ? subqueueNames[2] : "";
-            txtNext3.Text        = subqueueNames.Count > 3 ? subqueueNames[3] : "";
-            txtNext4.Text        = subqueueNames.Count > 4 ? subqueueNames[4] : "";
+            if (txtSubqueueName.Text != subqueueNames[0])
+            {
+                stpQueue.Visibility = Visibility.Hidden;
+                System.Timers.Timer tx = new(75) { AutoReset = false, Enabled = true };
+                tx.Elapsed += new((s, e) => Application.Current.Dispatcher.Invoke(new Action(() => updateText(subqueueNames))));
+            }
+
             pbProgressOverall.Value = (double)valueOverall / ProgressBarOverallMax * 100;
             pbProgressSubqueue.Value = valueSubqueue;
             txtProgressSubqueue.Text = valueSubqueue + " / " + ProgressBarSubqueueMax;
@@ -75,6 +76,17 @@ namespace CTecUtil.UI
             if (valueOverall >= ProgressBarOverallMax)
                 Hide();
         }
+
+        private void updateText(List<string> subqueueNames)
+        {
+            txtSubqueueName.Text = subqueueNames.Count > 0 ? subqueueNames[0] : "";
+            txtNext1.Text        = subqueueNames.Count > 1 ? subqueueNames[1] : "";
+            txtNext2.Text        = subqueueNames.Count > 2 ? subqueueNames[2] : "";
+            txtNext3.Text        = subqueueNames.Count > 3 ? subqueueNames[3] : "";
+            txtNext4.Text        = subqueueNames.Count > 4 ? subqueueNames[4] : "";
+            stpQueue.Visibility = Visibility.Visible;
+        }
+
 
         private void Button_Click(object sender, RoutedEventArgs e) => OnCancel?.Invoke();
     }

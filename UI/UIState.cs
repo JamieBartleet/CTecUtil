@@ -48,8 +48,7 @@ namespace CTecUtil.UI
         /// <param name="e">The <see cref="System.EventArgs"/> instance containing the event data.</param>
         private static void dispatcherTimer_Tick(object sender, EventArgs e)
         {
-            var dispatcherTimer = sender as DispatcherTimer;
-            if (dispatcherTimer != null)
+            if (sender is DispatcherTimer dispatcherTimer)
             {
                 setBusyState(false);
                 dispatcherTimer.Stop();

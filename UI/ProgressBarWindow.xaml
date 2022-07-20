@@ -11,7 +11,8 @@
         WindowStyle="None"
         Style="{StaticResource CTecMessageBoxStyle}"
         Width="250" Height="165"
-        Title="ProgressBarWindow">
+        Title="ProgressBarWindow"
+        ShowInTaskbar="False">
     
     <Grid>
         <Border Background="{StaticResource Brush10}" 
@@ -51,8 +52,47 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
+
+                    <Grid.Resources>
+                        <Style TargetType="{x:Type StackPanel}">
+                            <Style.Resources>
+                                <Storyboard x:Key="FadeOut">
+                                    <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" FillBehavior="Stop">
+                                        <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}"/>
+                                        <DiscreteObjectKeyFrame KeyTime="0:0:0.1" Value="{x:Static Visibility.Hidden}"/>
+                                    </ObjectAnimationUsingKeyFrames>
+                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="1" To="0" Duration="0:0:0.1" AutoReverse="False" />
+                                </Storyboard>
+                                <Storyboard x:Key="FadeIn">
+                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.25" AutoReverse="False" />
+                                </Storyboard>
+                            </Style.Resources>
+                            <Style.Triggers>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="Visibility" Value="Hidden" />
+                                        <Condition Property="Opacity" Value="1" />
+                                    </MultiTrigger.Conditions>
+                                    <MultiTrigger.EnterActions>
+                                        <StopStoryboard BeginStoryboardName="FadeInStoryboard" />
+                                        <BeginStoryboard Name="FadeOutStoryboard" Storyboard="{StaticResource FadeOut}" />
+                                    </MultiTrigger.EnterActions>
+                                </MultiTrigger>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="Visibility" Value="Visible" />
+                                        <Condition Property="Opacity" Value="0" />
+                                    </MultiTrigger.Conditions>
+                                    <MultiTrigger.EnterActions>
+                                        <StopStoryboard BeginStoryboardName="FadeOutStoryboard" />
+                                        <BeginStoryboard Name="FadeInStoryboard" Storyboard="{StaticResource FadeIn}" />
+                                    </MultiTrigger.EnterActions>
+                                </MultiTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Resources>
                     
-                    <StackPanel Grid.Column="0" Grid.ColumnSpan="2" Orientation="Vertical">
+                    <StackPanel x:Name="stpQueue" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Vertical" >
                         <TextBlock Name="txtSubqueueName" HorizontalAlignment="Center" FontSize="10" Margin="0,0,0,0"/>
                         <TextBlock Name="txtNext1" HorizontalAlignment="Center" FontSize="8"   Opacity="0.6" Margin="0,-2,0,0"/>
                         <TextBlock Name="txtNext2" HorizontalAlignment="Center" FontSize="7"   Opacity="0.5" Margin="0,-1.5,0,0"/>
