@@ -61,8 +61,9 @@ namespace CTecUtil.UI
 
         internal void UpdateProgress(List<string> subqueueNames, int valueOverall, int valueSubqueue)
         {
-            if (txtSubqueueName.Text != subqueueNames[0])
+            if ((subqueueNames?.Count??0) > 0 && txtSubqueueName.Text != subqueueNames[0])
             {
+                txtSubqueueName.Visibility = Visibility.Hidden;
                 stpQueue.Visibility = Visibility.Hidden;
                 System.Timers.Timer tx = new(75) { AutoReset = false, Enabled = true };
                 tx.Elapsed += new((s, e) => Application.Current.Dispatcher.Invoke(new Action(() => updateText(subqueueNames))));
@@ -79,6 +80,7 @@ namespace CTecUtil.UI
 
         private void updateText(List<string> subqueueNames)
         {
+            txtSubqueueName.Visibility = Visibility.Visible;
             txtSubqueueName.Text = subqueueNames.Count > 0 ? subqueueNames[0] : "";
             txtNext1.Text        = subqueueNames.Count > 1 ? subqueueNames[1] : "";
             txtNext2.Text        = subqueueNames.Count > 2 ? subqueueNames[2] : "";
