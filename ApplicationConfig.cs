@@ -58,12 +58,12 @@ namespace CTecUtil
             catch (IOException ex) { Debug.WriteLine(ex.Message); }
             catch (Exception ex) { Debug.WriteLine(ex.Message); }
 
-            if (string.IsNullOrEmpty(_config.SerialPort.PortName))
-            {
-                //try legacy registry settings (only ever used in pre-release test versions)
-                Registry.Initialise("QuantecTools");
-                _config.SerialPort = Registry.ReadSerialPortSettings();
-            }
+            //if (string.IsNullOrEmpty(_config.SerialPort.PortName))
+            //{
+            //    //try legacy registry settings (only ever used in pre-release test versions)
+            //    Registry.Initialise("QuantecTools");
+            //    _config.SerialPort = Registry.ReadSerialPortSettings();
+            //}
         }
 
 
