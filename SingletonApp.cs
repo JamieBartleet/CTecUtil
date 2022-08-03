@@ -11,10 +11,10 @@ namespace CTecUtil
     public class SingletonApp
     {
         /// <summary>
-        /// Checks whether any instance of this app is already running.  If so, switches focus to that one.
+        /// Check for another instance of this app and, if found, switch focus to it (restores if minimised).
         /// </summary>
         /// <returns>True if another instance of the app is already running.</returns>
-        public static bool IsRunning()
+        public static bool SwitchIfAlreadyRunning()
         {
             bool isAlreadyRunning = false;
             try
