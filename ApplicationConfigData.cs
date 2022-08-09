@@ -14,6 +14,7 @@ namespace CTecUtil
         public string             CultureName = "en-GB";
         public WindowSizeParams   MainWindow;
         public WindowSizeParams   MonitorWindow;
+        public WindowSizeParams   ValidationWindow;
         public float              ZoomLevel = 0.75f;
         public SerialPortSettings SerialPort = new();
     }

@@ -89,6 +89,12 @@ namespace CTecUtil
 
 
         /// <summary>
+        /// Validation window's size and position.
+        /// </summary>
+        public static WindowSizeParams ValidationWindow { get => _config.ValidationWindow; }
+
+
+        /// <summary>
         /// Save the main application window's size and position.
         /// </summary>
         public static void UpdateMainWindowParams(Window window, bool saveSettings = false)
@@ -112,16 +118,31 @@ namespace CTecUtil
         }
 
 
+        /// <summary>
+        /// Save the Validation window's size and position.
+        /// </summary>
+        public static void UpdateValidationWindowParams(Window window, bool saveSettings = false)
+        {
+            if (_config.ValidationWindow is null)
+                _config.ValidationWindow = new();
+
+            updateWindowParams(window, _config.ValidationWindow, saveSettings);
+        }
+
+
         private static void updateWindowParams(Window window, WindowSizeParams dimensions, bool saveSettings)
         {
-            if (window.WindowState != WindowState.Maximized)
-            {
-                var newLocation = new Point((int)window.Left, (int)window.Top);
-                var newSize     = new Size((int)window.Width, (int)window.Height);
+            //if (window.WindowState != WindowState.Maximized)
+            //{
+            //    var newLocation = new Point((int)window.Left, (int)window.Top);
+            //    var newSize = new Size((int)window.Width, (int)window.Height);
 
-                dimensions.Location    = newLocation;
-                dimensions.Size        = newSize;
-            }
+            //    dimensions.Location = newLocation;
+            //    dimensions.Size = newSize;
+            //}
+
+            dimensions.Location    = new Point((int)window.Left, (int)window.Top);
+            dimensions.Size        = new Size((int)window.Width, (int)window.Height);
             dimensions.IsMaximised = window.WindowState == WindowState.Maximized;
 
             if (saveSettings)
@@ -129,16 +150,16 @@ namespace CTecUtil
         }
 
 
-        /// <summary>
-        /// Retrieve the main application window's state and set the window's size and position accordingly.
-        /// </summary>
-        public static WindowState RestoreMainWindowState(Window window) => UI.WindowUtils.SetWindowDimensions(window, _config.MainWindow);
+        ///// <summary>
+        ///// Retrieve the main application window's state and set the window's size and position accordingly.
+        ///// </summary>
+        //public static WindowState RestoreMainWindowState(Window window) => UI.WindowUtils.SetWindowDimensions(window, _config.MainWindow);
 
 
-        /// <summary>
-        /// Retrieve the Configurator Monitor window's state and set the window's size and position accordingly.
-        /// </summary>
-        public static WindowState RestoreMonitorWindowState(Window window) => UI.WindowUtils.SetWindowDimensions(window, _config.MonitorWindow);
+        ///// <summary>
+        ///// Retrieve the Configurator Monitor window's state and set the window's size and position accordingly.
+        ///// </summary>
+        //public static WindowState RestoreMonitorWindowState(Window window) => UI.WindowUtils.SetWindowDimensions(window, _config.MonitorWindow);
 
 
 
