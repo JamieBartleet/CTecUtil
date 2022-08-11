@@ -427,6 +427,8 @@ namespace CTecUtil.IO
                     CTecUtil.Debug.WriteLine((char)0x2714 + " ACK");
                     if (_commandQueue.Dequeue())
                     {
+                        CTecUtil.Debug.WriteLine("dequeued         : Qs=" + _commandQueue.SubqueueCount + " this=" + _commandQueue.CurrentSubqueueName + "(" + _commandQueue.CommandsInCurrentSubqueue + ") tot=" + _commandQueue.TotalCommandCount);
+
                         //new queue - reset the count
                         _progressWithinSubqueue = 0;
                         Application.Current.Dispatcher.Invoke(new Action(() =>
@@ -465,6 +467,8 @@ namespace CTecUtil.IO
                             //NB: cmd.DataReceiver may have started a new command queue, so check the Id before dequeueing
                             if (_commandQueue.Id == savedQueueId && _commandQueue.Dequeue())
                             {
+                                CTecUtil.Debug.WriteLine("dequeued         : Qs=" + _commandQueue.SubqueueCount + " this=" + _commandQueue.CurrentSubqueueName + "(" + _commandQueue.CommandsInCurrentSubqueue + ") tot=" + _commandQueue.TotalCommandCount);
+                                
                                 //new queue - reset the count
                                 _progressWithinSubqueue = 0;
                                 Application.Current.Dispatcher.Invoke(new Action(() =>
@@ -473,7 +477,6 @@ namespace CTecUtil.IO
 
                                 }), DispatcherPriority.Normal);
                             }
-                            CTecUtil.Debug.WriteLine("dequeued         : Qs=" + _commandQueue.SubqueueCount + " this=" + _commandQueue.CurrentSubqueueName + "(" + _commandQueue.CommandsInCurrentSubqueue + ") tot=" + _commandQueue.TotalCommandCount);
                         }
 
                         if (_commandQueue.TotalCommandCount == 0)
