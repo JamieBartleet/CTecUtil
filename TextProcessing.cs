@@ -16,10 +16,34 @@ namespace CTecUtil
         //public static readonly char[] DigitChars = { '0','1','2','3','4','5','6','7','8','9' };
 
 
-        public static bool IsNumeric(string text) => new Regex("^[0-9]+").IsMatch(text);
+        public static bool StringIsNumeric(string text) => new Regex("^[0-9]+").IsMatch(text);
 
 
-        public static bool IsNumericKey(Key k)
+        public static bool CharIsAlpha(char c)        => c >= 'A' && c <= 'Z';
+        public static bool CharIsNumeric(char c)      => c >= '0' && c <= '9';
+        public static bool CharIsAlphaNumeric(char c) => CharIsAlpha(c) || CharIsNumeric(c);
+
+
+        public static bool KeyEventArgsIsAlpha(KeyEventArgs e)
+        {
+            var keyStr = KeyToString(e);
+            return keyStr.Length > 0 && CharIsAlpha(keyStr[0]);
+        }
+
+        public static bool KeyEventArgsIsNumeric(KeyEventArgs e)
+        {
+            var keyStr = KeyToString(e);
+            return keyStr.Length > 0 && CharIsNumeric(keyStr[0]);
+        }
+
+        public static bool KeyEventArgsIsAlphaNumeric(KeyEventArgs e)
+        {
+            var keyStr = KeyToString(e);
+            return keyStr.Length > 0 && CharIsAlphaNumeric(keyStr[0]);
+        }
+
+
+        public static bool KeyIsNumeric(Key k)
             => k switch
             {
                 Key.D0 or Key.D1 or Key.D2 or Key.D3 or Key.D4 or Key.D5 or Key.D6 or Key.D7 or Key.D8 or Key.D9 or 
@@ -36,7 +60,7 @@ namespace CTecUtil
         /// </summary>
         public static string KeyToString(Key k)
             => k >= Key.A && k <= Key.Z ? k.ToString()
-            : IsNumericKey(k) ? DigitKeyToString(k)
+            : KeyIsNumeric(k) ? DigitKeyToString(k)
             : k switch
             {
                 Key.Add => "+",
@@ -93,6 +117,13 @@ namespace CTecUtil
                 Key.Up  => "Up",
                 _ => "",
             };
+
+
+        /// <summary>
+        /// Converts KeyEventArgs key to a string.
+        /// </summary>
+        public static string KeyToString(KeyEventArgs e) => e.SystemKey != Key.None ? TextProcessing.KeyToString(e.SystemKey)   // if Alt+key was pressed, the key 
+                                                                                    : TextProcessing.KeyToString(e.Key);        // is e.SystemKey rather than e.Key
 
 
         /// <summary>
