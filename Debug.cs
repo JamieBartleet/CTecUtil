@@ -71,6 +71,12 @@ namespace CTecUtil
 
 
         /// <summary>
+        /// Writes a new line to the trace listeners in the System.Diagnostics.Debug.Listeners collection.
+        /// </summary>
+        public static void WriteLine() => System.Diagnostics.Debug.WriteLine("");
+
+
+        /// <summary>
         /// Writes a category name and the value of the object's System.Object.ToString method to the trace listeners in the System.Diagnostics.Debug.Listeners collection.
         /// </summary>
         /// <param name="value">An object whose name is sent to the System.Diagnostics.Debug.Listeners.</param>

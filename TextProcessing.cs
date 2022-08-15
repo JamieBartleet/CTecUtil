@@ -21,7 +21,14 @@ namespace CTecUtil
 
         public static bool CharIsAlpha(char c)        => c >= 'A' && c <= 'Z';
         public static bool CharIsNumeric(char c)      => c >= '0' && c <= '9';
+        public static bool CharIsPunctuation(char c)  => c >= '0' && c <= '9';
         public static bool CharIsAlphaNumeric(char c) => CharIsAlpha(c) || CharIsNumeric(c);
+        public static bool CharIsPossibleMenuOption(char c)
+            => CharIsAlphaNumeric(c) || c switch
+            {
+                '!' or '#' or '$' or '£' or '€' or '%' or '&' or '(' or ')' or '*' or '+' or '-' or '=' or '<' or '>' or '?' or '@' or '[' or ']' or '^' or '~' or '{' or '}' or '~' => true,
+                _ => false
+            };
 
 
         public static bool KeyEventArgsIsAlpha(KeyEventArgs e)
@@ -42,6 +49,14 @@ namespace CTecUtil
             return keyStr.Length > 0 && CharIsAlphaNumeric(keyStr[0]);
         }
 
+        public static bool KeyEventArgsIsPossibleMenuOption(KeyEventArgs e)
+        {
+            var keyStr = KeyToString(e);
+            return keyStr.Length > 0 && CharIsPossibleMenuOption(keyStr[0]);
+        }
+
+
+        public static bool KeyIsAlpha(Key k) => k >= Key.A && k <= Key.Z;
 
         public static bool KeyIsNumeric(Key k)
             => k switch
@@ -51,15 +66,17 @@ namespace CTecUtil
                 _ => false,
             };
 
+        public static bool KeyIsAlphaNumeric(Key k) => KeyIsAlpha(k) || KeyIsNumeric(k);
 
-        public static bool IsSpecialKey(Key k) => new Key[] { Key.Tab, Key.Enter, Key.LeftAlt, Key.LeftShift, Key.RightShift }.Contains(k);
+
+        public static bool KeyIsSpecialKey(Key k) => new Key[] { Key.Tab, Key.Enter, Key.LeftAlt, Key.LeftShift, Key.RightShift }.Contains(k);
 
 
         /// <summary>
         /// Converts non-OEM Key to a string.<br/>E.g. Key.A -> "A"; Key.D1 or Key.Numpad1 -> "1"; Key.Div
         /// </summary>
         public static string KeyToString(Key k)
-            => k >= Key.A && k <= Key.Z ? k.ToString()
+            => KeyIsAlpha(k) ? k.ToString()
             : KeyIsNumeric(k) ? DigitKeyToString(k)
             : k switch
             {
@@ -99,15 +116,15 @@ namespace CTecUtil
                 //Key.OemBackslash => "\\",
                 //Key.OemCloseBrackets => "]",
                 //Key.OemComma => ",",
-                //Key.OemMinus => "-",
+                Key.OemMinus => "-",
                 //Key.OemOpenBrackets => "[",
                 //Key.OemPeriod => ".",
                 //Key.OemPipe => "|",
-                //Key.OemPlus => "+",
-                //Key.OemQuestion => "?",
+                Key.OemPlus => "+",
+                Key.OemQuestion => "?",
                 //Key.OemQuotes => "\"",
                 //Key.OemSemicolon => ";",
-                //Key.OemTilde => "~",
+                Key.OemTilde => "~",
                 Key.PageDown => "PgDn",
                 Key.PageUp => "PgUp",
                 Key.PrintScreen  => "PrtScrn",
