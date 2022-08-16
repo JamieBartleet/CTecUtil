@@ -17,6 +17,8 @@ namespace CTecUtil
         public WindowSizeParams   ValidationWindow;
         public float              ZoomLevel = 0.75f;
         public SerialPortSettings SerialPort = new();
+        public RecentItemsList RecentPanelFiles = new();
+        public RecentItemsList RecentConfiguratorFiles = new();
     }
 
 

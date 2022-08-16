@@ -27,8 +27,8 @@ namespace CTecUtil
         }
 
 
-        private const  string _companyName = "C-Tec";
-        private static bool   _initialised = false;
+        private const string _companyName = "C-Tec";
+        private static bool _initialised = false;
         private static string _appDataFolder;
         private static string _configFilePath;
         private static ApplicationConfigData _config = new();
@@ -132,35 +132,13 @@ namespace CTecUtil
 
         private static void updateWindowParams(Window window, WindowSizeParams dimensions, bool saveSettings)
         {
-            //if (window.WindowState != WindowState.Maximized)
-            //{
-            //    var newLocation = new Point((int)window.Left, (int)window.Top);
-            //    var newSize = new Size((int)window.Width, (int)window.Height);
-
-            //    dimensions.Location = newLocation;
-            //    dimensions.Size = newSize;
-            //}
-
-            dimensions.Location    = new Point((int)window.Left, (int)window.Top);
-            dimensions.Size        = new Size((int)window.Width, (int)window.Height);
+            dimensions.Location = new Point((int)window.Left, (int)window.Top);
+            dimensions.Size = new Size((int)window.Width, (int)window.Height);
             dimensions.IsMaximised = window.WindowState == WindowState.Maximized;
 
             if (saveSettings)
                 SaveSettings();
         }
-
-
-        ///// <summary>
-        ///// Retrieve the main application window's state and set the window's size and position accordingly.
-        ///// </summary>
-        //public static WindowState RestoreMainWindowState(Window window) => UI.WindowUtils.SetWindowDimensions(window, _config.MainWindow);
-
-
-        ///// <summary>
-        ///// Retrieve the Configurator Monitor window's state and set the window's size and position accordingly.
-        ///// </summary>
-        //public static WindowState RestoreMonitorWindowState(Window window) => UI.WindowUtils.SetWindowDimensions(window, _config.MonitorWindow);
-
 
 
         public static float ZoomLevel
@@ -173,21 +151,35 @@ namespace CTecUtil
         public static bool IsClassicLayout
         {
             get => _config.Layout == Layouts.Classic;
-            set  { _config.Layout = value ? Layouts.Classic : Layouts.Standard; SaveSettings(); }
+            set { _config.Layout = value ? Layouts.Classic : Layouts.Standard; SaveSettings(); }
         }
 
 
         public static string Culture
         {
             get => _config.CultureName;
-            set  { _config.CultureName = value; SaveSettings(); }
+            set { _config.CultureName = value; SaveSettings(); }
         }
 
 
         public static SerialPortSettings SerialPortSettings
         {
             get => _config.SerialPort;
-            set  { _config.SerialPort = value; SaveSettings(); }
+            set { _config.SerialPort = value; SaveSettings(); }
+        }
+
+
+        public static RecentItemsList RecentPanelFiles
+        {
+            get => _config.RecentPanelFiles;
+            set { _config.RecentPanelFiles = value; SaveSettings(); }
+        }
+
+
+        public static RecentItemsList RecentConfiguratorFiles
+        {
+            get => _config.RecentConfiguratorFiles;
+            set { _config.RecentConfiguratorFiles = value; SaveSettings(); }
         }
     }
 }
