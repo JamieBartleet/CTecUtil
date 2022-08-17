@@ -10,6 +10,12 @@ namespace CTecUtil
 {
     public class ApplicationConfigData
     {
+        public ApplicationConfigData()
+        {
+            RecentPanelFiles.RecentFileListHasChanged        = new(() => ApplicationConfig.RecentPanelFileListHasChanged?.Invoke());
+            RecentConfiguratorFiles.RecentFileListHasChanged = new(() => ApplicationConfig.RecentConfiguratorFileListHasChanged?.Invoke());
+        }
+
         public Layouts            Layout;
         public string             CultureName = "en-GB";
         public WindowSizeParams   MainWindow;
@@ -17,8 +23,8 @@ namespace CTecUtil
         public WindowSizeParams   ValidationWindow;
         public float              ZoomLevel = 0.75f;
         public SerialPortSettings SerialPort = new();
-        public RecentItemsList RecentPanelFiles = new();
-        public RecentItemsList RecentConfiguratorFiles = new();
+        public RecentFilesList    RecentPanelFiles = new();
+        public RecentFilesList    RecentConfiguratorFiles = new();
     }
 
 

@@ -34,6 +34,16 @@ namespace CTecUtil
         private static ApplicationConfigData _config = new();
 
 
+        /// <summary>Delegate to send notification when a recent files list has changed</summary>
+        public delegate void RecentFileListChangeNotifier();
+        /// <summary>Sends notification when the recent panel files list has changed</summary>
+        [JsonIgnore]
+        public static RecentFileListChangeNotifier RecentPanelFileListHasChanged;
+        /// <summary>Sends notification when the recent configurator files list has changed</summary>
+        [JsonIgnore]
+        public static RecentFileListChangeNotifier RecentConfiguratorFileListHasChanged;
+
+
         private static void readSettings()
         {
             if (!_initialised)
@@ -169,14 +179,14 @@ namespace CTecUtil
         }
 
 
-        public static RecentItemsList RecentPanelFiles
+        public static RecentFilesList RecentPanelFiles
         {
             get => _config.RecentPanelFiles;
             set { _config.RecentPanelFiles = value; SaveSettings(); }
         }
 
 
-        public static RecentItemsList RecentConfiguratorFiles
+        public static RecentFilesList RecentConfiguratorFiles
         {
             get => _config.RecentConfiguratorFiles;
             set { _config.RecentConfiguratorFiles = value; SaveSettings(); }

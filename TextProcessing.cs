@@ -52,7 +52,7 @@ namespace CTecUtil
         public static bool KeyEventArgsIsPossibleMenuOption(KeyEventArgs e)
         {
             var keyStr = KeyToString(e);
-            return keyStr.Length > 0 && CharIsPossibleMenuOption(keyStr[0]);
+            return keyStr.Length == 1 && CharIsPossibleMenuOption(keyStr[0]);
         }
 
 
