@@ -65,7 +65,7 @@ namespace CTecUtil.UI
             {
                 txtSubqueueName.Visibility = Visibility.Hidden;
                 stpQueue.Visibility = Visibility.Hidden;
-                System.Timers.Timer tx = new(75) { AutoReset = false, Enabled = true };
+                System.Timers.Timer tx = new(100) { AutoReset = false, Enabled = true };
                 tx.Elapsed += new((s, e) => Application.Current.Dispatcher.Invoke(new Action(() => updateText(subqueueNames))));
             }
 
