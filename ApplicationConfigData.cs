@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows;
 using CTecUtil.IO;
@@ -22,6 +23,7 @@ namespace CTecUtil
         public WindowSizeParams   MonitorWindow;
         public WindowSizeParams   ValidationWindow;
         public float              ZoomLevel = 0.75f;
+        public float              SerialMonitorZoomLevel = 0.75f;
         public SerialPortSettings SerialPort = new();
         public RecentFilesList    RecentPanelFiles = new();
         public RecentFilesList    RecentConfiguratorFiles = new();

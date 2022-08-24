@@ -151,10 +151,20 @@ namespace CTecUtil
         }
 
 
+        public static float MinZoom = 0.45f;
+        public static float MaxZoom = 1.25f;
+        public static float ZoomStep { get => (MaxZoom - MinZoom) / 16; }
+
         public static float ZoomLevel
         {
             get => _config.ZoomLevel;
             set => _config.ZoomLevel = value;
+        }
+
+        public static float SerialMonitorZoomLevel
+        {
+            get => _config.SerialMonitorZoomLevel;
+            set => _config.SerialMonitorZoomLevel = value;
         }
 
 
