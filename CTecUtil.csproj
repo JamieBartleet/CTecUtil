@@ -6,8 +6,8 @@
 	  <UseWindowsForms>true</UseWindowsForms>
 	  <SourceRevisionId>Build=$([System.DateTime]::UtcNow.ToString("yyyy-MM-dd HH:mm:ss"))</SourceRevisionId>
 	  <AssemblyVersion>1.0.2.18</AssemblyVersion>
-	  <FileVersion>1.0.2.0</FileVersion>
-	  <Version>1.0.2</Version>
+	  <FileVersion>1.0.2.18</FileVersion>
+	  <Version>1.0.2.18</Version>
   </PropertyGroup>
 
   <ItemGroup>

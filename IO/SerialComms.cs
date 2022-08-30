@@ -21,8 +21,7 @@ namespace CTecUtil.IO
         {
             _settings = ApplicationConfig.SerialPortSettings;
             _progressBarWindow.OnCancel = CancelCommandQueue;
-
-            _responseTimer.OnTimedOut = new(() => { responseTimerTimeout(); });
+            _responseTimer.OnTimedOut   = responseTimerTimeout;
             _responseTimer.Start(_responseTimerPeriod);
         }
 
@@ -64,7 +63,7 @@ namespace CTecUtil.IO
         }
 
 
-        private const int _incomingDataTimerPeriod = 4500;
+        private const int _incomingDataTimerPeriod = 1000;
         private const int _responseTimerPeriod     = 5500;
         private const int _pingTimerPeriod         = 5000;
 
@@ -73,7 +72,7 @@ namespace CTecUtil.IO
         private static CommandQueue _commandQueue = new();
 
         /// <summary>Timer for reading data; the OnTimedOut event means incomplete data was received</summary>
-        private static CommsTimer _incomingDataTimer = new();
+        private static CommsTimer _incomingDataTimer;
         
         /// <summary>Timer on response to SendData; the OnTimedOut event is used to notify the connection status</summary>
         private static CommsTimer _responseTimer = new();
@@ -238,14 +237,11 @@ namespace CTecUtil.IO
 
         public static void StartSendingCommandQueue(Action onStart, OnFinishedHandler onEnd)
         {
-            //if (_transferInProgress)
-            //    return;
-
             //_transferInProgress = true;
             _queueWasCompleted = false;
             CTecUtil.Debug.WriteLine("---StartSendingCommandQueue() 01");
 
-            //arbitrarily don't show progress bar for single jobs (especially don't want to do that for firmware version request)
+            //don't show progress bar for single-item queue= (especially don't want to do that for firmware version request)
             if (_commandQueue.TotalCommandCount < 2)
                 sendFirstCommandInQueue();
             else
@@ -256,7 +252,7 @@ namespace CTecUtil.IO
 
         public static void CancelCommandQueue()
         {
-            _incomingDataTimer.Stop();
+            //_incomingDataTimer.Stop();
             _commandQueue?.Clear();
         }
 
@@ -329,7 +325,6 @@ namespace CTecUtil.IO
                     if (command != null && command.CommandData != null)
                     {
                         command.Tries++;
-                        //CTecUtil.Debug.WriteLine("SendData() {try=" + command.Tries + "} [" + command.ToString() + "]");
 
                         try
                         {
@@ -385,11 +380,6 @@ namespace CTecUtil.IO
         {
             try
             {
-                //data received, so status is one of the Connected statuses
-                //if (_connectionStatus != ConnectionStatus.ConnectedWriteable)
-                //    _connectionStatus = ConnectionStatus.ConnectedReadOnly;
-                //NotifyConnectionStatus?.Invoke(_connectionStatus);
-
                 var incoming = readIncomingResponse(port);
 
                 //CTecUtil.Debug.WriteLine("Receive data:      [" + ByteArrayProcessing.ByteArrayToHexString(incoming) + "] --> \"" + ByteArrayProcessing.ByteArrayToString(incoming) + "\"");
@@ -518,6 +508,7 @@ namespace CTecUtil.IO
             try
             {
                 //1.5 sec timeout
+                _incomingDataTimer = new();
                 _incomingDataTimer.Start(_incomingDataTimerPeriod);
 
                 //wait for buffering - often SerialPort.DataReceived is called by the port when BytesToRead is still zero
@@ -561,7 +552,8 @@ namespace CTecUtil.IO
 
                     //Read payload & checksum
                     var bytes = Math.Min(port.BytesToRead, buffer.Length - offset);
-                    port.Read(buffer, offset, bytes);
+                    if (bytes > 0)
+                        port.Read(buffer, offset, bytes);
                     offset += bytes;
                 }
 
@@ -579,7 +571,7 @@ namespace CTecUtil.IO
             }
             finally
             {
-                _incomingDataTimer.Stop();
+                //_incomingDataTimer.Stop();
                 port.DiscardInBuffer();
             }
         }
@@ -638,7 +630,7 @@ namespace CTecUtil.IO
             }
             finally
             {
-                _incomingDataTimer.Stop();
+                //_incomingDataTimer.Stop();
                 port.DiscardInBuffer();
             }
         }
