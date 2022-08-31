@@ -19,10 +19,7 @@ namespace CTecUtil.IO
     {
         static SerialComms()
         {
-            _settings = ApplicationConfig.SerialPortSettings;
             _progressBarWindow.OnCancel = CancelCommandQueue;
-            _responseTimer.OnTimedOut   = responseTimerTimeout;
-            _responseTimer.Start(_responseTimerPeriod);
         }
 
 
@@ -75,7 +72,7 @@ namespace CTecUtil.IO
         private static CommsTimer _incomingDataTimer;
         
         /// <summary>Timer on response to SendData; the OnTimedOut event is used to notify the connection status</summary>
-        private static CommsTimer _responseTimer = new();
+        private static CommsTimer _responseTimer;
 
         private static Exception _lastException = null;
 
@@ -90,8 +87,23 @@ namespace CTecUtil.IO
 
         public static Window OwnerWindow { get; set; }
 
-        private static SerialPortSettings _settings;
-        public static SerialPortSettings Settings { get => _settings; }
+        private static SerialPortSettings _settings = null;
+        public static SerialPortSettings Settings
+        {
+            get
+            {
+                if (_settings is null) throw new NullReferenceException("SerialComms.Settings has not been initialised.");
+                return _settings;
+            }
+            set
+            {
+                _settings = value;
+                _responseTimer = new();
+                _responseTimer.OnTimedOut = responseTimerTimeout;
+                _responseTimer.Start(_responseTimerPeriod);
+            }
+        }
+
 
         /// <summary>Use of this delegate allows house style message box to be used</summary>
         public delegate void ErrorMessageHandler(string message);
@@ -698,10 +710,14 @@ namespace CTecUtil.IO
             try
             {
                 CancelCommandQueue();
+
                 if (_port?.IsOpen == true)
-                    _port?.Close();
-                _port?.Dispose();
-                _port = null;
+                {
+                    //close port on new thread to avoid hang [known issue with SerialPort class]
+                    Thread closePortThread = new Thread(new ThreadStart(closeDownPort));
+                    closePortThread.Start();
+                }
+
                 return true;
             }
             catch (Exception ex)
@@ -711,10 +727,10 @@ namespace CTecUtil.IO
             }
         }
 
-        ~SerialComms()
+        private static void closeDownPort()
         {
             _port?.Close();
-            _port?.Dispose();
+            _port = null;
         }
 
 

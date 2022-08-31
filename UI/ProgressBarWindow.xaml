@@ -10,7 +10,7 @@
         AllowsTransparency="True"
         WindowStyle="None"
         Style="{StaticResource CTecMessageBoxStyle}"
-        Width="250" Height="165"
+        Width="250" Height="148"
         Title="ProgressBarWindow"
         ShowInTaskbar="False">
     
@@ -30,10 +30,10 @@
             </Border.Effect>
 
             <StackPanel Grid.Column="0" Grid.Row="0"
-                        Orientation="Vertical" Margin="10"
-                        HorizontalAlignment="Center" VerticalAlignment="Bottom">
+                        Orientation="Vertical" Margin="10,15,10,10"
+                        HorizontalAlignment="Center" VerticalAlignment="Top">
 
-                <TextBlock Name="txtOperationName" HorizontalAlignment="Center"/>
+                <TextBlock Name="txtOperationName" HorizontalAlignment="Center" FontSize="11"/>
 
                 <Grid Margin="0,5,0,0">
                     <ProgressBar Name="pbProgressOverall" Height="18" Width="200" Value="0" Minimum="0" Maximum="100" Foreground="DeepSkyBlue" BorderBrush="{StaticResource Brush06}"/>
@@ -100,7 +100,7 @@
                         <TextBlock Name="txtNext4" HorizontalAlignment="Center" FontSize="6.5" Opacity="0.2" Margin="0,-1.5,0,0"/>
                     </StackPanel>
 
-                    <Button Grid.Column="1" Content="{Binding Path=Option_Cancel, Source={StaticResource Resources}}" VerticalAlignment="Bottom" Click="Button_Click" Height="26"/>
+                    <Button Grid.Column="1" Content="{Binding Path=Option_Cancel, Source={StaticResource Resources}}" VerticalAlignment="Bottom" FontSize="10" Click="Button_Click" Height="26"/>
 
                 </Grid>
 
