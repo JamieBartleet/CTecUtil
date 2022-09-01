@@ -112,10 +112,10 @@
     <value>2.0</value>
   </resheader>
   <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Error_Checksum_Fail" xml:space="preserve">
     <value>Des données non valides ont été reçues du panneau.</value>
@@ -161,5 +161,59 @@
   </data>
   <data name="File_Save_As" xml:space="preserve">
     <value>Enregistrer Sous...</value>
+  </data>
+  <data name="QT412_Staff_Transmitter" xml:space="preserve">
+    <value>Transmetteur Personnel</value>
+  </data>
+  <data name="QT432_Pendant_Transmitter" xml:space="preserve">
+    <value>Transmetteur Pendentif</value>
+  </data>
+  <data name="QT602_9_or_QT302RX_Callpoint" xml:space="preserve">
+    <value>Point d'Appel</value>
+  </data>
+  <data name="QT611_CallPoint" xml:space="preserve">
+    <value>(Point d'Appel)</value>
+  </data>
+  <data name="QT611_Callpoint_Programming_Info" xml:space="preserve">
+    <value>Selon les paramètres actuels de l’appareil, il peut être nécessaire d’ouvrir ou de fermer le contact spécial afin d’envoyer et de vérifier les données de programmation.</value>
+  </data>
+  <data name="QT611_Day_Night_Switch" xml:space="preserve">
+    <value>(Interrupteur Jour/Nuit)</value>
+  </data>
+  <data name="QT611_Day_Night_Switch_Programming_Info" xml:space="preserve">
+    <value>Selon les paramètres actuels de l’appareil, il peut être nécessaire d’ouvrir ou de fermer le commutateur afin d’envoyer et de vérifier les données de programmation.</value>
+  </data>
+  <data name="QT611_Monitor_Point" xml:space="preserve">
+    <value>(Point de Surveillance)</value>
+  </data>
+  <data name="QT611_Monitor_Point_Programming_Info" xml:space="preserve">
+    <value>Selon les paramètres actuels de l’appareil, il peut être nécessaire d’ouvrir ou de fermer le contact d’isolement afin d’envoyer et de vérifier les données de programmation.</value>
+  </data>
+  <data name="QT612_Relay_Output" xml:space="preserve">
+    <value>Relais Sortie</value>
+  </data>
+  <data name="QT613_ZI_or_QT688_2_Sounder" xml:space="preserve">
+    <value>Indicateur Zonal/Sonneur</value>
+  </data>
+  <data name="QT616_Fall_Sensor" xml:space="preserve">
+    <value>Capteur de Chute</value>
+  </data>
+  <data name="Quantec_Callpoint" xml:space="preserve">
+    <value>Point d'Appel</value>
+  </data>
+  <data name="Quantec_CorridorDisplay" xml:space="preserve">
+    <value>Ecran Couloir</value>
+  </data>
+  <data name="Quantec_MonitoringPoint" xml:space="preserve">
+    <value>Point de Surveillance</value>
+  </data>
+  <data name="Quantec_NetworkController" xml:space="preserve">
+    <value>Contrôleur du Réseau</value>
+  </data>
+  <data name="Quantec_OverDoorLight" xml:space="preserve">
+    <value>Feu de porte supérieure</value>
+  </data>
+  <data name="Quantec_RadioReceiver" xml:space="preserve">
+    <value>Récepteur Radio</value>
   </data>
 </root>

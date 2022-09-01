@@ -62,7 +62,7 @@ namespace CTecUtil.IO
 
         private const int _incomingDataTimerPeriod = 1000;
         private const int _responseTimerPeriod     = 5500;
-        private const int _pingTimerPeriod         = 5000;
+        private const int _pingTimerPeriod         = 2000;
 
 
         private static SerialPort _port;
