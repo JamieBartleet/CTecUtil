@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using CTecDevices.Protocol.Protocols;
 using CTecUtil.IO;
 using Newtonsoft.Json;
 
@@ -179,6 +180,13 @@ namespace CTecUtil
         {
             get => _config.CultureName;
             set { _config.CultureName = value; SaveSettings(); }
+        }
+
+
+        public static ProtocolTypes Protocol
+        {
+            get => _config.Protocol;
+            set { _config.Protocol = value; SaveSettings(); }
         }
 
 
