@@ -54,8 +54,4 @@
     <Folder Include="Properties\" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\CTecDevices\CTecDevices.csproj" />
-  </ItemGroup>
-
 </Project>

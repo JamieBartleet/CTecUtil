@@ -7,7 +7,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using CTecDevices.Protocol.Protocols;
 using CTecUtil.IO;
 using Newtonsoft.Json;
 
@@ -183,7 +182,7 @@ namespace CTecUtil
         }
 
 
-        public static ProtocolTypes Protocol
+        public static string Protocol
         {
             get => _config.Protocol;
             set { _config.Protocol = value; SaveSettings(); }

@@ -5,7 +5,6 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows;
-using CTecDevices.Protocol.Protocols;
 using CTecUtil.IO;
 
 namespace CTecUtil
@@ -26,7 +25,7 @@ namespace CTecUtil
         public float              ZoomLevel = 0.75f;
         public float              SerialMonitorZoomLevel = 0.75f;
         public SerialPortSettings SerialPort = new();
-        public ProtocolTypes      Protocol = ProtocolTypes.Cast;
+        public string             Protocol = "CAST";
         public RecentFilesList    RecentPanelFiles = new();
         public RecentFilesList    RecentConfiguratorFiles = new();
     }
