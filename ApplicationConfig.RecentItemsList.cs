@@ -34,6 +34,9 @@ namespace CTecUtil
         /// if path is already in the list it will be moved to the first item.</summary>
         public void Add(string path)
         {
+            if (string.IsNullOrWhiteSpace(path))
+                return;
+
             if (_items.Contains(path))
                 _items.Remove(path);
             
