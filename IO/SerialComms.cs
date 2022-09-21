@@ -290,6 +290,8 @@ namespace CTecUtil.IO
             _progressWithinSubqueue++;
             if (_commandQueue.TotalCommandCount > 0)
                 SendData(_commandQueue.Peek());
+            else
+                _queueWasCompleted = true;
         }
 
 
@@ -481,12 +483,7 @@ namespace CTecUtil.IO
                             }
                         }
 
-                        if (_commandQueue.TotalCommandCount == 0)
-                        {
-                            //_transferInProgress = false;
-                            _queueWasCompleted = true;
-                        }
-                        else if (ok)
+                        if (ok)
                             sendNextCommandInQueue();
                         else
                             resendCommand();

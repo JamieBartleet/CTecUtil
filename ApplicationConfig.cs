@@ -168,13 +168,6 @@ namespace CTecUtil
         }
 
 
-        public static bool IsClassicLayout
-        {
-            get => _config.Layout == Layouts.Classic;
-            set { _config.Layout = value ? Layouts.Classic : Layouts.Standard; SaveSettings(); }
-        }
-
-
         public static string Culture
         {
             get => _config.CultureName;
