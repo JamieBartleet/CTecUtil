@@ -41,9 +41,8 @@ namespace CTecUtil.IO
         /// </summary>
         internal void Start(double timeoutperiod)
         {
-            _timer.Stop();
+            Stop();
             _timer.Interval = timeoutperiod;
-            TimedOut = false;
             _timer.Start();
         }
 

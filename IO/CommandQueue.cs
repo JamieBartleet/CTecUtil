@@ -120,8 +120,8 @@ namespace CTecUtil.IO
         internal void Clear()
         {
             foreach (var q in _subqueues)
-                q.Clear();
-            _subqueues.Clear();
+                try { q.Clear(); } catch { }
+            try { _subqueues.Clear(); } catch { }
         }
 
 
