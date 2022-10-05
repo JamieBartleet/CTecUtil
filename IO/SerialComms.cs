@@ -285,20 +285,26 @@ namespace CTecUtil.IO
 
         private static void sendNextCommandInQueue()
         {
-            CTecUtil.Debug.WriteLine("SendNextCommandInQueue()");
             _progressOverall++;
             _progressWithinSubqueue++;
+            CTecUtil.Debug.WriteLine("SendNextCommandInQueue() - subq=" + _progressWithinSubqueue + " o/a=" + _progressOverall + "/" + _commandQueue.TotalCommandCount);
             if (_commandQueue.TotalCommandCount > 0)
+            {
                 SendData(_commandQueue.Peek());
+                CTecUtil.Debug.WriteLine("SendNextCommandInQueue() - ...data sent");
+            }
             else
+            {
                 _queueWasCompleted = true;
+                CTecUtil.Debug.WriteLine("SendNextCommandInQueue() - _queueWasCompleted");
+            }
         }
 
 
         private static void resendCommand()
         {
             var cmd = _commandQueue.Peek();
-            if (cmd != null)
+            if (cmd is not null)
             {
                 CTecUtil.Debug.WriteLine("ResendCommand()");
 
@@ -306,7 +312,7 @@ namespace CTecUtil.IO
                 {
                     //the number of retries on the current command is excessive
                     // - report the last-noted exception (if any)
-                    if (_lastException != null)
+                    if (_lastException is not null)
                     {
                         if (_lastException is TimeoutException)
                             error(_commandQueue.Direction == Direction.Upload ? Cultures.Resources.Error_Upload_Timeout : Cultures.Resources.Error_Download_Timeout, _lastException);
@@ -330,26 +336,36 @@ namespace CTecUtil.IO
 
         internal static void SendData(Command command)
         {
+            CTecUtil.Debug.WriteLine("SendData() - command=" + CTecUtil.ByteArrayProcessing.ByteArrayToHexString(command.CommandData));
             lock (_sendLock)
             {
+                CTecUtil.Debug.WriteLine("SendNextCommandInQueue() - go!");
                 try
                 {
                     _lastException = null;
 
-                    if (command != null && command.CommandData != null)
+                    if (command is not null && command.CommandData is not null)
                     {
                         command.Tries++;
+                        CTecUtil.Debug.WriteLine("SendNextCommandInQueue() - command.Tries=" + command.Tries);
 
                         try
                         {
                             if (_port is null)
+                            {
+                                CTecUtil.Debug.WriteLine("SendNextCommandInQueue() - port was null");
                                 _port = newSerialPort();
-
+                            }
                             if (!_port.IsOpen)
+                            {
+                                CTecUtil.Debug.WriteLine("SendNextCommandInQueue() - port was closed");
                                 _port.Open();
+                            }
 
+                            CTecUtil.Debug.WriteLine("SendNextCommandInQueue() - clear buffers");
                             _port.DiscardInBuffer();
                             _port.DiscardOutBuffer();
+                            CTecUtil.Debug.WriteLine("SendNextCommandInQueue() - write data to port");
                             _port.Write(command.CommandData, 0, command.CommandData.Length);
                         }
                         catch (Exception ex)
@@ -362,7 +378,9 @@ namespace CTecUtil.IO
                 {
                     CTecUtil.Debug.WriteLine("  **Exception** (SendData) " + ex.Message);
                 }
+                CTecUtil.Debug.WriteLine("SendNextCommandInQueue() - sent");
             }
+            CTecUtil.Debug.WriteLine("SendNextCommandInQueue() - unlocked");
         }
 
 
@@ -371,10 +389,14 @@ namespace CTecUtil.IO
         /// </summary>
         private static void dataReceived(object sender, SerialDataReceivedEventArgs e)
         {
+            CTecUtil.Debug.WriteLine("dataReceived()");
             try
             {
                 if (sender is not SerialPort port)
+                {
+                    CTecUtil.Debug.WriteLine("dataReceived() - sender is not SerialPort");
                     return;
+                }
 
                 _responseTimer.Start(_responseTimerPeriod);
 
@@ -392,6 +414,7 @@ namespace CTecUtil.IO
 
         private static async void responseDataReceived(SerialPort port)
         {
+            CTecUtil.Debug.WriteLine("responseDataReceived()");
             try
             {
                 var incoming = readIncomingResponse(port);
@@ -400,6 +423,7 @@ namespace CTecUtil.IO
 
                 if (isPingResponse(incoming))
                 {
+                    CTecUtil.Debug.WriteLine("responseDataReceived() - isPingResponse");
                     //status is one of the Connected statuses: if not already thought to be writeable set it to read-only
                     if (_connectionStatus != ConnectionStatus.ConnectedWriteable)
                         setConnectionStatus(ConnectionStatus.ConnectedReadOnly);
@@ -409,6 +433,7 @@ namespace CTecUtil.IO
                 }
                 else if (isCheckFirmwareResponse(incoming))
                 {
+                    CTecUtil.Debug.WriteLine("responseDataReceived() - isCheckFirmwareResponse");
                     //panel responded to ping, so notify the version number and request its read-only status
                     if (!NotifyFirmwareVersion?.Invoke(incoming) ?? true)
                         NotifyConnectionStatus?.Invoke(setConnectionStatus(ConnectionStatus.FirmwareNotSupported));
@@ -417,17 +442,20 @@ namespace CTecUtil.IO
                 }
                 else if (isCheckWriteableResponse(incoming))
                 {
+                    CTecUtil.Debug.WriteLine("responseDataReceived() - isCheckWritableResponse");
                     //read-only response received?
                     var readOnly = incoming.Length > 2 && incoming[2] == 0;
                     NotifyConnectionStatus?.Invoke(setConnectionStatus(readOnly ? ConnectionStatus.ConnectedReadOnly : ConnectionStatus.ConnectedWriteable));
                 }
                 else if (isNak(incoming))
                 {
+                    CTecUtil.Debug.WriteLine("responseDataReceived() - isNak");
                     CTecUtil.Debug.WriteLine((char)0x2718 + " NAK");
                     resendCommand();
                 }
                 else if (isAck(incoming))
                 {
+                    CTecUtil.Debug.WriteLine("responseDataReceived() - isAck");
                     CTecUtil.Debug.WriteLine((char)0x2714 + " ACK");
                     if (_commandQueue.Dequeue())
                     {
@@ -445,33 +473,43 @@ namespace CTecUtil.IO
                 }
                 else if (_commandQueue.TotalCommandCount > 0)
                 {
+                    CTecUtil.Debug.WriteLine("responseDataReceived() - _commandQueue.TotalCommandCount > 0");
                     var ok = false;
                     var cmd = _commandQueue.Peek();
+                    if (cmd is null)
+                        CTecUtil.Debug.WriteLine("responseDataReceived() - cmd is null");
+                    else
+                        CTecUtil.Debug.WriteLine("responseDataReceived() - cmd=" + CTecUtil.ByteArrayProcessing.ByteArrayToHexString(cmd.CommandData));
 
                     NotifyConnectionStatus?.Invoke(_connectionStatus);
 
-                    if (cmd != null)
+                    if (cmd is not null)
                     {
                         var savedQueueId = _commandQueue.Id;
+                        CTecUtil.Debug.WriteLine("responseDataReceived() - _commandQueue.Id=" + _commandQueue.Id);
 
-                        if (incoming != null)
+                        if (incoming is not null)
                         {
+                            CTecUtil.Debug.WriteLine("responseDataReceived() - incoming=" + CTecUtil.ByteArrayProcessing.ByteArrayToHexString(incoming));
+                            CTecUtil.Debug.WriteLine("responseDataReceived() - send response to data receiver");
                             //send response to data receiver
                             await Task.Run(new Action(() =>
                             {
                                 ok = cmd.DataReceiver?.Invoke(incoming, cmd.Index) == true;
                             }));
+                            CTecUtil.Debug.WriteLine("responseDataReceived() - ...sent");
 
-                            CTecUtil.Debug.WriteLine("progress: subq=" + _progressWithinSubqueue + " o/a=" + _progressOverall + "/" + _numCommandsToProcess);
+                            CTecUtil.Debug.WriteLine("responseDataReceived() - progress: subq=" + _progressWithinSubqueue + " o/a=" + _progressOverall + "/" + _numCommandsToProcess);
                         }
 
 
                         if (ok)
                         {
+                            CTecUtil.Debug.WriteLine("responseDataReceived() - ok");
                             //NB: cmd.DataReceiver may have started a new command queue, so check the Id before dequeueing
                             if (_commandQueue.Id == savedQueueId && _commandQueue.Dequeue())
                             {
-                                CTecUtil.Debug.WriteLine("dequeued         : Qs=" + _commandQueue.SubqueueCount + " this=" + _commandQueue.CurrentSubqueueName + "(" + _commandQueue.CommandsInCurrentSubqueue + ") tot=" + _commandQueue.TotalCommandCount);
+                                CTecUtil.Debug.WriteLine("responseDataReceived() - dequeued         : Qs=" + _commandQueue.SubqueueCount + " this=" + _commandQueue.CurrentSubqueueName + "(" + _commandQueue.CommandsInCurrentSubqueue + ") tot=" + _commandQueue.TotalCommandCount);
                                 
                                 //new queue - reset the count
                                 _progressWithinSubqueue = 0;
@@ -482,6 +520,7 @@ namespace CTecUtil.IO
                                 }), DispatcherPriority.Normal);
                             }
                         }
+                        else CTecUtil.Debug.WriteLine("responseDataReceived() - !ok");
 
                         if (ok)
                             sendNextCommandInQueue();
@@ -513,24 +552,35 @@ namespace CTecUtil.IO
 
 
         private static byte[] readIncomingResponse(SerialPort port)
-        {
+        { 
+            CTecUtil.Debug.WriteLine("readIncomingResponse()");
+            if (port is null)
+                CTecUtil.Debug.WriteLine("readIncomingResponse() - port is null");
+            else
+                CTecUtil.Debug.WriteLine("readIncomingResponse() - " + port.PortName + " IsOpen=" + port.IsOpen);
             try
             {
                 //1.5 sec timeout
                 _incomingDataTimer = new();
                 _incomingDataTimer.Start(_incomingDataTimerPeriod);
+                CTecUtil.Debug.WriteLine("readIncomingResponse() - response timer started");
 
                 //wait for buffering - often SerialPort.DataReceived is called by the port when BytesToRead is still zero
                 while (port.BytesToRead == 0)
                 {
                     Thread.Sleep(10);
+                    CTecUtil.Debug.WriteLine("readIncomingResponse() - waiting for buffering...");
                     if (_incomingDataTimer.TimedOut)
                         throw new TimeoutException();
                 }
 
                 //read first byte: either Ack/Nak or the command ID
+                CTecUtil.Debug.WriteLine("readIncomingResponse() - read 1st byte");
                 byte[] header = new byte[2];
                 port.Read(header, 0, 1);
+                if (isAck(header[0])) CTecUtil.Debug.WriteLine("readIncomingResponse() - ACK");
+                if (isNak(header[0])) CTecUtil.Debug.WriteLine("readIncomingResponse() - NAK");
+
                 if (isAck(header[0]) || isNak(header[0]))
                     return new byte[] { header[0] };
 
@@ -538,12 +588,14 @@ namespace CTecUtil.IO
                 while (port.BytesToRead == 0)
                 {
                     Thread.Sleep(5);
+                    CTecUtil.Debug.WriteLine("readIncomingResponse() - waiting for payload byte...");
                     if (_incomingDataTimer.TimedOut)
                         throw new TimeoutException();
                 }
 
                 port.Read(header, 1, 1);
                 var payloadLength = header[1];
+                CTecUtil.Debug.WriteLine("readIncomingResponse() - payload length=" + payloadLength);
 
                 //now we know how many more bytes to expect - i.e. header + payloadLength + 1 byte for checksum
                 byte[] buffer = new byte[header.Length + payloadLength + 1];
@@ -555,12 +607,14 @@ namespace CTecUtil.IO
                     while (port.BytesToRead == 0)
                     {
                         Thread.Sleep(5);
+                        CTecUtil.Debug.WriteLine("readIncomingResponse() - waiting for payload data...");
                         if (_incomingDataTimer.TimedOut)
                             throw new TimeoutException();
                     }
 
                     //Read payload & checksum
                     var bytes = Math.Min(port.BytesToRead, buffer.Length - offset);
+                    CTecUtil.Debug.WriteLine("readIncomingResponse() - payload bytes=" + bytes);
                     if (bytes > 0)
                         port.Read(buffer, offset, bytes);
                     offset += bytes;
@@ -571,6 +625,7 @@ namespace CTecUtil.IO
                 if (!checkChecksum(buffer))
                     throw new FormatException();
 
+                CTecUtil.Debug.WriteLine("readIncomingResponse() - buffer=" + CTecUtil.ByteArrayProcessing.ByteArrayToHexString(buffer));
                 return buffer;
             }
             catch (Exception ex)
@@ -594,7 +649,7 @@ namespace CTecUtil.IO
 
                 var incoming = readIncomingListenerData(port);
 
-                if (incoming != null && ListenerDataReceiver != null)
+                if (incoming is not null && ListenerDataReceiver is not null)
                 {
                     //send response to data receiver
                     await Task.Run(new Action(() =>
@@ -645,8 +700,8 @@ namespace CTecUtil.IO
         }
 
         
-        private static bool isAck(byte[] data) => data != null && data.Length > 0 && isAck(data[0]);
-        private static bool isNak(byte[] data) => data != null && data.Length > 0 && isNak(data[0]);
+        private static bool isAck(byte[] data) => data is not null && data.Length > 0 && isAck(data[0]);
+        private static bool isNak(byte[] data) => data is not null && data.Length > 0 && isNak(data[0]);
         private static bool isAck(byte data) => data == AckByte;
         private static bool isNak(byte data) => data == NakByte;
 
