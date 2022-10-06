@@ -101,7 +101,7 @@ namespace CTecUtil
         /// <returns></returns>
         public static string ByteArrayToString(byte[] data, int startByte, int endByte)
         {
-            if (data is null) return "";
+            if (data is null) return "*null*";
             var result = new StringBuilder();
             for (int i = startByte; i <= endByte; i++)
                 result.Append(data[i] switch { >0x1f and <0x7f or 0x0a or 0x0d => (char)data[i], _ => '·' });
@@ -111,7 +111,8 @@ namespace CTecUtil
 
         public static string ByteArrayToHexString(byte[] data)
         {
-            if (data is null) return "*empty*";
+            if (data is null) return "*null*";
+            if (data.Length == 0) return "*empty*";
             var result = new StringBuilder();
             foreach (var b in data)
                 result.Append(string.Format("{0:X2} ", b));

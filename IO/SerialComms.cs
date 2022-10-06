@@ -68,11 +68,8 @@ namespace CTecUtil.IO
         private static SerialPort _port;
         private static CommandQueue _commandQueue = new();
 
-        /// <summary>Timer for reading data; the OnTimedOut event means incomplete data was received</summary>
-        private static CommsTimer _incomingDataTimer;
-        
         /// <summary>Timer on response to SendData; the OnTimedOut event is used to notify the connection status</summary>
-        private static CommsTimer _responseTimer;
+        private static CommsTimer _responseTimer = new(nameof(_responseTimer));
 
         private static Exception _lastException = null;
 
@@ -98,7 +95,6 @@ namespace CTecUtil.IO
             set
             {
                 _settings = value;
-                _responseTimer = new();
                 _responseTimer.OnTimedOut = responseTimerTimeout;
                 _responseTimer.Start(_responseTimerPeriod);
             }
@@ -193,8 +189,11 @@ namespace CTecUtil.IO
         private static void sendPing(object sender, ElapsedEventArgs e)
         {
             //only ping the panel if there is no active upload/download
-            if (_commandQueue.SubqueueCount == 0)
+            if (_commandQueue.TotalCommandCount == 0)
+            {
+                CTecUtil.Debug.WriteLine("PING");
                 SendData(new Command() { CommandData = _pingCommand });
+            }
         }
 
         private static void sendFirmwareVersionCheck()
@@ -264,7 +263,6 @@ namespace CTecUtil.IO
 
         public static void CancelCommandQueue()
         {
-            //_incomingDataTimer.Stop();
             _commandQueue?.Clear();
         }
 
@@ -291,12 +289,12 @@ namespace CTecUtil.IO
             if (_commandQueue.TotalCommandCount > 0)
             {
                 SendData(_commandQueue.Peek());
-                CTecUtil.Debug.WriteLine("SendNextCommandInQueue() - ...data sent");
+                CTecUtil.Debug.WriteLine("SendNextCommandInQueue() - ...command sent");
             }
             else
             {
                 _queueWasCompleted = true;
-                CTecUtil.Debug.WriteLine("SendNextCommandInQueue() - _queueWasCompleted");
+                CTecUtil.Debug.WriteLine("SendNextCommandInQueue() - queue was completed");
             }
         }
 
@@ -349,6 +347,12 @@ namespace CTecUtil.IO
                         command.Tries++;
                         CTecUtil.Debug.WriteLine("SendNextCommandInQueue() - command.Tries=" + command.Tries);
 
+                        if (command.Tries > 3)
+                        {
+                            CTecUtil.Debug.WriteLine("SendNextCommandInQueue() --------------------------------------- close port ---------------------------------------");
+                            _port.Close();
+                        }
+
                         try
                         {
                             if (_port is null)
@@ -362,7 +366,7 @@ namespace CTecUtil.IO
                                 _port.Open();
                             }
 
-                            CTecUtil.Debug.WriteLine("SendNextCommandInQueue() - clear buffers");
+                            CTecUtil.Debug.WriteLine("SendNextCommandInQueue() - clear port's buffers");
                             _port.DiscardInBuffer();
                             _port.DiscardOutBuffer();
                             CTecUtil.Debug.WriteLine("SendNextCommandInQueue() - write data to port");
@@ -419,7 +423,7 @@ namespace CTecUtil.IO
             {
                 var incoming = readIncomingResponse(port);
 
-                //CTecUtil.Debug.WriteLine("Receive data:      [" + ByteArrayProcessing.ByteArrayToHexString(incoming) + "] --> \"" + ByteArrayProcessing.ByteArrayToString(incoming) + "\"");
+                CTecUtil.Debug.WriteLine("responseDataReceived() - incoming=" + ByteArrayProcessing.ByteArrayToHexString(incoming));
 
                 if (isPingResponse(incoming))
                 {
@@ -553,24 +557,20 @@ namespace CTecUtil.IO
 
         private static byte[] readIncomingResponse(SerialPort port)
         { 
-            CTecUtil.Debug.WriteLine("readIncomingResponse()");
             if (port is null)
                 CTecUtil.Debug.WriteLine("readIncomingResponse() - port is null");
             else
                 CTecUtil.Debug.WriteLine("readIncomingResponse() - " + port.PortName + " IsOpen=" + port.IsOpen);
             try
             {
-                //1.5 sec timeout
-                _incomingDataTimer = new();
-                _incomingDataTimer.Start(_incomingDataTimerPeriod);
-                CTecUtil.Debug.WriteLine("readIncomingResponse() - response timer started");
+                var timeout = DateTime.Now.AddMilliseconds(_incomingDataTimerPeriod);
 
-                //wait for buffering - often SerialPort.DataReceived is called by the port when BytesToRead is still zero
+                //wait data to start appearing - note: SerialPort.DataReceived is often called by the port when BytesToRead is still zero
                 while (port.BytesToRead == 0)
                 {
-                    Thread.Sleep(10);
-                    CTecUtil.Debug.WriteLine("readIncomingResponse() - waiting for buffering...");
-                    if (_incomingDataTimer.TimedOut)
+                    Thread.Sleep(30);
+                    CTecUtil.Debug.WriteLine("readIncomingResponse() - waiting for bytes...");
+                    if (DateTime.Now > timeout)
                         throw new TimeoutException();
                 }
 
@@ -589,7 +589,7 @@ namespace CTecUtil.IO
                 {
                     Thread.Sleep(5);
                     CTecUtil.Debug.WriteLine("readIncomingResponse() - waiting for payload byte...");
-                    if (_incomingDataTimer.TimedOut)
+                    if (DateTime.Now > timeout)
                         throw new TimeoutException();
                 }
 
@@ -608,15 +608,18 @@ namespace CTecUtil.IO
                     {
                         Thread.Sleep(5);
                         CTecUtil.Debug.WriteLine("readIncomingResponse() - waiting for payload data...");
-                        if (_incomingDataTimer.TimedOut)
+                        if (DateTime.Now > timeout)
                             throw new TimeoutException();
                     }
 
                     //Read payload & checksum
                     var bytes = Math.Min(port.BytesToRead, buffer.Length - offset);
-                    CTecUtil.Debug.WriteLine("readIncomingResponse() - payload bytes=" + bytes);
                     if (bytes > 0)
+                    {
+                        CTecUtil.Debug.WriteLine("readIncomingResponse() - read port...");
                         port.Read(buffer, offset, bytes);
+                        CTecUtil.Debug.WriteLine("readIncomingResponse() -          ...read " + bytes + " bytes");
+                    }
                     offset += bytes;
                 }
 
@@ -635,7 +638,6 @@ namespace CTecUtil.IO
             }
             finally
             {
-                //_incomingDataTimer.Stop();
                 port.DiscardInBuffer();
             }
         }
@@ -671,12 +673,12 @@ namespace CTecUtil.IO
         {
             try
             {
-                _incomingDataTimer.Start(_incomingDataTimerPeriod);
+                var timeout = DateTime.Now.AddMilliseconds(1000);
 
                 //wait for buffering [sometimes SerialPort.DataReceived is called by the port when BytesToRead is still zero]
                 while (port.BytesToRead == 0)
                 {
-                    if (_incomingDataTimer.TimedOut)
+                    if (DateTime.Now > timeout)
                         throw new TimeoutException();
                 }
 
@@ -694,7 +696,6 @@ namespace CTecUtil.IO
             }
             finally
             {
-                //_incomingDataTimer.Stop();
                 port.DiscardInBuffer();
             }
         }
@@ -713,6 +714,7 @@ namespace CTecUtil.IO
 
         private static void responseTimerTimeout()
         {
+            CTecUtil.Debug.WriteLine("responseTimerTimeout()");
             if (_connectionStatus != ConnectionStatus.Listening)
             {
                 //try again...
@@ -906,7 +908,7 @@ namespace CTecUtil.IO
                     break;
                 }
 
-                CTecUtil.Debug.WriteLine("---progressBarThread() - " + _progressOverall + " (" + lastProgress + ")");
+                CTecUtil.Debug.WriteLine("---progress: " + _progressOverall + " (" + lastProgress + ")");
 
                 if (_progressOverall > lastProgress)
                 {

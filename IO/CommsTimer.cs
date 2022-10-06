@@ -10,13 +10,15 @@ namespace CTecUtil.IO
 {
     internal class CommsTimer
     {
-        internal CommsTimer()
+        internal CommsTimer(string name)
         {
+            Id = ++_index;
             TimedOut = false;
             _timer.AutoReset = false;
             _timer.Enabled = false;
             _timer.Interval = 1000;  //default 1 sec
             _timer.Elapsed += new ElapsedEventHandler(onTimedCommsEvent);
+            _name = name;
         }
 
 
@@ -25,6 +27,10 @@ namespace CTecUtil.IO
 
 
         private Timer _timer = new();
+
+        private string _name;
+        private static int _index = 0;
+        private int Id;
 
 
         /// <summary>
@@ -43,7 +49,7 @@ namespace CTecUtil.IO
         {
             Stop();
             _timer.Interval = timeoutperiod;
-            CTecUtil.Debug.WriteLine("CommsTimer.Start()");
+            CTecUtil.Debug.WriteLine("CommsTimer " + _name + " #"+ Id + " Start()");
             _timer.Start();
         }
 
@@ -53,7 +59,7 @@ namespace CTecUtil.IO
         /// </summary>
         internal void Stop()
         {
-            CTecUtil.Debug.WriteLine("CommsTimer.Stop()");
+            CTecUtil.Debug.WriteLine("CommsTimer " + _name + " #" + Id + " Stop()");
             _timer.Stop();
             TimedOut = false;
         }
@@ -64,7 +70,7 @@ namespace CTecUtil.IO
         /// </summary>
         private void onTimedCommsEvent(object source, ElapsedEventArgs e)
         {
-            CTecUtil.Debug.WriteLine("***** CommsTimer TimedOut *****");
+            CTecUtil.Debug.WriteLine("***** CommsTimer " + _name + " #" + Id + " TimedOut *****");
             _timer.Stop();
             TimedOut = true;
             OnTimedOut?.Invoke();
