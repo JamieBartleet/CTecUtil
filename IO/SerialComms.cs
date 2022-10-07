@@ -285,7 +285,6 @@ namespace CTecUtil.IO
         {
             _progressOverall++;
             _progressWithinSubqueue++;
-            CTecUtil.Debug.WriteLine("SendNextCommandInQueue() - subq=" + _progressWithinSubqueue + " o/a=" + _progressOverall + "/" + _commandQueue.TotalCommandCount);
             if (_commandQueue.TotalCommandCount > 0)
             {
                 SendData(_commandQueue.Peek());
