@@ -49,7 +49,6 @@ namespace CTecUtil.IO
         {
             Stop();
             _timer.Interval = timeoutperiod;
-            CTecUtil.Debug.WriteLine("CommsTimer " + _name + " #"+ Id + " Start()");
             _timer.Start();
         }
 
@@ -59,7 +58,6 @@ namespace CTecUtil.IO
         /// </summary>
         internal void Stop()
         {
-            CTecUtil.Debug.WriteLine("CommsTimer " + _name + " #" + Id + " Stop()");
             _timer.Stop();
             TimedOut = false;
         }
