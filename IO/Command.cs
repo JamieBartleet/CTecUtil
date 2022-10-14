@@ -10,18 +10,18 @@ namespace CTecUtil.IO
     {
         internal Command() { }
 
-        internal Command(Command original)
-        {
-            CommandData = (byte[])original.CommandData.Clone();
-            Index = original.Index;
-            Tries = original.Tries;
-        }
+        //internal Command(Command original)
+        //{
+        //    CommandData = (byte[])original.CommandData.Clone();
+        //    Index = original.Index;
+        //    Tries = original.Tries;
+        //}
 
+
+        internal int Index { get; set; }
 
         /// <summary>The command data</summary>
         internal byte[] CommandData { get; set; }
-
-        internal int Index { get; set; }
 
         internal int Tries { get; set; }
 

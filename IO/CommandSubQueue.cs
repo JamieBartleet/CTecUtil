@@ -14,7 +14,7 @@ namespace CTecUtil.IO
             OnSubqueueComplete = original.OnSubqueueComplete;
             Name               = original.Name;
             foreach (var c in _commandQueue)
-                _commandQueue.Append(new Command(c));
+                _commandQueue.Append(c);
         }
 
         internal CommandSubqueue(SerialComms.Direction direction, SerialComms.SubqueueCompletedHandler onCompletion)
@@ -33,7 +33,7 @@ namespace CTecUtil.IO
 
 
         internal void    Enqueue(Command command) => _commandQueue.Enqueue(command);
-        //public void    Dequeue()                => _commandQueue.Dequeue();
+
         internal void Dequeue()
         {
             _commandQueue.Dequeue();
