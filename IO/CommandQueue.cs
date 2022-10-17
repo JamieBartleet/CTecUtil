@@ -78,7 +78,7 @@ namespace CTecUtil.IO
             //CTecUtil.Debug.WriteLine("Dequeue() - _subqueues.Count=" + _subqueues.Count);
 
             //remove first command in the current subqueue
-            _subqueues.Peek()?.Dequeue();
+            _subqueues?.Peek()?.Dequeue();
 
             if (_subqueues.Count == 0 || _subqueues.Peek()?.Count > 0)
                 return false;
@@ -95,6 +95,23 @@ namespace CTecUtil.IO
             }
 
             return true;
+        }
+
+
+        /// <summary>
+        /// Dequeue the specified command from the first queue.
+        /// </summary>
+        /// <returns>True if a new subqueue was started (or there are none left to process).</returns>
+        internal bool Dequeue(Command command)
+        {
+            //find the command in any subqueue
+            if (_subqueues is not null && _subqueues.Count > 0)
+                if (_subqueues.Peek().Peek().CommandData == command.CommandData)
+                    return Dequeue();
+                else
+                    CTecUtil.Debug.WriteLine("Dequeue(" + (command?.ToString()??"null") + ") - >>>>>>> not found in queue");
+
+            return false;
         }
 
 

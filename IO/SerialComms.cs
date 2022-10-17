@@ -252,6 +252,8 @@ namespace CTecUtil.IO
             _queueWasCompleted = false;
             //CTecUtil.Debug.WriteLine("---StartSendingCommandQueue() 01");
 
+            SerialComms.DebugPlacenames = false;
+
             //don't show progress bar for single-item queue (especially don't want to do that for firmware version request)
             if (_commandQueue.TotalCommandCount < 2)
                 sendFirstCommandInQueue();
@@ -261,10 +263,7 @@ namespace CTecUtil.IO
         }
 
 
-        public static void CancelCommandQueue()
-        {
-            _commandQueue?.Clear();
-        }
+        public static void CancelCommandQueue() => _commandQueue?.Clear();
 
 
         private static void sendFirstCommandInQueue()
@@ -334,8 +333,12 @@ namespace CTecUtil.IO
 
         internal static void SendData(Command command)
         {
+            if (_commandQueue.CurrentSubqueueName == "Place names")
+                SerialComms.DebugPlacenames = true;
+
             //CTecUtil.Debug.WriteLine("SendData() - command.Index=" + command.Index);
-            //CTecUtil.Debug.WriteLine("SendData() - command=" + CTecUtil.ByteArrayProcessing.ByteArrayToHexString(command.CommandData));
+            CTecUtil.Debug.WriteLine("SendData() - command=" + CTecUtil.ByteArrayProcessing.ByteArrayToHexString(command.CommandData));
+
             lock (_sendLock)
             {
                 //CTecUtil.Debug.WriteLine("SendData() - go!");
@@ -415,6 +418,7 @@ namespace CTecUtil.IO
             }
         }
 
+        public static bool DebugPlacenames = false;
 
         private static async void responseDataReceived(SerialPort port)
         {
@@ -512,7 +516,7 @@ namespace CTecUtil.IO
                         {
                             //CTecUtil.Debug.WriteLine("responseDataReceived() - ok");
                             //NB: cmd.DataReceiver may have started a new command queue, so check the Id before dequeueing
-                            if (_commandQueue.Id == savedQueueId && _commandQueue.Dequeue())
+                            if (_commandQueue.Id == savedQueueId && _commandQueue.Dequeue(cmd))
                             {
                                 //CTecUtil.Debug.WriteLine("responseDataReceived() - dequeued         : Qs=" + _commandQueue.SubqueueCount + " this=" + _commandQueue.CurrentSubqueueName + "(" + _commandQueue.CommandsInCurrentSubqueue + ") tot=" + _commandQueue.TotalCommandCount);
                                 
