@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CTecUtil.IO
 {
-    internal class Command
+    public class Command
     {
         internal Command() { }
 

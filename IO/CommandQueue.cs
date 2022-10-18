@@ -14,7 +14,7 @@ namespace CTecUtil.IO
     /// E.g. when requesting device details the zones and groups are also requested:<br/>
     /// queue #1 = device request commands, queue #2 = zone request commands, queue #3 = group request commands.
     /// </summary>
-    internal class CommandQueue
+    public class CommandQueue
     {
         internal CommandQueue() => Id = ++_idCounter;
 
@@ -66,7 +66,11 @@ namespace CTecUtil.IO
         /// NB: AddSubQueue() must have been called prior to this to initialise the queue that is actively being added to.
         /// </summary>
         /// <param name="command"></param>
-        internal void Enqueue(Command command) => _currentQueue?.Enqueue(command);
+        internal void Enqueue(Command command)
+        {
+            CTecUtil.Debug.WriteLine("Enqueue(" + command?.ToString() + ")");
+            _currentQueue?.Enqueue(command);
+        }
 
 
         /// <summary>
@@ -118,7 +122,7 @@ namespace CTecUtil.IO
         /// <summary>
         /// Returns the first command in the first subqueue.
         /// </summary>
-        internal Command Peek()
+        public Command Peek()
         {
             try
             {
