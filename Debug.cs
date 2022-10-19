@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CTecUtil
@@ -11,7 +12,7 @@ namespace CTecUtil
     /// </summary>
     public class Debug
     {
-        private static string debugPrefix { get => DateTime.Now + " - "; }
+        private static string debugPrefix { get => DateTime.Now + " " + String.Format("{0,-3}", Thread.CurrentThread.ManagedThreadId) + " - "; }
 
 
         /// <summary>

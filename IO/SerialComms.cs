@@ -60,9 +60,25 @@ namespace CTecUtil.IO
         }
 
 
-        private const int _incomingDataTimerPeriod = 1000;
+        private const int _incomingDataTimerPeriod = 1250;
         private const int _responseTimerPeriod     = 5500;
         private const int _pingTimerPeriod         = 2000;
+
+
+        public static string PortName
+        {
+            get => _port?.PortName;
+            set
+            {
+                if (!string.IsNullOrEmpty(value) && Settings.PortName != value)
+                {
+                    Settings.PortName = value;
+
+                    if (_port is null || _port.PortName != value)
+                        getNewSerialPort();
+                }
+            }
+        }
 
 
         private static SerialPort _port;
@@ -321,8 +337,11 @@ namespace CTecUtil.IO
                 else
                 {
                     CTecUtil.Debug.WriteLine("resendCommand() - index=" + cmd.Index);
-                    _port?.DiscardOutBuffer();
-                    _port?.DiscardInBuffer();
+                    if (_port is not null & _port.IsOpen)
+                    {
+                        _port?.DiscardOutBuffer();
+                        _port?.DiscardInBuffer();
+                    }
                     SendData(cmd);
                 }
             }
@@ -345,22 +364,22 @@ namespace CTecUtil.IO
             {
                 try
                 {
-                    if (_port is not null && _port.IsOpen)
-                    {
-                        do
-                        {
-                            //discard stray incoming data
-                            Thread.Sleep(20);
-                            var bytesToRead = _port.BytesToRead;
-                            if (bytesToRead > 0)
-                            {
-                                CTecUtil.Debug.WriteLine("SendData() - discard=" + bytesToRead);
-                                byte[] buffer = new byte[bytesToRead];
-                                _port.Read(buffer, 0, bytesToRead);
-                                Thread.Sleep(20);
-                            }
-                        } while (_port.BytesToRead > 0);
-                    }
+                    //if (_port is not null && _port.IsOpen)
+                    //{
+                    //    do
+                    //    {
+                    //        //discard stray incoming data
+                    //        Thread.Sleep(20);
+                    //        var bytesToRead = _port.BytesToRead;
+                    //        if (bytesToRead > 0)
+                    //        {
+                    //            CTecUtil.Debug.WriteLine("SendData() - discard=" + bytesToRead);
+                    //            byte[] buffer = new byte[bytesToRead];
+                    //            _port.Read(buffer, 0, bytesToRead);
+                    //            Thread.Sleep(20);
+                    //        }
+                    //    } while (_port.BytesToRead > 0);
+                    //}
 
                     _lastException = null;
 
@@ -372,7 +391,8 @@ namespace CTecUtil.IO
                         if (command.Tries > 3)
                         {
                             CTecUtil.Debug.WriteLine("SendData() --------------------------------------- close port ---------------------------------------");
-                            _port.Close();
+                            _port?.Close();
+                            //ClosePort();
                         }
 
                         try
@@ -380,18 +400,18 @@ namespace CTecUtil.IO
                             if (_port is null)
                             {
                                 CTecUtil.Debug.WriteLine("SendData() - port was null");
-                                _port = newSerialPort();
+                                getNewSerialPort();
                             }
-                            if (!_port.IsOpen)
+                            if (_port?.IsOpen == false)
                             {
                                 CTecUtil.Debug.WriteLine("SendData() - port was closed");
-                                _port.Open();
+                                _port?.Open();
                             }
 
-                            _port.DiscardInBuffer();
-                            _port.DiscardOutBuffer();
+                            //_port.DiscardInBuffer();
+                            //_port.DiscardOutBuffer();
                             //CTecUtil.Debug.WriteLine("SendData() - write data to port");
-                            _port.Write(command.CommandData, 0, command.CommandData.Length);
+                            _port?.Write(command.CommandData, 0, command.CommandData.Length);
                         }
                         catch (Exception ex)
                         {
@@ -586,7 +606,7 @@ namespace CTecUtil.IO
                 //wait data to start appearing - note: SerialPort.DataReceived is often called by the port when BytesToRead is still zero
                 while (port.BytesToRead == 0)
                 {
-                    Thread.Sleep(30);
+                    Thread.Sleep(10);
                     if (DateTime.Now > timeout)
                         throw new TimeoutException("1 waiting for first byte");
                 }
@@ -618,7 +638,7 @@ namespace CTecUtil.IO
                 {
                     while (port.BytesToRead == 0)
                     {
-                        Thread.Sleep(5);
+                        Thread.Sleep(20);
                         if (DateTime.Now > timeout)
                             throw new TimeoutException("3 waiting for data");
                     }
@@ -773,15 +793,22 @@ namespace CTecUtil.IO
         {
             try
             {
+                CTecUtil.Debug.WriteLine("ClosePort()");
                 CancelCommandQueue();
 
                 if (_port?.IsOpen == true)
                 {
                     //close port on new thread to avoid hang [known issue with SerialPort class]
-                    Thread closePortThread = new Thread(new ThreadStart(closeDownPort));
+                    Thread closePortThread = new Thread(new ThreadStart(() => {
+                        _port?.Close();
+                        //pause to allow port's internal threads to terminate - we would get an UnauthorizedAccessException if we try to open it immediately after closing
+                        Thread.Sleep(666);
+                        _port.Dispose();
+                        _port = null;
+                    }));
                     closePortThread.Start();
+                    closePortThread.Join();
                 }
-
                 return true;
             }
             catch (Exception ex)
@@ -789,12 +816,6 @@ namespace CTecUtil.IO
                 CTecUtil.Debug.WriteLine("  **Exception** (ClosePort) " + ex.Message);
                 return false;
             }
-        }
-
-        private static void closeDownPort()
-        {
-            _port?.Close();
-            _port = null;
         }
 
 
@@ -805,29 +826,30 @@ namespace CTecUtil.IO
 
 
         /// <summary>
-        /// Returns a new serial port Initialised with the current PortName, BaudRate, etc. properties.
+        /// Gets a new serial port Initialised with the current PortName, BaudRate, etc. properties.
         /// </summary>
-        private static SerialPort newSerialPort()
+        private static SerialPort getNewSerialPort()
         {
             try
             {
-                var port = new SerialPort(Settings.PortName, Settings.BaudRate, Settings.Parity, Settings.DataBits, Settings.StopBits)
+                ClosePort();
+
+                _port = new SerialPort(Settings.PortName, Settings.BaudRate, Settings.Parity, Settings.DataBits, Settings.StopBits)
                 {
                     ReadTimeout  = Settings.ReadTimeout,
                     WriteTimeout = Settings.WriteTimeout
                 };
 
                 var available = GetAvailablePorts();
-                if (available.Count > 0 && !available.Contains(port.PortName))
-                    port.PortName = available[0];
+                if (available.Count > 0 && !available.Contains(_port.PortName))
+                    _port.PortName = available[0];
 
-                port.DataReceived += dataReceived;
-                port.ErrorReceived += errorReceived;
-                return port;
+                _port.DataReceived += dataReceived;
+                _port.ErrorReceived += errorReceived;
             }
             catch (Exception ex)
             {
-                CTecUtil.Debug.WriteLine("  **Exception** (newSerialPort) " + ex.Message);
+                CTecUtil.Debug.WriteLine("  **Exception** (openNewSerialPort) " + ex.Message);
                 error(Cultures.Resources.Error_Serial_Port, ex);
             }
             return null;
