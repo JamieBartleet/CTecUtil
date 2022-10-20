@@ -40,9 +40,9 @@ namespace CTecUtil.IO
             CTecUtil.Debug.WriteLine("Dequeue() - _commandQueue.Count=" + _commandQueue.Count);
         }
 
-        internal Command Peek()                   { try { return _commandQueue?.Peek(); } catch { return null; } }
-        internal void    Clear()                  => _commandQueue?.Clear();
-        internal int     Count                    => _commandQueue.Count;
+        internal Command Peek()  { try { return _commandQueue?.Peek(); } catch { return null; } }
+        internal void    Clear() => _commandQueue?.Clear();
+        internal int     Count   => _commandQueue.Count;
 
 
         internal SerialComms.SubqueueCompletedHandler OnSubqueueComplete;

@@ -268,8 +268,6 @@ namespace CTecUtil.IO
             _queueWasCompleted = false;
             //CTecUtil.Debug.WriteLine("---StartSendingCommandQueue() 01");
 
-            SerialComms.DebugPlacenames = false;
-
             //don't show progress bar for single-item queue (especially don't want to do that for firmware version request)
             if (_commandQueue.TotalCommandCount < 2)
                 sendFirstCommandInQueue();
@@ -318,7 +316,7 @@ namespace CTecUtil.IO
             var cmd = _commandQueue.Peek();
             if (cmd is not null)
             {
-                if (cmd.Tries > 19)
+                if (cmd.Tries > 5)
                 {
                     //the number of retries on the current command is excessive
                     // - report the last-noted exception (if any)
@@ -354,10 +352,6 @@ namespace CTecUtil.IO
 
         internal static void SendData(Command command)
         {
-            if (_commandQueue.CurrentSubqueueName == "Place names")
-                SerialComms.DebugPlacenames = true;
-
-            //CTecUtil.Debug.WriteLine("SendData() - command.Index=" + command.Index);
             CTecUtil.Debug.WriteLine("SendData() - command=" + command?.ToString());
 
             lock (_portLock)
@@ -388,12 +382,12 @@ namespace CTecUtil.IO
                         command.Tries++;
                         CTecUtil.Debug.WriteLine("SendData() - index=" + command.Index + " Tries=" + command.Tries);
 
-                        if (command.Tries > 3)
-                        {
-                            CTecUtil.Debug.WriteLine("SendData() --------------------------------------- close port ---------------------------------------");
-                            _port?.Close();
-                            //ClosePort();
-                        }
+                        //if (command.Tries > 3)
+                        //{
+                        //    CTecUtil.Debug.WriteLine("SendData() --------------------------------------- close port ---------------------------------------");
+                        //    _port?.Close();
+                        //    //ClosePort();
+                        //}
 
                         try
                         {
@@ -465,7 +459,6 @@ namespace CTecUtil.IO
         }
 
 
-        public static bool DebugPlacenames = false;
         public static CommandQueue TheQueue { get => _commandQueue; }
 
         private static async void responseDataReceived(SerialPort port)
@@ -798,16 +791,13 @@ namespace CTecUtil.IO
 
                 if (_port?.IsOpen == true)
                 {
-                    //close port on new thread to avoid hang [known issue with SerialPort class]
-                    Thread closePortThread = new Thread(new ThreadStart(() => {
-                        _port?.Close();
-                        //pause to allow port's internal threads to terminate - we would get an UnauthorizedAccessException if we try to open it immediately after closing
-                        Thread.Sleep(666);
-                        _port.Dispose();
-                        _port = null;
-                    }));
-                    closePortThread.Start();
-                    closePortThread.Join();
+                    GC.SuppressFinalize(_port.BaseStream);
+                    try { _port.Close(); } catch { }
+
+                    //pause to allow port's internal threads to terminate per MS documentation (though they dont' specify a time)
+                    //- we would typically get an UnauthorizedAccessException if we try to open it immediately after closing
+                    Thread.Sleep(666);
+                    _port = null;
                 }
                 return true;
             }
