@@ -40,8 +40,10 @@ namespace CTecUtil.Cultures
                 return;
             
 
-            System.Threading.Thread.CurrentThread.CurrentCulture = culture;
-            System.Threading.Thread.CurrentThread.CurrentUICulture = culture; 
+            //System.Threading.Thread.CurrentThread.CurrentCulture = culture;
+            //System.Threading.Thread.CurrentThread.CurrentUICulture = culture; 
+            CultureInfo.DefaultThreadCurrentCulture = culture;
+            CultureInfo.DefaultThreadCurrentUICulture = culture;
             Cultures.Resources.Culture = culture;
             ResourceProvider.Refresh();
         }
