@@ -207,7 +207,7 @@ namespace CTecUtil.IO
             //only ping the panel if there is no active upload/download
             if (_commandQueue.TotalCommandCount == 0)
             {
-                CTecUtil.Debug.WriteLine("PING");
+                //CTecUtil.Debug.WriteLine("PING");
                 SendData(new Command() { CommandData = _pingCommand });
             }
         }
@@ -352,7 +352,7 @@ namespace CTecUtil.IO
 
         internal static void SendData(Command command)
         {
-            CTecUtil.Debug.WriteLine("SendData() - command=" + command?.ToString());
+            //CTecUtil.Debug.WriteLine("SendData() - command=" + command?.ToString());
 
             lock (_portLock)
             {
@@ -380,7 +380,7 @@ namespace CTecUtil.IO
                     if (command is not null && command.CommandData is not null)
                     {
                         command.Tries++;
-                        CTecUtil.Debug.WriteLine("SendData() - index=" + command.Index + " Tries=" + command.Tries);
+                        //CTecUtil.Debug.WriteLine("SendData() - index=" + command.Index + " Tries=" + command.Tries);
 
                         //if (command.Tries > 3)
                         //{
@@ -737,7 +737,7 @@ namespace CTecUtil.IO
 
         private static void responseTimerTimeout()
         {
-            CTecUtil.Debug.WriteLine("responseTimerTimeout()");
+            //CTecUtil.Debug.WriteLine("responseTimerTimeout()");
             if (_connectionStatus != ConnectionStatus.Listening)
             {
                 //try again...

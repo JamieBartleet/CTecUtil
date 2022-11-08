@@ -5,8 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace CTecUtil
 {
@@ -299,6 +301,21 @@ namespace CTecUtil
                 '·'or'¸' => ".",
                 _ => "*"
             };
+        }
+
+        public static Size MeasureText(string text, FontFamily fontFamily, double fontSize, FontStyle fontStyle, FontWeight fontWeight, FontStretch fontStretch)
+        {
+            var formattedText = new FormattedText(text,
+                                                  CultureInfo.CurrentCulture,
+                                                  FlowDirection.LeftToRight,
+                                                  new Typeface(fontFamily, fontStyle, fontWeight, fontStretch),
+                                                  fontSize,
+                                                  Brushes.Black,
+                                                  new NumberSubstitution(),
+                                                  1);
+
+            return new Size(formattedText.Width, formattedText.Height);
+
         }
     }
 }

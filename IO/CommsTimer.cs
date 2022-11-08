@@ -68,7 +68,7 @@ namespace CTecUtil.IO
         /// </summary>
         private void onTimedCommsEvent(object source, ElapsedEventArgs e)
         {
-            CTecUtil.Debug.WriteLine("***** CommsTimer " + _name + " #" + Id + " TimedOut *****");
+            //CTecUtil.Debug.WriteLine("***** CommsTimer " + _name + " #" + Id + " TimedOut *****");
             _timer.Stop();
             TimedOut = true;
             OnTimedOut?.Invoke();
