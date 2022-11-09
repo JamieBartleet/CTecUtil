@@ -193,95 +193,133 @@ namespace CTecUtil
             return result.ToString();
         }
 
+
+        /// <summary>
+        /// Returns the given single-character string filtered whereby characters above ASCII #127 are converted to approximate equivalents, e.g. 'é' -> 'e'.<br/>
+        /// Does not convert to multiple-char output, i.e. will not convert German 'Ä' -> "AE", 'ö' to "oe", etc.<br/>
+        /// Cyrillic or Greek characters may not be converted.
+        /// </summary>
+        public static string FilterAscii127SingleChar(string s) => string.IsNullOrEmpty(s) ? s : FilterAscii127SingleChar(s[0]);
+
+
         /// <summary>
         /// Returns the given char as a string<br/>
         /// Values above ASCII #127 are converted to approximate equivalents, e.g. 'é' -> "e".<br/>
         /// If a German keyboard is being used 'Ä' is converted to "AE", 'ö' to "oe", etc.<br/>
         /// Cyrillic or Greek characters may not be converted.
         /// </summary>
-        public static string FilterAscii127(char c)
+        public static string FilterAscii127(char c) => FilterAscii127Extended(c);
+
+
+        /// <summary>
+        /// Returns the given char as a string<br/>
+        /// Values above ASCII #127 are converted to approximate equivalents, e.g. 'é' -> "e".<br/>
+        /// If a German keyboard is being used 'Ä' is converted to "AE", 'ö' to "oe", etc.<br/>
+        /// Cyrillic or Greek characters may not be converted.
+        /// </summary>
+        private static string FilterAscii127Extended(char c)
         {
             if (c < 127)
                 return c.ToString();
             var _deutscheTastatur = InputLanguageManager.Current.CurrentInputLanguage.Name.StartsWith("de");
             return c switch
             {
-                'À'or'Á'or'Â'or'Ã'or'Å'or'Ā'or'Ă'or'Ą'or'Ǎ'or'Ǟ'or'Ǡ'or'Ǻ'or'Ȁ'or'Ȃ'or'Ȧ'or'Ⱥ'or'Α'or'А' => "A",
                 'Ä' => _deutscheTastatur ? "AE" : "A",
                 'Æ'or'Ǣ'or'Ǽ' => "AE",
+                'Ч'or'Ш' => "CH",
+                'Ĳ' => "IJ",
+                'Ю' => "IO",
+                'Я' => "YA",
+                'Χ'or'Х' => "KH",
+                'Ö' => _deutscheTastatur ? "OE" : "O",
+                'Œ' => "OE",
+                'Ψ' => "PS",
+                'Щ' => "SH",
+                'Θ' => "TH",
+                'Ц' => "TS",
+                'Ü' => _deutscheTastatur ? "UE" : "U",
+                'ä' => _deutscheTastatur ? "ae" : "a",
+                'æ'or'ǣ'or'ǽ' => "ae",
+                'ч'or'ш' => "ch",
+                'ĳ' => "ij",
+                'ю' => "io",
+                'я' => "ya",
+                'χ'or'х' => "kh",
+                'ö' => _deutscheTastatur ? "oe" : "o",
+                'œ' => "oe",
+                'ψ' => "ps",
+                'щ' => "sh",
+                'ß' => "ss",
+                'θ' => "th",
+                'ц' => "ts",
+                'ü' => _deutscheTastatur ? "ue" : "u",
+                '€' => "EUR",
+                '©' => "(c)",
+                '®' => "(R)",
+                _ => FilterAscii127SingleChar(c),
+            };
+        }
+
+
+        /// <summary>
+        /// Returns the given char as a string<br/>
+        /// Values above ASCII #127 are converted to approximate equivalents, e.g. 'é' -> "e".<br/>
+        /// Does not convert to multiple-char output, i.e. will not convert German 'Ä' -> "AE", 'ö' to "oe", etc.<br/>
+        /// Cyrillic or Greek characters may not be converted.
+        /// </summary>
+        public static string FilterAscii127SingleChar(char c)
+        {
+            if (c < 127)
+                return c.ToString();
+            return c switch
+            {
+                'À'or'Á'or'Â'or'Ã'or'Å'or'Ā'or'Ă'or'Ą'or'Ǎ'or'Ǟ'or'Ǡ'or'Ǻ'or'Ȁ'or'Ȃ'or'Ȧ'or'Ⱥ'or'Α'or'А' => "A",
                 'Ɓ'or'Ƃ'or'Ƀ'or'Β'or'Б' => "B",
                 'Ç'or'Ć'or'Ĉ'or'Ċ'or'Č'or'Ƈ'or'Ȼ' => "C",
-                'Ч'or'Ш' => "CH",
                 'Ð'or'Ď'or'Đ'or'Ɖ'or'Ɗ'or'Ƌ'or'Δ'or'Д' => "D",
                 'È'or'É'or'Ê'or'Ë'or'Ē'or'Ĕ'or'Ė'or'Ę'or'Ě'or'Ǝ'or'Ɛ'or'Ȅ'or'Ȇ'or'Ȩ'or'Ɇ'or'Ε'or'Е'or'Η'or'Э' => "E",
                 'Ƒ'or'Φ'or'Ф' => "F",
                 'Ĝ'or'Ğ'or'Ġ'or'Ģ'or'Ɠ'or'Ǥ'or'Ǧ'or'Ǵ'or'Γ'or'Г' => "G",
                 'Ĥ'or'Ħ'or'Ȟ' => "H",
                 'Ì'or'Í'or'Î'or'Ï'or'Ĩ'or'Ī'or'Ĭ'or'Į'or'İ'or'Ɩ'or'Ɨ'or'Ǐ'or'Ȉ'or'Ȋ'or'Ι'or'И'or'Й' => "I",
-                'Ĳ' => "IJ",
-                'Ю' => "IO",
-                'Я' => "YA",
                 'Ĵ'or'Ɉ'or'Ж' => "J",
                 'Ķ'or'Ƙ'or'Ǩ'or'Κ'or'К' => "K",
-                'Χ'or'Х' => "KH",
                 'Ĺ'or'Ļ'or'Ľ'or'Ŀ'or'Ł'or'Ƚ'or'Λ'or'Л' => "L",
                 'Μ'or'М' => "M",
                 'Ñ'or'Ń'or'Ņ'or'Ň'or'Ŋ'or'Ɲ'or'Ǹ'or'Ƞ'or'Ν'or'Н' => "N",
                 'Ò'or'Ó'or'Ô'or'Õ'or'Ø'or'Ō'or'Ŏ'or'Ő'or'Ɔ'or'Ơ'or'Ǒ'or'Ǫ'or'Ǭ'or'Ǿ'or'Ȍ'or'Ȏ'or'Ȫ'or'Ȭ'or'Ȯ'or'Ȱ'or'Ο'or'Ω'or'О' => "O",
-                'Ö' => _deutscheTastatur ? "OE" : "O",
-                'Œ' => "OE",
                 'Ƥ'or'Π'or'П' => "P",
-                'Ψ' => "PS",
                 'Ɋ' => "Q",
                 'Ŕ'or'Ŗ'or'Ř'or'Ʀ'or'Ȑ'or'Ȓ'or'Ɍ'or'Ρ'or'Р' => "R",
                 'Ś'or'Ŝ'or'Ş'or'Š'or'Ș'or'Σ'or'С' => "S",
-                'Щ' => "SH",
                 'Ţ'or'Ť'or'Ŧ'or'Ƭ'or'Ʈ'or'Ț'or'Ⱦ'or'Τ'or'Т' => "T",
-                'Θ' => "TH",
-                'Ц' => "TS",
                 'Ù'or'Ú'or'Û'or'Ũ'or'Ū'or'Ŭ'or'Ů'or'Ű'or'Ų'or'Ư'or'Ǔ'or'Ǖ'or'Ǘ'or'Ǚ'or'Ǜ'or'Ȕ'or'Ȗ'or'Ʉ'or'Υ'or'У' => "U",
-                'Ü' => _deutscheTastatur ? "UE" : "U",
                 'Ʋ'or'В' => "V",
                 'Ŵ' => "W",
                 'Ξ' => "X",
                 '¥'or'Ý'or'Ŷ'or'Ÿ'or'Ƴ'or'Ȳ'or'Ɏ' => "Y",
                 'Ź'or'Ż'or'Ž'or'Ƶ'or'Ȥ'or'Ζ'or'З' => "Z",
                 'à'or'á'or'â'or'ã'or'å'or'ā'or'ă'or'ą'or'ǎ'or'ǟ'or'ǡ'or'ǻ'or'ȁ'or'ȃ'or'ȧ'or'α'or'а' => "a",
-                'ä' => _deutscheTastatur ? "ae" : "a",
-                'æ'or'ǣ'or'ǽ' => "ae",
                 'ƀ'or'ƃ'or'Ƅ'or'ƅ'or'ɓ'or'β'or'б' => "b",
                 '¢'or'ç'or'ć'or'ĉ'or'ċ'or'č'or'ć'or'ĉ'or'ċ'or'č'or'ƈ'or'ȼ'or'ɕ' => "c",
-                'ч'or'ш' => "ch",
                 'ď'or'đ'or'ƌ'or'ƍ'or'ȡ'or'ɖ'or'ɗ'or'δ'or'д' => "d",
                 'è'or'é'or'ê'or'ë'or'ē'or'ĕ'or'ė'or'ę'or'ě'or'ǝ'or'ȅ'or'ȇ'or'ȩ'or'ɇ'or'ε'or'η'or'е'or'э' => "e",
                 'ƒ'or'φ'or'ф' => "f",
                 'ĝ'or'ğ'or'ġ'or'ģ'or'ǥ'or'ǧ'or'ǵ'or'ɠ'or'ɡ'or'γ'or'г' => "g",
                 'ĥ'or'ħ'or'ȟ'or'ɦ'or'ɧ' => "h",
                 'ì'or'í'or'î'or'ï'or'ĩ'or'ī'or'ĭ'or'į'or'ı'or'ƚ'or'ǐ'or'ȉ'or'ȋ'or'ɨ'or'ι'or'и'or'й' => "i",
-                'ĳ' => "ij",
-                'ю' => "io",
-                'я' => "ya",
                 'ĵ'or'ǰ'or'ȷ'or'ɉ'or'ɟ'or'ж' => "j",
                 'ķ'or'ĸ'or'ƙ'or'ǩ'or'κ'or'к' => "k",
-                'χ'or'х' => "kh",
                 'ĺ'or'ļ'or'ľ'or'ŀ'or'ł'or'ȴ'or'ɫ'or'ɬ'or'ɭ'or'λ'or'л' => "l",
                 'Ɯ'or'ɰ'or'ɱ'or'µ'or'μ'or'м' => "m",
                 'ñ'or'ń'or'ņ'or'ň'or'ŉ'or'ŋ'or'ƞ'or'ǹ'or'ȵ'or'ɲ'or'ɳ'or'ν'or'н' => "n",
                 'ò'or'ó'or'ô'or'õ'or'ø'or'ō'or'ŏ'or'ő'or'ơ'or'ǒ'or'ǫ'or'ǭ'or'ǿ'or'ȍ'or'ȏ'or'ȫ'or'ȭ'or'ȯ'or'ȱ'or'ɔ'or'ο'or'ω'or'о' => "o",
-                'ö' => _deutscheTastatur ? "oe" : "o",
-                'œ' => "oe",
                 'ƥ'or'π'or'п' => "p",
-                'ψ' => "ps",
                 'ɋ'or'ʠ' => "q",
                 'ŕ'or'ŗ'or'ř'or'ȑ'or'ȓ'or'ɍ'or'ɼ'or'ɽ'or'ɾ'or'ρ'or'р' => "r",
                 'ś'or'ŝ'or'ş'or'š'or'ſ'or'ș'or'ȿ'or'ʂ'or'ς'or'σ'or'с' => "s",
-                'щ' => "sh",
-                'ß'=>"ss",
                 'ţ'or'ť'or'ŧ'or'ƫ'or'ƭ'or'ț'or'ȶ'or'ʈ'or'τ'or'т' => "t",
-                'θ' => "th",
-                'ц' => "ts",
                 'ù'or'ú'or'û'or'ũ'or'ū'or'ŭ'or'ů'or'ű'or'ų'or'ư'or'ǔ'or'ǖ'or'ǘ'or'ǚ'or'ǜ'or'ȕ'or'ȗ'or'ʉ'or'υ'or'у' => "u",
-                'ü' => _deutscheTastatur ? "ue" : "u",
                 'ʋ'or'в' => "v",
                 'ŵ' => "w",
                 '×'or'ξ' => "x",
@@ -290,9 +328,6 @@ namespace CTecUtil
                 '¡' => "!",
                 '¿' => "?",
                 '£' => "#",
-                '€' => "EUR",
-                '©' => "(c)",
-                '®' => "(R)",
                 '«'or'»' => "\"",
                 '´' => "'",
                 '÷' => "/",
@@ -302,6 +337,7 @@ namespace CTecUtil
                 _ => "*"
             };
         }
+
 
         public static Size MeasureText(string text, FontFamily fontFamily, double fontSize, FontStyle fontStyle, FontWeight fontWeight, FontStretch fontStretch)
         {

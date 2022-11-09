@@ -207,7 +207,7 @@ namespace CTecUtil.IO
             //only ping the panel if there is no active upload/download
             if (_commandQueue.TotalCommandCount == 0)
             {
-                //CTecUtil.Debug.WriteLine("PING");
+                CTecUtil.Debug.WriteLine("PING");
                 SendData(new Command() { CommandData = _pingCommand });
             }
         }
@@ -426,7 +426,7 @@ namespace CTecUtil.IO
         /// </summary>
         private static void dataReceived(object sender, SerialDataReceivedEventArgs e)
         {
-            CTecUtil.Debug.WriteLine("dataReceived()");
+            //CTecUtil.Debug.WriteLine("dataReceived()");
 
             //lock (_portLock)
             {
@@ -471,6 +471,8 @@ namespace CTecUtil.IO
 
                 if (isPingResponse(incoming))
                 {
+                    CTecUtil.Debug.WriteLine("responseDataReceived() - ping response");
+                    
                     //status is one of the Connected statuses: if not already thought to be writeable set it to read-only
                     if (_connectionStatus != ConnectionStatus.ConnectedWriteable)
                         setConnectionStatus(ConnectionStatus.ConnectedReadOnly);
@@ -494,10 +496,13 @@ namespace CTecUtil.IO
                 }
                 else if (isNak(incoming))
                 {
+                    CTecUtil.Debug.WriteLine("responseDataReceived() - NAK");
                     resendCommand();
                 }
                 else if (isAck(incoming))
                 {
+                    CTecUtil.Debug.WriteLine("responseDataReceived() - ACK");
+
                     if (_commandQueue.Dequeue())
                     {
                         //new queue - reset the count
@@ -641,7 +646,7 @@ namespace CTecUtil.IO
                     if (bytes > 0)
                     {
                         port.Read(buffer, offset, bytes);
-                        CTecUtil.Debug.WriteLine("readIncomingResponse() -          ...read " + bytes + " bytes");
+                        //CTecUtil.Debug.WriteLine("readIncomingResponse() -          ...read " + bytes + " bytes");
                     }
                     offset += bytes;
                 }
