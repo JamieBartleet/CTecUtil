@@ -195,6 +195,15 @@ namespace CTecUtil
 
 
         /// <summary>
+        /// Returns the given char as a string<br/>
+        /// Values above ASCII #127 are converted to approximate equivalents, e.g. 'é' -> "e".<br/>
+        /// If a German keyboard is being used 'Ä' is converted to "AE", 'ö' to "oe", etc.<br/>
+        /// Cyrillic or Greek characters may not be converted.
+        /// </summary>
+        public static string FilterAscii127(char c) => FilterAscii127Extended(c);
+
+
+        /// <summary>
         /// Returns the given single-character string filtered whereby characters above ASCII #127 are converted to approximate equivalents, e.g. 'é' -> 'e'.<br/>
         /// Does not convert to multiple-char output, i.e. will not convert German 'Ä' -> "AE", 'ö' to "oe", etc.<br/>
         /// Cyrillic or Greek characters may not be converted.
@@ -203,12 +212,15 @@ namespace CTecUtil
 
 
         /// <summary>
-        /// Returns the given char as a string<br/>
-        /// Values above ASCII #127 are converted to approximate equivalents, e.g. 'é' -> "e".<br/>
-        /// If a German keyboard is being used 'Ä' is converted to "AE", 'ö' to "oe", etc.<br/>
+        /// Returns the given char filtered whereby chars above ASCII #127 are converted to approximate equivalents, e.g. 'é' -> 'e'.<br/>
+        /// Does not convert to multiple-char output, i.e. will not convert German 'Ä' -> "AE", 'ö' to "oe", etc.<br/>
         /// Cyrillic or Greek characters may not be converted.
         /// </summary>
-        public static string FilterAscii127(char c) => FilterAscii127Extended(c);
+        public static char FilterAscii127SingleChar(Key k)
+        {
+            var keyStr = KeyToString(k);
+            return string.IsNullOrEmpty(keyStr) ? '\0' : FilterAscii127SingleChar(keyStr)[0];
+        }
 
 
         /// <summary>
