@@ -105,7 +105,7 @@ namespace CTecUtil.IO
         {
             get
             {
-                if (_settings is null) throw new NullReferenceException("SerialComms.Settings has not been initialised.");
+                //if (_settings is null) throw new NullReferenceException("SerialComms.Settings has not been initialised.");
                 return _settings;
             }
             set
