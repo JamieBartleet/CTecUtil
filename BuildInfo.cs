@@ -29,7 +29,8 @@ namespace CTecUtil
         {
             VersionInfo result = new();
 
-            result.Version = assembly.GetName().Version.ToString();
+            var ver = assembly.GetName().Version;
+            result.Version = ver.Major + "." + ver.Minor + "." + ver.Build;
 
             var versionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
 
