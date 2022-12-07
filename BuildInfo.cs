@@ -1,23 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CTecUtil
 {
     public static class BuildInfo
     {
-        private static readonly VersionInfo _versionInfo = ParseProductVersionString(Assembly.GetExecutingAssembly());
-
-        public static string   BuildVersion { get { return _versionInfo.Version;         } }
-        public static DateTime BuildDate    { get { return _versionInfo.BuildDate.Value; } }
-        public static string   BuildYear    { get { return _versionInfo.BuildYear;       } }
+        public static readonly BuildDetails Details = ParseProductVersionString(Assembly.GetExecutingAssembly());
 
 
-        public class VersionInfo
+        public class BuildDetails
         {
             public string    Version   { get; set; }
             public DateTime? BuildDate { get; set; }
@@ -25,9 +17,9 @@ namespace CTecUtil
         }
 
 
-        public static VersionInfo ParseProductVersionString(Assembly assembly)
+        public static BuildDetails ParseProductVersionString(Assembly assembly)
         {
-            VersionInfo result = new();
+            BuildDetails result = new();
 
             var ver = assembly.GetName().Version;
             result.Version = ver.Major + "." + ver.Minor + "." + ver.Build;
