@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Diagnostics;
 using System.Windows.Data;
+using System.Reflection;
 
 namespace CTecUtil.Cultures
 {
@@ -23,29 +24,73 @@ namespace CTecUtil.Cultures
             return new Cultures.Resources();
         }
 
-        private static ObjectDataProvider _provider;
-        public static ObjectDataProvider ResourceProvider
-        {
-            get
-            {
-                if (_provider == null)
-                    _provider = (ObjectDataProvider)System.Windows.Application.Current.FindResource("CTecUtil");
-                return _provider;
-            }
-        }
+        //private static ObjectDataProvider _provider;
+        //public static ObjectDataProvider ResourceProvider
+        //{
+        //    get
+        //    {
+        //        if (_provider is null)
+        //            _provider = (ObjectDataProvider)System.Windows.Application.Current.FindResource(nameof(CTecUtil));
+        //        return _provider;
+        //    }
+        //}
 
         public static void ChangeCulture(CultureInfo culture)
         {
             if (culture == null)
                 return;
-            
 
-            //System.Threading.Thread.CurrentThread.CurrentCulture = culture;
-            //System.Threading.Thread.CurrentThread.CurrentUICulture = culture; 
+            Cultures.Resources.Culture = culture;
             CultureInfo.DefaultThreadCurrentCulture = culture;
             CultureInfo.DefaultThreadCurrentUICulture = culture;
-            Cultures.Resources.Culture = culture;
-            ResourceProvider.Refresh();
+            System.Threading.Thread.CurrentThread.CurrentCulture = culture;
+            System.Threading.Thread.CurrentThread.CurrentUICulture = culture;
+            //ResourceProvider.Refresh();
+        }
+
+        
+        private static List<CultureInfo> _supportedCultures = null;
+
+        /// <summary>
+        /// List of available cultures, enumerated at startup
+        /// </summary>
+        public static List<CultureInfo> SupportedCultures
+        {
+            get
+            {
+                if (_supportedCultures is null)
+                    throw new CultureNotFoundException("SupportedCultures has not been initialised - call 'CTecUtil.Cultures.CultureResources.InitSupportedCultures(mainAssemblyName)'.");
+                return _supportedCultures;
+            }
+        }
+
+
+        /// <summary>
+        /// Initialise the supported cultures list
+        /// </summary>
+        /// <param name="mainAssemblyName"></param>
+        public static void InitSupportedCultures(string mainAssemblyName)
+        {
+            if (_supportedCultures is null)
+            {
+                _supportedCultures = new List<CultureInfo>();
+
+                //determine which cultures are available to this application
+                foreach (string dir in Directory.GetDirectories(AppDomain.CurrentDomain.BaseDirectory))
+                {
+                    try
+                    {
+                        DirectoryInfo dirinfo = new DirectoryInfo(dir);
+
+                        //is there a resources dll that originated from our assembly (i.e. not from the installer package) in this directory?
+                        if (dirinfo.GetFiles(mainAssemblyName + ".resources.dll").Length > 0)
+                            _supportedCultures.Add(CultureInfo.GetCultureInfo(dirinfo.Name));
+                    }
+                    catch (ArgumentException) //ignore exceptions generated for any unrelated directories in the bin folder
+                    {
+                    }
+                }
+            }
         }
     }
 }
