@@ -48,5 +48,19 @@ namespace CTecUtil
             ApplicationConfig.SaveSettings();
             RecentFileListHasChanged?.Invoke();
         }
+
+
+        /// <summary>Remove a file path from the list.</summary>
+        public void Remove(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return;
+
+            if (_items.Contains(path))
+                _items.Remove(path);
+
+            ApplicationConfig.SaveSettings();
+            RecentFileListHasChanged?.Invoke();
+        }
     }
 }
