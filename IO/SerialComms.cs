@@ -207,7 +207,7 @@ namespace CTecUtil.IO
             //only ping the panel if there is no active upload/download
             if (_commandQueue.TotalCommandCount == 0)
             {
-                CTecUtil.Debug.WriteLine("PING");
+                //CTecUtil.Debug.WriteLine("PING");
                 SendData(new Command() { CommandData = _pingCommand });
             }
         }
