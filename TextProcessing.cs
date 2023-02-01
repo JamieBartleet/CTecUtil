@@ -365,5 +365,24 @@ namespace CTecUtil
             return new Size(formattedText.Width, formattedText.Height);
 
         }
+
+
+        public static string NumberListToString(List<int> numberList)
+        {
+            StringBuilder result = new StringBuilder();
+            for (int i = 0; i < numberList.Count; i++)
+            {
+                if (result.Length > 0)
+                {
+                    if (i == numberList.Count - 1)
+                        result.Append(" & " + numberList[i].ToString());
+                    else
+                        result.Append(", " + numberList[i].ToString());
+                }
+                else
+                    result.Append(numberList[i]);
+            }
+            return result.ToString();
+        }
     }
 }
