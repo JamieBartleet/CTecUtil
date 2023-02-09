@@ -26,7 +26,8 @@ namespace CTecUtil.IO
         public static string JsonFileExt = ".json";
 
 
-        public static string FilePath { get; set; }
+        private static string _filePath = "";
+        public static string FilePath { get => _filePath; set { _filePath = value; FileFolder = Path.GetDirectoryName(value); } }
         public static string Filter { get; set; }
 
         internal static string FileFolder { get; set; }
@@ -46,7 +47,7 @@ namespace CTecUtil.IO
             if (dlgOpenFile.ShowDialog() == true)
             {
                 FilePath = dlgOpenFile.FileName;
-                FileFolder = dataFileDirectory();
+                //FileFolder = dataFileDirectory();
                 CTecUtil.Debug.WriteLine("Opening file: " + FilePath);
                 return true;
             }
