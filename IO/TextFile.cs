@@ -122,8 +122,8 @@ namespace CTecUtil.IO
         protected static string JsonFileName(string filePath)
         {
             var ext = Path.GetExtension(filePath);
-            var idx = FilePath.LastIndexOf(ext);
-            return FilePath.Substring(0, idx) + JsonFileExt;
+            var idx = filePath.LastIndexOf(ext);
+            return filePath.Substring(0, idx) + JsonFileExt;
         }
 
     }
