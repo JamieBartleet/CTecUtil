@@ -66,6 +66,9 @@ namespace CTecUtil.IO
                         Console.Beep(t.Frequency, t.Duration);
                     else
                         System.Threading.Thread.Sleep(t.Duration);
+
+                    if (!_repeat)
+                        break;
                 }
 
             } while (_repeat);
