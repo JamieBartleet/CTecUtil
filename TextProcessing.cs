@@ -386,6 +386,12 @@ namespace CTecUtil
         }
 
 
+        /// <summary>
+        /// Attempts to retrieve the int value from a formatted string, i.e. one built using string.Format and containing a '{0}' placeholder.
+        /// </summary>
+        /// <param name="text">The text string to analyse</param>
+        /// <param name="formatString">The string template containing the '{0}' placeholder</param>
+        /// <returns>Returns the integer value if found, otherwise null.</returns>
         public static int? ExtractFormattedStringInt(string text, string formatString)
         {
             if (string.IsNullOrEmpty(text))
