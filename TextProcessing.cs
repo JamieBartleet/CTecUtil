@@ -384,5 +384,24 @@ namespace CTecUtil
             }
             return result.ToString();
         }
+
+
+        public static int? ExtractFormattedStringInt(string text, string formatString)
+        {
+            if (string.IsNullOrEmpty(text))
+                return null;
+
+            var idx1 = formatString.IndexOf("{0}");
+            var idx2 = formatString.IndexOf("}");
+            if (idx1 > -1 && idx2 == idx1 + 2)
+            {
+                var startOfNum = text.Substring(idx1);
+                var split = startOfNum.Split(new char[] { ' ',',','.','-',':' });
+                if (int.TryParse(split[split.Length - 1], out var result))
+                    return result;
+            }
+
+            return null;
+        }
     }
 }
