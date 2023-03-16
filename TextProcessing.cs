@@ -392,20 +392,37 @@ namespace CTecUtil
         /// <param name="text">The text string to analyse</param>
         /// <param name="formatString">The string template containing the '{0}' placeholder</param>
         /// <returns>Returns the integer value if found, otherwise null.</returns>
-        public static int? ExtractFormattedStringInt(string text, string formatString)
+        public static int? ExtractIntFromFormattedText(string text, string formatString)
         {
             if (string.IsNullOrEmpty(text))
                 return null;
 
             var idx1 = formatString.IndexOf("{0}");
-            var idx2 = formatString.IndexOf("}");
-            if (idx1 > -1 && idx2 == idx1 + 2)
+            if (idx1 > -1)
             {
-                var startOfNum = text.Substring(idx1);
-                var split = startOfNum.Split(new char[] { ' ',',','.','-',':' });
-                if (int.TryParse(split[split.Length - 1], out var result))
+                var split = text.Substring(idx1).Split(new char[] { ' ',',','.','-',':' });
+                if (int.TryParse(split[0], out var result))
                     return result;
             }
+
+            return null;
+        }
+
+
+        /// <summary>
+        /// Attempts to retrieve the substring value from a formatted string, i.e. one built using string.Format and containing a '{0}' placeholder.
+        /// </summary>
+        /// <param name="text">The text string to analyse</param>
+        /// <param name="formatString">The string template containing the '{0}' placeholder</param>
+        /// <returns>Returns the integer value if found, otherwise null.</returns>
+        public static string ExtractStringFromFormattedText(string text, string formatString)
+        {
+            if (string.IsNullOrEmpty(text))
+                return null;
+
+            var idx1 = formatString.IndexOf("{0}");
+            if (idx1 > -1)
+                return text.Substring(idx1).Split(new char[] { ' ',',','.','-',':' })[0];
 
             return null;
         }
