@@ -42,7 +42,7 @@ namespace CTecUtil.UI
         }
 
 
-        internal string ProgressBarLegend { set => txtOperationName.Text = value; }
+        internal string ProgressBarLegend { set => txtOperationName.Text = value; get => txtOperationName.Text; }
 
         internal int ProgressBarOverallMax  { get; set; }
 

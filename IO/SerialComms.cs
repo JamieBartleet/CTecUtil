@@ -118,14 +118,17 @@ namespace CTecUtil.IO
 
 
         /// <summary>Use of this delegate allows house style message box to be used</summary>
-        public delegate void ErrorMessageHandler(string message);
+        public delegate void MessageHandler(string message);
 
         /// <summary>Delegate called when a command subqueue's requests have been completed</summary>
         public delegate void SubqueueCompletedHandler();
 
 
+        /// <summary>Set this to provide house style message box for any messages generated during serial comms</summary>
+        public static MessageHandler ShowMessage { get; set; }
+
         /// <summary>Set this to provide house style message box for any error messages generated during serial comms</summary>
-        public static ErrorMessageHandler ShowErrorMessage { get; set; }
+        public static MessageHandler ShowErrorMessage { get; set; }
 
 
         public static byte AckByte { get; set; }
@@ -269,9 +272,9 @@ namespace CTecUtil.IO
             //CTecUtil.Debug.WriteLine("---StartSendingCommandQueue() 01");
 
             //don't show progress bar for single-item queue (especially don't want to do that for firmware version request)
-            if (_commandQueue.TotalCommandCount < 2)
-                sendFirstCommandInQueue();
-            else
+            //if (_commandQueue.TotalCommandCount < 2)
+            //    sendFirstCommandInQueue();
+            //else
                 ShowProgressBarWindow(onStart, onEnd);
             //CTecUtil.Debug.WriteLine("---StartSendingCommandQueue() 02");
         }
@@ -859,6 +862,9 @@ namespace CTecUtil.IO
         private static Action _onStartProgress;
         private static OnFinishedHandler _onEndProgress;
 
+        private const int _timeoutSeconds = 10;
+        private const int _completionMessageTime = 500;
+
 
         internal static void ShowProgressBarWindow(Action onStart, OnFinishedHandler onEnd)
         {
@@ -878,31 +884,25 @@ namespace CTecUtil.IO
                 error(ex.Message, ex);
             }
         }
-
-        private static void hideProgressBarWindow()
-        {
-            CancelCommandQueue();
-            _progressBarWindow.Hide();
-            _onEndProgress?.Invoke(_queueWasCompleted);
-        }
-
-
-        private const int _timeoutSeconds = 10;
-
+        
 
         private static void progressBarThread()
         {
-            _numCommandsToProcess = _commandQueue.TotalCommandCount;
-            var commandsInSubqueue = _commandQueue.CommandsInCurrentSubqueue;
+            _numCommandsToProcess   = _commandQueue.TotalCommandCount;
+            var commandsInSubqueue  = _commandQueue.CommandsInCurrentSubqueue;
+            var commsDirection      = _commandQueue.Direction;
+            string currentCommsDesc = _commandQueue.SubqueueNames?.Count > 0 ? _commandQueue.SubqueueNames?[0] : "";
+
+            var startTime = DateTime.Now;
 
             Application.Current.Dispatcher.Invoke(new Action(() =>
             {
                 _onStartProgress?.Invoke();
 
                 //launch the progress bar window
-                _progressBarWindow.ProgressBarLegend = _commandQueue.OperationDesc;
-                _progressBarWindow.SubqueueCount = _commandQueue.SubqueueCount;
-                _progressBarWindow.ProgressBarOverallMax = _numCommandsToProcess;
+                _progressBarWindow.ProgressBarLegend      = _commandQueue.OperationDesc;
+                _progressBarWindow.SubqueueCount          = _commandQueue.SubqueueCount;
+                _progressBarWindow.ProgressBarOverallMax  = _numCommandsToProcess;
                 _progressBarWindow.ProgressBarSubqueueMax = commandsInSubqueue;
 
                 _progressBarWindow.Show(OwnerWindow);
@@ -955,9 +955,17 @@ namespace CTecUtil.IO
             }
 
             //hide progress window if it hasn't already done it itself
-            Application.Current.Dispatcher.Invoke(new Action(() => { hideProgressBarWindow(); }), DispatcherPriority.Normal);
-        }
-        #endregion
+            CancelCommandQueue();
+            Application.Current.Dispatcher.Invoke(new Action(() => { 
+                _progressBarWindow.Hide();
+                _onEndProgress?.Invoke(_queueWasCompleted);
+            }), DispatcherPriority.Normal);
 
+            //if comms finishes rapidly the progressbar window may not have had time to be shown, so show a message
+            if (DateTime.Now < startTime.AddMilliseconds(_completionMessageTime))
+                ShowMessage?.Invoke(string.Format(commsDirection == Direction.Upload ? Cultures.Resources.Comms_x_Upload_Complete : Cultures.Resources.Comms_x_Download_Complete, currentCommsDesc));
+        }
+
+        #endregion
     }
 }

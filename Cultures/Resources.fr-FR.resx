@@ -162,4 +162,10 @@
   <data name="File_Save_As" xml:space="preserve">
     <value>Enregistrer Sous...</value>
   </data>
+  <data name="Comms_x_Download_Complete" xml:space="preserve">
+    <value>{0} : téléchargement est terminé.</value>
+  </data>
+  <data name="Comms_x_Upload_Complete" xml:space="preserve">
+    <value>{0} : téléchargement est terminé.</value>
+  </data>
 </root>

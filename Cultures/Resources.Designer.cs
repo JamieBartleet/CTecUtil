@@ -106,6 +106,24 @@ namespace CTecUtil.Cultures {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}: download complete..
+        /// </summary>
+        public static string Comms_x_Download_Complete {
+            get {
+                return ResourceManager.GetString("Comms_x_Download_Complete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: upload complete..
+        /// </summary>
+        public static string Comms_x_Upload_Complete {
+            get {
+                return ResourceManager.GetString("Comms_x_Upload_Complete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid data was received from the panel..
         /// </summary>
         public static string Error_Checksum_Fail {
