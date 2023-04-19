@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows;
 using Microsoft.Win32;
 using CTecUtil.UI;
+using System.DirectoryServices;
 
 namespace CTecUtil.IO
 {
@@ -34,6 +35,16 @@ namespace CTecUtil.IO
         internal static string FileName { get => Path.GetFileName(FilePath); }
 
         protected static string dataFileDirectory() => string.IsNullOrEmpty(FilePath) ? Environment.CurrentDirectory : Path.GetDirectoryName(FilePath);
+
+
+        protected static string GetFilterString(string description, List<string> fileExts)
+        {
+            StringBuilder concat = new();
+            foreach (var e in fileExts)
+                concat.Append((concat.Length > 0 ? ";*" : "*") + e);
+            return description + " (" + concat + ")|" + concat;
+        }
+        protected static string GetFilterString(string description, string fileExt) => description + " (*" + fileExt + ")|*" + fileExt;
 
 
         public static bool OpenFile()
@@ -124,6 +135,17 @@ namespace CTecUtil.IO
             var ext = Path.GetExtension(filePath);
             var idx = filePath.LastIndexOf(ext);
             return filePath.Substring(0, idx) + JsonFileExt;
+        }
+
+
+        /// <summary>
+        /// Ensure FilePath has the given extension
+        /// </summary>
+        protected static string SetFileNameSuffix(string filePath, string extension)
+        {
+            var ext = Path.GetExtension(filePath);
+            var idx = filePath.LastIndexOf(ext);
+            return filePath.Substring(0, idx) + extension;
         }
 
     }
