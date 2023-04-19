@@ -130,16 +130,16 @@ namespace CTecUtil.IO
         /// <summary>
         /// Ensure FilePath's extension is .json
         /// </summary>
-        protected static string JsonFileName(string filePath)
-        {
-            var ext = Path.GetExtension(filePath);
-            var idx = filePath.LastIndexOf(ext);
-            return filePath.Substring(0, idx) + JsonFileExt;
-        }
+        //protected static string JsonFileName(string filePath)
+        //{
+        //    var ext = Path.GetExtension(filePath);
+        //    var idx = filePath.LastIndexOf(ext);
+        //    return filePath.Substring(0, idx) + JsonFileExt;
+        //}
 
 
         /// <summary>
-        /// Ensure FilePath has the given extension
+        /// Ensure FilePath has the given extension (replaces any pre-existing extension)
         /// </summary>
         protected static string SetFileNameSuffix(string filePath, string extension)
         {
