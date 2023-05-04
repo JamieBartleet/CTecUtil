@@ -21,17 +21,18 @@ namespace CTecUtil
         public static void InitConfigSettings(string productName)
         {
             _initialised = true;
-            Directory.CreateDirectory(_appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), _companyName));
-            _configFilePath = Path.Combine(_appDataFolder, productName + TextFile.JsonFileExt);
+            Directory.CreateDirectory(AppDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), _companyName));
+            _configFilePath = Path.Combine(AppDataFolder, productName + TextFile.JsonFileExt);
             readSettings();
         }
 
 
         private const string _companyName = "C-Tec";
         private static bool _initialised = false;
-        private static string _appDataFolder;
         private static string _configFilePath;
         private static ApplicationConfigData _config = new();
+        
+        public static string AppDataFolder { get; set; }
 
 
         /// <summary>Delegate to send notification when a recent files list has changed</summary>
