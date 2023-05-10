@@ -10,42 +10,39 @@ namespace CTecUtil.Comms
 {
     public class PipeClient
     {
-        public void Send(string SendStr, string PipeName, int TimeOut = 1000)
+        public void Send(string message, string pipeName, int timeOut = 1000)
         {
             try
             {
-                NamedPipeClientStream pipeStream = new NamedPipeClientStream(".", PipeName, PipeDirection.Out, PipeOptions.Asynchronous);
+                byte[] data = Encoding.UTF8.GetBytes(message);
 
-                // The connect function will indefinitely wait for the pipe to become available
-                // If that is not acceptable specify a maximum waiting time (in ms)
-                pipeStream.Connect(TimeOut);
-                //MessageBox.Show("[Client] Pipe connection established");
-
-                byte[] _buffer = Encoding.UTF8.GetBytes(SendStr);
-                pipeStream.BeginWrite(_buffer, 0, _buffer.Length, AsyncSend, pipeStream);
+                NamedPipeClientStream pipeStream = new NamedPipeClientStream(".", pipeName, PipeDirection.Out, PipeOptions.Asynchronous);
+                pipeStream.Connect(timeOut);
+                pipeStream.BeginWrite(data, 0, data.Length, AsyncSend, pipeStream);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Pipe Send Exception: " + ex.Message + "\n\n" + ex.ToString(), "Send");
+                //MessageBox.Show("Pipe Send Exception: " + ex.Message + "\n\n" + ex.ToString(), "Send");
+                Debug.WriteLine("PipeServer.Send - " + ex.Message);
             }
         }
 
-        private void AsyncSend(IAsyncResult iar)
+        private void AsyncSend(IAsyncResult asyncResult)
         {
             try
             {
-                // Get the pipe
-                NamedPipeClientStream pipeStream = (NamedPipeClientStream)iar.AsyncState;
+                NamedPipeClientStream pipeStream = (NamedPipeClientStream)asyncResult.AsyncState;
 
-                // End the write
-                pipeStream.EndWrite(iar);
+                //end the write
+                pipeStream.EndWrite(asyncResult);
                 pipeStream.Flush();
                 pipeStream.Close();
                 pipeStream.Dispose();
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message + "\n\n" + ex.ToString(), "AsyncSend");
+                //MessageBox.Show(ex.Message + "\n\n" + ex.ToString(), "AsyncSend");
+                Debug.WriteLine("PipeServer.AsyncSend - " + ex.Message);
             }
         }
     }

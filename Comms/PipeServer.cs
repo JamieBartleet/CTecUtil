@@ -11,23 +11,24 @@ namespace CTecUtil.Comms
     public class PipeServer
     {
         private string _pipeName;
+        private NamedPipeServerStream _pipeServer;
+
+        public delegate void PipeMessageHandler(string data);
+        public PipeMessageHandler ReceivePipeMessage;
 
 
         public void Listen(string PipeName)
         {
             try
             {
-                // Set to class level var so we can re-use in the async callback method
                 _pipeName = PipeName;
-                // Create the new async pipe 
-                NamedPipeServerStream pipeServer = new NamedPipeServerStream(PipeName, PipeDirection.In, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
-
-                // Wait for a connection
-                pipeServer.BeginWaitForConnection(new AsyncCallback(WaitForConnectionCallBack), pipeServer);
+                _pipeServer = new NamedPipeServerStream(PipeName, PipeDirection.In, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+                _pipeServer.BeginWaitForConnection(new AsyncCallback(WaitForConnectionCallBack), _pipeServer);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message + "\n\n" + ex.ToString(), "Listen");
+                //MessageBox.Show(ex.Message + "\n\n" + ex.ToString(), "Listen");
+                Debug.WriteLine("PipeServer.Listen - " + ex.Message);
             }
         }
 
@@ -39,43 +40,31 @@ namespace CTecUtil.Comms
         {
             lock (_lock)
             {
-                NamedPipeServerStream pipeServer = (NamedPipeServerStream)iar.AsyncState;
                 try
                 {
-                    // End waiting for the connection
-                    pipeServer.EndWaitForConnection(iar);
+                    _pipeServer.EndWaitForConnection(iar);
 
-                    byte[] buffer = new byte[255];
+                    //read the incoming message
+                    //NB: fixed buffer size
+                    var bufferSize = 1000;
+                    byte[] buffer = new byte[bufferSize];
+                    _pipeServer.Read(buffer, 0, bufferSize);
+                    ReceivePipeMessage?.Invoke(Encoding.UTF8.GetString(buffer, 0, buffer.Length));
 
-                    // Read the incoming message
-                    pipeServer.Read(buffer, 0, 255);
-
-                    // Convert byte buffer to string
-                    string stringData = Encoding.UTF8.GetString(buffer, 0, buffer.Length);
-                    //MessageBox.Show("Message received: " + stringData);
-
-                    // Pass message back to calling form
-                    PipeMessage?.Invoke(stringData);
-
-                    // Kill original server and create new wait server
-                    pipeServer.Flush();
-                    pipeServer.Close();
-                    pipeServer.Dispose();
-                    pipeServer = null;
-                    pipeServer = new NamedPipeServerStream(_pipeName, PipeDirection.In, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
-
-                    // Recursively wait for the connection again and again....
-                    pipeServer.BeginWaitForConnection(new AsyncCallback(WaitForConnectionCallBack), pipeServer);
+                    //start new wait server
+                    _pipeServer.Flush();
+                    _pipeServer.Close();
+                    _pipeServer.Dispose();
+                    _pipeServer = null;
+                    _pipeServer = new NamedPipeServerStream(_pipeName, PipeDirection.In, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+                    _pipeServer.BeginWaitForConnection(new AsyncCallback(WaitForConnectionCallBack), _pipeServer);
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message + "\n\n" + ex.ToString(), "WaitForConnectionCallBack");
-                    return;
+                    //MessageBox.Show(ex.Message + "\n\n" + ex.ToString(), "WaitForConnectionCallBack");
+                    Debug.WriteLine("PipeServer.WaitForConnectionCallBack - " + ex.Message);
                 }
             }
         }
-
-        public delegate void PipeMessager(string data);
-        public PipeMessager PipeMessage;
     }
 }
