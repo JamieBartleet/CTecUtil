@@ -9,11 +9,10 @@ using System.Management;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 
 namespace CTecUtil.IO
 {
-    //ref: https://stackoverflow.com/questions/10550635/new-com-port-available-event
-
     /// <summary>
     /// 
     /// </summary>
@@ -21,56 +20,64 @@ namespace CTecUtil.IO
     [PartCreationPolicy(CreationPolicy.Shared)]
     public sealed class SerialPortWatcher : IDisposable
     {
-        public SerialPortWatcher(ObservableCollection<string> ports)
+        public SerialPortWatcher()
         {
             _taskScheduler = TaskScheduler.FromCurrentSynchronizationContext();
-            _comPorts = ports;
+            _comPorts = new();
 
             WqlEventQuery query = new WqlEventQuery("SELECT * FROM Win32_DeviceChangeEvent");
 
             _watcher = new ManagementEventWatcher(query);           
-            _watcher.EventArrived += (sender, eventArgs) => CheckForNewPorts(eventArgs);
-            _watcher.Start();       
+            _watcher.EventArrived += (sender, eventArgs) => checkForNewPorts(eventArgs);
+            _watcher.Start();
         }
         
 
-        private ObservableCollection<string> _comPorts;
-
+        private List<string> _comPorts;
         private ManagementEventWatcher _watcher;
         private TaskScheduler _taskScheduler;
 
+        public delegate void PortsChangedHandler(List<string> ports);
+        public PortsChangedHandler PortsChanged;
 
-        private void CheckForNewPorts(EventArrivedEventArgs args)
+
+        private void checkForNewPorts(EventArrivedEventArgs args)
         {
             // do it async so it is performed in the UI thread if this class has been created in the UI thread
-            Task.Factory.StartNew(CheckForNewPortsAsync, CancellationToken.None, TaskCreationOptions.None, _taskScheduler);
+            Task.Factory.StartNew(checkForNewPortsAsync, CancellationToken.None, TaskCreationOptions.None, _taskScheduler);
         }
 
-        private void CheckForNewPortsAsync()
+
+        private static object _lock = new();
+
+        private void checkForNewPortsAsync()
         {
-            IEnumerable<string> ports = SerialPort.GetPortNames().OrderBy(s => s);
-
-            foreach (string comPort in _comPorts)
-                if (!ports.Contains(comPort))
-                    _comPorts.Remove(comPort);
-
-            foreach (var port in ports)
-                if (!_comPorts.Contains(port))
-                    AddPort(port);
-        }
-
-        private void AddPort(string port)
-        {
-            for (int j = 0; j < _comPorts.Count; j++)
+            lock (_lock)
             {
-                if (port.CompareTo(_comPorts[j]) < 0)
-                {
-                    _comPorts.Insert(j, port);
-                    break;
-                }
-            }
+                IEnumerable<string> ports = SerialPort.GetPortNames().OrderBy(s => s);
 
+                try
+                {
+                    foreach (string comPort in _comPorts)
+                        if (!ports.Contains(comPort))
+                            _comPorts.Remove(comPort);
+                }
+                catch (InvalidOperationException) { }
+
+                try
+                {
+                    foreach (var port in ports)
+                        if (!_comPorts.Contains(port))
+                            _comPorts.Add(port);
+                    
+                    _comPorts.Sort();
+                }
+                catch (InvalidOperationException) { }
+
+                PortsChanged?.Invoke(_comPorts);
+            }
         }
+
 
         #region IDisposable Members
 
