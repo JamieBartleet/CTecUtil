@@ -170,11 +170,15 @@ namespace CTecUtil.IO
         /// <summary>Timer for pinging the panel every few seconds</summary>
         private static System.Timers.Timer _pingTimer;
 
+        private static bool             _disconnected         = false;
         private static ConnectionStatus _connectionStatus     = ConnectionStatus.Unknown;
         private static ConnectionStatus _prevConnectionStatus = ConnectionStatus.Unknown;
         private static byte[] _pingCommand;
         private static byte[] _checkFirmwareVersionCommand;
         private static byte[] _checkWriteableCommand;
+
+        public static ConnectionStatus Status => _connectionStatus;
+        public static bool IsConnected => _connectionStatus switch { ConnectionStatus.Listening or ConnectionStatus.ConnectedWriteable or ConnectionStatus.ConnectedReadOnly => true, _ => false };
 
         private static ConnectionStatus setConnectionStatus(ConnectionStatus status) => _connectionStatus = status;
 
@@ -207,6 +211,9 @@ namespace CTecUtil.IO
 
         private static void sendPing(object sender, ElapsedEventArgs e)
         {
+            if (_disconnected)
+                return;
+
             //only ping the panel if there is no active upload/download
             if (_commandQueue.TotalCommandCount == 0)
             {
@@ -217,6 +224,9 @@ namespace CTecUtil.IO
 
         private static void sendFirmwareVersionCheck()
         {
+            if (_disconnected)
+                return;
+
             //only ping the panel if there is no active upload/download
             if (_checkFirmwareVersionCommand is not null)
                 if (_commandQueue.SubqueueCount == 0)
@@ -225,6 +235,9 @@ namespace CTecUtil.IO
 
         private static void sendWriteableCheck()
         {
+            if (_disconnected)
+                return;
+
             //only ping the panel if there is no active upload/download
             if (_checkWriteableCommand is not null)
                 if (_commandQueue.SubqueueCount == 0)
@@ -267,6 +280,9 @@ namespace CTecUtil.IO
 
         public static void StartSendingCommandQueue(Action onStart, OnFinishedHandler onEnd)
         {
+            if (_disconnected)
+                return;
+
             //_transferInProgress = true;
             _queueWasCompleted = false;
             //CTecUtil.Debug.WriteLine("---StartSendingCommandQueue() 01");
@@ -285,6 +301,9 @@ namespace CTecUtil.IO
 
         private static void sendFirstCommandInQueue()
         {
+            if (_disconnected)
+                return;
+
             //CTecUtil.Debug.WriteLine("SendFirstCommandInQueue()   SubqueueCount " + _commandQueue.SubqueueCount);
 
             Application.Current.Dispatcher.Invoke(new Action(() =>
@@ -299,6 +318,9 @@ namespace CTecUtil.IO
 
         private static void sendNextCommandInQueue()
         {
+            if (_disconnected)
+                return;
+
             _progressOverall++;
             _progressWithinSubqueue++;
             if (_commandQueue.TotalCommandCount > 0)
@@ -316,6 +338,9 @@ namespace CTecUtil.IO
 
         private static void resendCommand()
         {
+            if (_disconnected)
+                return;
+
             var cmd = _commandQueue.Peek();
             if (cmd is not null)
             {
@@ -355,6 +380,10 @@ namespace CTecUtil.IO
 
         internal static void SendData(Command command)
         {
+            if (_disconnected)
+                return;
+
+
             //CTecUtil.Debug.WriteLine("SendData() - command=" + command?.ToString());
 
             lock (_portLock)
@@ -394,16 +423,8 @@ namespace CTecUtil.IO
 
                         try
                         {
-                            if (_port is null)
-                            {
-                                CTecUtil.Debug.WriteLine("SendData() - port was null");
-                                getNewSerialPort();
-                            }
-                            if (_port?.IsOpen == false)
-                            {
-                                CTecUtil.Debug.WriteLine("SendData() - port was closed");
-                                _port?.Open();
-                            }
+                            //open port if required
+                            openPort();
 
                             //_port.DiscardInBuffer();
                             //_port.DiscardOutBuffer();
@@ -787,25 +808,47 @@ namespace CTecUtil.IO
 
 
         #region port
+        private static bool openPort()
+        {
+            if (_port is null)
+            {
+                CTecUtil.Debug.WriteLine("OpenPort() - port was null");
+                getNewSerialPort();
+            }
+
+            if (_port?.IsOpen == false)
+            {
+                CTecUtil.Debug.WriteLine("OpenPort() - port was closed");
+                _port?.Open();
+            }
+
+            return _port?.IsOpen == true;
+        }
+
         /// <summary>
         /// Discard any pending commands and close the serial port
         /// </summary>
-        public static bool ClosePort()
+        private static bool ClosePort()
         {
             try
             {
                 CTecUtil.Debug.WriteLine("ClosePort()");
                 CancelCommandQueue();
 
-                if (_port?.IsOpen == true)
+                lock (_portLock)
                 {
-                    GC.SuppressFinalize(_port.BaseStream);
-                    try { _port.Close(); } catch { }
+                    if (_port?.IsOpen == true)
+                    {
+                        GC.SuppressFinalize(_port.BaseStream);
+                        try
+                        { _port.Close(); }
+                        catch { }
 
-                    //pause to allow port's internal threads to terminate per MS documentation (though they dont' specify a time)
-                    //- we would typically get an UnauthorizedAccessException if we try to open it immediately after closing
-                    Thread.Sleep(666);
-                    _port = null;
+                        //pause to allow port's internal threads to terminate per MS documentation (though they dont' specify a time)
+                        //- we would typically get an UnauthorizedAccessException if we try to open it immediately after closing
+                        Thread.Sleep(666);
+                        _port = null;
+                    }
                 }
                 return true;
             }
@@ -814,6 +857,20 @@ namespace CTecUtil.IO
                 CTecUtil.Debug.WriteLine("  **Exception** (ClosePort) " + ex.Message);
                 return false;
             }
+        }
+
+
+        public static bool Connect()
+        {
+            _disconnected = false;
+            return openPort();
+        }
+
+        public static bool Disconnect()
+        {
+            ClosePort();
+            _disconnected = true;
+            return true;
         }
 
 
