@@ -828,7 +828,7 @@ namespace CTecUtil.IO
         /// <summary>
         /// Discard any pending commands and close the serial port
         /// </summary>
-        private static bool ClosePort()
+        public static bool ClosePort()
         {
             try
             {
