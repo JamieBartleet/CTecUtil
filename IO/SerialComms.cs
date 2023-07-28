@@ -285,14 +285,8 @@ namespace CTecUtil.IO
 
             //_transferInProgress = true;
             _queueWasCompleted = false;
-            //CTecUtil.Debug.WriteLine("---StartSendingCommandQueue() 01");
 
-            //don't show progress bar for single-item queue (especially don't want to do that for firmware version request)
-            //if (_commandQueue.TotalCommandCount < 2)
-            //    sendFirstCommandInQueue();
-            //else
-                ShowProgressBarWindow(onStart, onEnd);
-            //CTecUtil.Debug.WriteLine("---StartSendingCommandQueue() 02");
+            ShowProgressBarWindow(onStart, onEnd);
         }
 
 
@@ -383,52 +377,20 @@ namespace CTecUtil.IO
             if (_disconnected)
                 return;
 
-
-            //CTecUtil.Debug.WriteLine("SendData() - command=" + command?.ToString());
-
             lock (_portLock)
             {
                 try
                 {
-                    //if (_port is not null && _port.IsOpen)
-                    //{
-                    //    do
-                    //    {
-                    //        //discard stray incoming data
-                    //        Thread.Sleep(20);
-                    //        var bytesToRead = _port.BytesToRead;
-                    //        if (bytesToRead > 0)
-                    //        {
-                    //            CTecUtil.Debug.WriteLine("SendData() - discard=" + bytesToRead);
-                    //            byte[] buffer = new byte[bytesToRead];
-                    //            _port.Read(buffer, 0, bytesToRead);
-                    //            Thread.Sleep(20);
-                    //        }
-                    //    } while (_port.BytesToRead > 0);
-                    //}
-
                     _lastException = null;
 
                     if (command is not null && command.CommandData is not null)
                     {
                         command.Tries++;
-                        //CTecUtil.Debug.WriteLine("SendData() - index=" + command.Index + " Tries=" + command.Tries);
-
-                        //if (command.Tries > 3)
-                        //{
-                        //    CTecUtil.Debug.WriteLine("SendData() --------------------------------------- close port ---------------------------------------");
-                        //    _port?.Close();
-                        //    //ClosePort();
-                        //}
 
                         try
                         {
-                            //open port if required
+                            //check & open port if required
                             openPort();
-
-                            //_port.DiscardInBuffer();
-                            //_port.DiscardOutBuffer();
-                            //CTecUtil.Debug.WriteLine("SendData() - write data to port");
                             _port?.Write(command.CommandData, 0, command.CommandData.Length);
                         }
                         catch (Exception ex)
@@ -483,7 +445,7 @@ namespace CTecUtil.IO
         }
 
 
-        public static CommandQueue TheQueue { get => _commandQueue; }
+        //public static CommandQueue TheQueue { get => _commandQueue; }
 
         private static async void responseDataReceived(SerialPort port)
         {
@@ -780,13 +742,20 @@ namespace CTecUtil.IO
         }
 
 
-        public static byte CalcChecksum(byte[] data, bool outgoing = false, bool check = false)
+        /// <summary>
+        /// Returns the checksum for the given data packet.  Takes into account 
+        /// </summary>
+        /// <param name="packet">The data for which to calculate the checksum</param>
+        /// <param name="outgoing"></param>
+        /// <param name="checkOnly">If true calculates the checksum excluding the final byte</param>
+        /// <returns></returns>
+        public static byte CalcChecksum(byte[] packet, bool outgoing = false, bool checkOnly = false)
         {
             var startByte = outgoing ? 1 : 0;
-            var checkLength = check ? data.Length - 1 : data.Length;
+            var checkLength = checkOnly ? packet.Length - 1 : packet.Length;
             int checksumCalc = 0;
             for (int i = startByte; i < checkLength; i++)
-                checksumCalc += data[i];
+                checksumCalc += packet[i];
             return (byte)(checksumCalc & 0xff);
         }
 
@@ -794,6 +763,9 @@ namespace CTecUtil.IO
         private static bool checkChecksum(byte[] data) => data.Length > 0 && CalcChecksum(data, false, true) == data[^1];
 
 
+        /// <summary>
+        /// Cancel queued commands and notify user
+        /// </summary>
         private static void error(string message, Exception ex = null)
         {
             CTecUtil.Debug.WriteLine("  **Exception** ex: '" + ex?.Message + "'");
@@ -860,17 +832,27 @@ namespace CTecUtil.IO
         }
 
 
+        /// <summary>
+        /// Open the serial port
+        /// </summary>
         public static bool Connect()
         {
             _disconnected = false;
             return openPort();
         }
 
+
+        /// <summary>
+        /// Cancel any queued commands, close the serial port and stop further activity until Connect() is called
+        /// </summary>
         public static bool Disconnect()
         {
-            ClosePort();
-            _disconnected = true;
-            return true;
+            if (ClosePort());
+            {
+                _disconnected = true;
+                return true;
+            }
+            return false;
         }
 
 
