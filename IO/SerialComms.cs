@@ -173,9 +173,14 @@ namespace CTecUtil.IO
         private static bool             _disconnected         = false;
         private static ConnectionStatus _connectionStatus     = ConnectionStatus.Unknown;
         private static ConnectionStatus _prevConnectionStatus = ConnectionStatus.Unknown;
-        private static byte[] _pingCommand;
-        private static byte[] _checkFirmwareVersionCommand;
-        private static byte[] _checkWriteableCommand;
+        //private static byte[] _pingCommand;
+        //private static byte[] _checkFirmwareVersionCommand;
+        //private static byte[] _checkWriteableCommand;
+
+        public delegate byte[] Pinger();
+        public Pinger  PingCommand;
+        public Pinger  CheckFirmwareCommand;
+        public Pinger  CheckWriteableCommand;
 
         public static ConnectionStatus Status => _connectionStatus;
         public static bool IsConnected => _connectionStatus switch { ConnectionStatus.Listening or ConnectionStatus.ConnectedWriteable or ConnectionStatus.ConnectedReadOnly => true, _ => false };
