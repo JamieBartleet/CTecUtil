@@ -135,32 +135,79 @@ namespace CTecUtil.IO
         public static byte NakByte { get; set; }
 
 
-        private static bool _listenerMode;
+        //private static bool _listenerMode;
 
         /// <summary>
         /// Set to true when the EventLogViewer page is active so that the correct ping command is sent to the panel
         /// </summary>
-        public static bool ListenerMode
-        {
-            get => _listenerMode;
-            set
-            {
-                var changedMode = _listenerMode != value;
-                _listenerMode = value;
-                if (changedMode)
-                {
-                    if (ListenerMode)
-                        _prevConnectionStatus = _connectionStatus;
-                    NotifyConnectionStatus?.Invoke(setConnectionStatus(_listenerMode ? ConnectionStatus.Listening : _prevConnectionStatus));
-                }
-            }
-        }
+        //public static bool ListenerMode
+        //{
+        //    get => _listenerMode;
+        //    set
+        //    {
+        //        var changedMode = _listenerMode != value;
+        //        _listenerMode = value;
+        //        if (changedMode)
+        //        {
+        //            if (ListenerMode)
+        //                _prevConnectionStatus = _connectionStatus;
+        //            NotifyConnectionStatus?.Invoke(setConnectionStatus(_listenerMode ? ConnectionStatus.Listening : _prevConnectionStatus));
+        //        }
+        //    }
+        //}
 
 
         public static bool TransferInProgress() => _commandQueue.TotalCommandCount > 0;
 
 
         #region ping
+        public enum PingModes
+        {
+            NoPing,
+            KeepAlive,
+            Logging
+        }
+
+
+        private static PingModes _pingMode;
+        private static bool _pingStarted;
+
+        public static PingModes PingMode
+        {
+            get => _pingMode;
+            set
+            {
+                var changedMode = _pingMode != value;
+
+                if ((_pingMode = value) != PingModes.NoPing)
+                {
+                    if (!_pingStarted)
+                    {
+                        _pingTimer = new()
+                        {
+                            AutoReset = true,
+                            Enabled = true,
+                            Interval = _pingTimerPeriod
+                        };
+                        _pingTimer.Elapsed += new(sendPing);
+                        _pingStarted = true;
+                    }
+                }
+                else
+                {
+                    _pingTimer?.Stop();
+                    _pingStarted = false;
+                }
+
+                if (changedMode)
+                {
+                    if (_pingMode == PingModes.Logging)
+                        _prevConnectionStatus = _connectionStatus;
+                    NotifyConnectionStatus?.Invoke(setConnectionStatus(value == PingModes.Logging ? ConnectionStatus.Listening : _prevConnectionStatus));
+                }
+            }
+        }
+
         public delegate bool FirmwareVersionNotifier(byte[] firmwareResponse);
         public static FirmwareVersionNotifier NotifyFirmwareVersion { get; set; }
 
@@ -178,41 +225,42 @@ namespace CTecUtil.IO
         //private static byte[] _checkWriteableCommand;
 
         public delegate byte[] Pinger();
-        public Pinger  PingCommand;
-        public Pinger  CheckFirmwareCommand;
-        public Pinger  CheckWriteableCommand;
-
+        public static Pinger  PingCommand;
+        public static Pinger  LoggingModePingCommand;
+        public static Pinger  CheckFirmwareCommand;
+        public static Pinger  CheckWriteableCommand;
+            
         public static ConnectionStatus Status => _connectionStatus;
         public static bool IsConnected => _connectionStatus switch { ConnectionStatus.Listening or ConnectionStatus.ConnectedWriteable or ConnectionStatus.ConnectedReadOnly => true, _ => false };
 
         private static ConnectionStatus setConnectionStatus(ConnectionStatus status) => _connectionStatus = status;
 
-        public static void SetPingCommands(byte[] pingCommand, byte[] checkFirmwareVersionCommand = null, byte[] checkWriteableCommand = null)
-        {
-            if (pingCommand is not null)
-            {
-                var start = _pingCommand is null;
-                _pingCommand                 = pingCommand;
-                _checkFirmwareVersionCommand = checkFirmwareVersionCommand;
-                _checkWriteableCommand       = checkWriteableCommand;
+        //public static void SetPingCommands(byte[] pingCommand, byte[] checkFirmwareVersionCommand = null, byte[] checkWriteableCommand = null)
+        //{
+        //    if (pingCommand is not null)
+        //    {
+        //        var start = _pingCommand is null;
+        //        _pingCommand = pingCommand;
+        //        _checkFirmwareVersionCommand = checkFirmwareVersionCommand;
+        //        _checkWriteableCommand = checkWriteableCommand;
 
-                if (start)
-                {
-                    _pingTimer = new()
-                    {
-                        AutoReset = true,
-                        Enabled = true,
-                        Interval = _pingTimerPeriod
-                    };
-                    _pingTimer.Elapsed += new(sendPing);
-                }
-            }
-            else
-            {
-                _pingTimer?.Stop();
-                _pingCommand = null;
-            }
-        }
+        //        if (start)
+        //        {
+        //            _pingTimer = new()
+        //            {
+        //                AutoReset = true,
+        //                Enabled = true,
+        //                Interval = _pingTimerPeriod
+        //            };
+        //            _pingTimer.Elapsed += new(sendPing);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        _pingTimer?.Stop();
+        //        _pingCommand = null;
+        //    }
+        //}
 
         private static void sendPing(object sender, ElapsedEventArgs e)
         {
@@ -222,8 +270,12 @@ namespace CTecUtil.IO
             //only ping the panel if there is no active upload/download
             if (_commandQueue.TotalCommandCount == 0)
             {
-                //CTecUtil.Debug.WriteLine("PING");
-                SendData(new Command() { CommandData = _pingCommand });
+                //SendData(new Command() { CommandData = _pingCommand });
+                switch (PingMode)
+                {
+                    case PingModes.KeepAlive: SendData(new Command() { CommandData = PingCommand?.Invoke() }); break;
+                    case PingModes.Logging: SendData(new Command() { CommandData = LoggingModePingCommand?.Invoke() }); break;
+                }
             }
         }
 
@@ -233,9 +285,11 @@ namespace CTecUtil.IO
                 return;
 
             //only ping the panel if there is no active upload/download
-            if (_checkFirmwareVersionCommand is not null)
-                if (_commandQueue.SubqueueCount == 0)
-                    SendData(new Command() { CommandData = _checkFirmwareVersionCommand });
+            //if (_checkFirmwareVersionCommand is not null)
+            //    if (_commandQueue.SubqueueCount == 0)
+            //        SendData(new Command() { CommandData = _checkFirmwareVersionCommand });
+            if (_commandQueue.SubqueueCount == 0)
+                SendData(new Command() { CommandData = CheckFirmwareCommand?.Invoke() });
         }
 
         private static void sendWriteableCheck()
@@ -244,9 +298,11 @@ namespace CTecUtil.IO
                 return;
 
             //only ping the panel if there is no active upload/download
-            if (_checkWriteableCommand is not null)
-                if (_commandQueue.SubqueueCount == 0)
-                    SendData(new Command() { CommandData = _checkWriteableCommand });
+            //if (_checkWriteableCommand is not null)
+            //    if (_commandQueue.SubqueueCount == 0)
+            //        SendData(new Command() { CommandData = _checkWriteableCommand });
+            if (_commandQueue.SubqueueCount == 0)
+                SendData(new Command() { CommandData = CheckWriteableCommand?.Invoke() });
         }
         #endregion
 
@@ -431,7 +487,8 @@ namespace CTecUtil.IO
 
                     _responseTimer.Start(_responseTimerPeriod);
 
-                    if (ListenerMode)
+                    //if (ListenerMode)
+                    if (PingMode == PingModes.Logging)
                         listenerDataReceived(port);
                     else
                         responseDataReceived(port);
@@ -725,9 +782,12 @@ namespace CTecUtil.IO
         private static bool isAck(byte data) => data == AckByte;
         private static bool isNak(byte data) => data == NakByte;
 
-        private static bool isPingResponse(byte[] data)           => data is not null && data.Length > 0 && data[0] == _pingCommand?[_pingCommand.Length - 3];
-        private static bool isCheckFirmwareResponse(byte[] data)  => data is not null && _checkFirmwareVersionCommand is not null && data.Length > 0 && data[0] == _checkFirmwareVersionCommand[_checkFirmwareVersionCommand.Length - 3];
-        private static bool isCheckWriteableResponse(byte[] data) => data is not null && _checkWriteableCommand is not null && data.Length > 0 && data[0] == _checkWriteableCommand[_checkWriteableCommand.Length - 3];
+        //private static bool isPingResponse(byte[] data)           => data is not null && data.Length > 0 && data[0] == _pingCommand?[_pingCommand.Length - 3];
+        //private static bool isCheckFirmwareResponse(byte[] data)  => data is not null && _checkFirmwareVersionCommand is not null && data.Length > 0 && data[0] == _checkFirmwareVersionCommand[_checkFirmwareVersionCommand.Length - 3];
+        //private static bool isCheckWriteableResponse(byte[] data) => data is not null && _checkWriteableCommand is not null && data.Length > 0 && data[0] == _checkWriteableCommand[_checkWriteableCommand.Length - 3];
+        private static bool isPingResponse(byte[] data)           => data is not null && data.Length > 0 && data[0] == PingCommand?.Invoke()?[^3];
+        private static bool isCheckFirmwareResponse(byte[] data)  => data is not null && data.Length > 0 && data[0] == CheckFirmwareCommand?.Invoke()?[^3];
+        private static bool isCheckWriteableResponse(byte[] data) => data is not null && data.Length > 0 && data[0] == CheckWriteableCommand?.Invoke()?[^3];
         #endregion
 
 
