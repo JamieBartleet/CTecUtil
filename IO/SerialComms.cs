@@ -9,7 +9,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows;
+using System.Windows.Markup;
 using System.Windows.Threading;
+using CTecUtil;
 using CTecUtil.UI;
 using static CTecUtil.IO.CommsTimer;
 
@@ -165,7 +167,7 @@ namespace CTecUtil.IO
         {
             NoPing,
             KeepAlive,
-            Logging
+            Listening
         }
 
 
@@ -177,6 +179,11 @@ namespace CTecUtil.IO
             get => _pingMode;
             set
             {
+                if (PingCommand is null)            throw new NotImplementedException("SerialComms.PingCommand has not been initialised");
+                if (LoggingModePingCommand is null) throw new NotImplementedException("SerialComms.LoggingModePingCommand has not been initialised");
+                if (CheckFirmwareCommand is null)   throw new NotImplementedException("SerialComms.CheckFirmwareCommand has not been initialised");
+                if (CheckFirmwareCommand is null)   throw new NotImplementedException("SerialComms.CheckFirmwareCommand has not been initialised");
+
                 var changedMode = _pingMode != value;
 
                 if ((_pingMode = value) != PingModes.NoPing)
@@ -201,9 +208,9 @@ namespace CTecUtil.IO
 
                 if (changedMode)
                 {
-                    if (_pingMode == PingModes.Logging)
+                    if (_pingMode == PingModes.Listening)
                         _prevConnectionStatus = _connectionStatus;
-                    NotifyConnectionStatus?.Invoke(setConnectionStatus(value == PingModes.Logging ? ConnectionStatus.Listening : _prevConnectionStatus));
+                    NotifyConnectionStatus?.Invoke(setConnectionStatus(value == PingModes.Listening ? ConnectionStatus.Listening : _prevConnectionStatus));
                 }
             }
         }
@@ -224,6 +231,9 @@ namespace CTecUtil.IO
         //private static byte[] _checkFirmwareVersionCommand;
         //private static byte[] _checkWriteableCommand;
 
+        /// <summary>
+        /// Delegate for getting the current ping command.<br/>
+        /// </summary>
         public delegate byte[] Pinger();
         public static Pinger  PingCommand;
         public static Pinger  LoggingModePingCommand;
@@ -274,7 +284,7 @@ namespace CTecUtil.IO
                 switch (PingMode)
                 {
                     case PingModes.KeepAlive: SendData(new Command() { CommandData = PingCommand?.Invoke() }); break;
-                    case PingModes.Logging: SendData(new Command() { CommandData = LoggingModePingCommand?.Invoke() }); break;
+                    case PingModes.Listening: SendData(new Command() { CommandData = LoggingModePingCommand?.Invoke() }); break;
                 }
             }
         }
@@ -359,7 +369,7 @@ namespace CTecUtil.IO
             if (_disconnected)
                 return;
 
-            //CTecUtil.Debug.WriteLine("SendFirstCommandInQueue()   SubqueueCount " + _commandQueue.SubqueueCount);
+            //Debug.WriteLine("SendFirstCommandInQueue()   SubqueueCount " + _commandQueue.SubqueueCount);
 
             Application.Current.Dispatcher.Invoke(new Action(() =>
             {
@@ -381,12 +391,12 @@ namespace CTecUtil.IO
             if (_commandQueue.TotalCommandCount > 0)
             {
                 SendData(_commandQueue.Peek());
-                //CTecUtil.Debug.WriteLine("SendNextCommandInQueue() - ...command sent");
+                //Debug.WriteLine("SendNextCommandInQueue() - ...command sent");
             }
             else
             {
                 _queueWasCompleted = true;
-                CTecUtil.Debug.WriteLine("SendNextCommandInQueue() - queue was completed");
+                Debug.WriteLine("SendNextCommandInQueue() - queue was completed");
             }
         }
 
@@ -417,7 +427,7 @@ namespace CTecUtil.IO
                 }
                 else
                 {
-                    CTecUtil.Debug.WriteLine("resendCommand() - index=" + cmd.Index);
+                    Debug.WriteLine("resendCommand() - index=" + cmd.Index);
                     if (_port is not null & _port.IsOpen)
                     {
                         _port?.DiscardOutBuffer();
@@ -462,7 +472,7 @@ namespace CTecUtil.IO
                 }
                 catch (Exception ex)
                 {
-                    CTecUtil.Debug.WriteLine("  **Exception** (SendData) " + ex.Message);
+                    Debug.WriteLine("  **Exception** (SendData) " + ex.Message);
                 }
             }
         }
@@ -473,7 +483,7 @@ namespace CTecUtil.IO
         /// </summary>
         private static void dataReceived(object sender, SerialDataReceivedEventArgs e)
         {
-            //CTecUtil.Debug.WriteLine("dataReceived()");
+            //Debug.WriteLine("dataReceived()");
 
             //lock (_portLock)
             {
@@ -481,28 +491,28 @@ namespace CTecUtil.IO
                 {
                     if (sender is not SerialPort port)
                     {
-                        //CTecUtil.Debug.WriteLine("dataReceived() - sender is not SerialPort");
+                        //Debug.WriteLine("dataReceived() - sender is not SerialPort");
                         return;
                     }
 
                     _responseTimer.Start(_responseTimerPeriod);
 
                     //if (ListenerMode)
-                    if (PingMode == PingModes.Logging)
+                    if (PingMode == PingModes.Listening)
                         listenerDataReceived(port);
                     else
                         responseDataReceived(port);
                 }
                 catch (Exception ex)
                 {
-                    CTecUtil.Debug.WriteLine("  **Exception** (dataReceived) " + ex.Message);
+                    Debug.WriteLine("  **Exception** (dataReceived) " + ex.Message);
                 }
             }
         }
 
         public static void errorReceived(object sender, System.IO.Ports.SerialErrorReceivedEventArgs e)
         {
-            CTecUtil.Debug.WriteLine("!!!! errorReceived(" + e.ToString() + ") !!!!");
+            Debug.WriteLine("!!!! errorReceived(" + e.ToString() + ") !!!!");
             resendCommand();
         }
 
@@ -515,11 +525,11 @@ namespace CTecUtil.IO
             {
                 var incoming = readIncomingResponse(port);
 
-                //CTecUtil.Debug.WriteLine("responseDataReceived() - incoming=" + ByteArrayProcessing.ByteArrayToHexString(incoming));
+                //Debug.WriteLine("responseDataReceived() - incoming=" + ByteArrayProcessing.ByteArrayToHexString(incoming));
 
                 if (isPingResponse(incoming))
                 {
-                    CTecUtil.Debug.WriteLine("responseDataReceived() - ping response");
+                    //Debug.WriteLine("responseDataReceived() - ping response");
                     
                     //status is one of the Connected statuses: if not already thought to be writeable set it to read-only
                     if (_connectionStatus != ConnectionStatus.ConnectedWriteable)
@@ -544,12 +554,12 @@ namespace CTecUtil.IO
                 }
                 else if (isNak(incoming))
                 {
-                    CTecUtil.Debug.WriteLine("responseDataReceived() - NAK");
+                    Debug.WriteLine("responseDataReceived() - NAK");
                     resendCommand();
                 }
                 else if (isAck(incoming))
                 {
-                    CTecUtil.Debug.WriteLine("responseDataReceived() - ACK");
+                    Debug.WriteLine("responseDataReceived() - ACK");
 
                     if (_commandQueue.Dequeue())
                     {
@@ -566,42 +576,43 @@ namespace CTecUtil.IO
                 else if (_commandQueue.TotalCommandCount > 0)
                 {
                     var ok = false;
-
+Debug.WriteLine("SerialComms.responseDataReceived(" + ByteArrayProcessing.ByteArrayToHexString(incoming) + ")");
+                    
                     NotifyConnectionStatus?.Invoke(_connectionStatus);
                     var cmd = _commandQueue.Peek();
                     //if (cmd is null)
-                    //    CTecUtil.Debug.WriteLine("responseDataReceived() - cmd is null");
+                    //    Debug.WriteLine("responseDataReceived() - cmd is null");
                     //else
-                    //    CTecUtil.Debug.WriteLine("responseDataReceived() - cmd=" + cmd.ToString());
+                    //    Debug.WriteLine("responseDataReceived() - cmd=" + cmd.ToString());
 
                     if (cmd is not null)
                     {
                         var savedQueueId = _commandQueue.Id;
-                        CTecUtil.Debug.WriteLine("responseDataReceived() - _commandQueue.Id=" + _commandQueue.Id);
+                        Debug.WriteLine("responseDataReceived() - _commandQueue.Id=" + _commandQueue.Id);
 
                         if (incoming is not null)
                         {
-                            //CTecUtil.Debug.WriteLine("responseDataReceived() - incoming=" + CTecUtil.ByteArrayProcessing.ByteArrayToHexString(incoming));
-                            //CTecUtil.Debug.WriteLine("responseDataReceived() - send response to data receiver");
+                            //Debug.WriteLine("responseDataReceived() - incoming=" + ByteArrayProcessing.ByteArrayToHexString(incoming));
+                            //Debug.WriteLine("responseDataReceived() - send response to data receiver");
                             //send response to data receiver
                             await Task.Run(new Action(() =>
                             {
                                 if ((cmd = _commandQueue.Peek()) is not null)
                                     ok = cmd.DataReceiver?.Invoke(incoming, cmd.Index) == true;
                             }));
-                            //CTecUtil.Debug.WriteLine("responseDataReceived() - ...sent");
+                            //Debug.WriteLine("responseDataReceived() - ...sent");
 
-                            CTecUtil.Debug.WriteLine("responseDataReceived() - progress: subq=" + _progressWithinSubqueue + " o/a=" + _progressOverall + "/" + _numCommandsToProcess);
+                            Debug.WriteLine("responseDataReceived() - progress: subq=" + _progressWithinSubqueue + " o/a=" + _progressOverall + "/" + _numCommandsToProcess);
                         }
 
 
                         if (ok)
                         {
-                            //CTecUtil.Debug.WriteLine("responseDataReceived() - ok");
+                            //Debug.WriteLine("responseDataReceived() - ok");
                             //NB: cmd.DataReceiver may have started a new command queue, so check the Id before dequeueing
                             if (_commandQueue.Id == savedQueueId && _commandQueue.Dequeue(cmd))
                             {
-                                //CTecUtil.Debug.WriteLine("responseDataReceived() - dequeued         : Qs=" + _commandQueue.SubqueueCount + " this=" + _commandQueue.CurrentSubqueueName + "(" + _commandQueue.CommandsInCurrentSubqueue + ") tot=" + _commandQueue.TotalCommandCount);
+                                //Debug.WriteLine("responseDataReceived() - dequeued         : Qs=" + _commandQueue.SubqueueCount + " this=" + _commandQueue.CurrentSubqueueName + "(" + _commandQueue.CommandsInCurrentSubqueue + ") tot=" + _commandQueue.TotalCommandCount);
                                 
                                 //new queue - reset the count
                                 _progressWithinSubqueue = 0;
@@ -612,7 +623,7 @@ namespace CTecUtil.IO
                                 }), DispatcherPriority.Normal);
                             }
                         }
-                        else CTecUtil.Debug.WriteLine("responseDataReceived() - !ok");
+                        else Debug.WriteLine("responseDataReceived() - !ok");
 
                         if (ok)
                             sendNextCommandInQueue();
@@ -624,19 +635,19 @@ namespace CTecUtil.IO
             catch (FormatException ex)
             {
                 //checksum fail
-                CTecUtil.Debug.WriteLine("  **FormatException** (ResponseDataReceived) " + ex.Message);
+                Debug.WriteLine("  **FormatException** (ResponseDataReceived) " + ex.Message);
                 _lastException = ex;
                 resendCommand();
             }
             catch (TimeoutException ex)
             {
-                CTecUtil.Debug.WriteLine("  **TimeoutException** (ResponseDataReceived) " + ex.Message);
+                Debug.WriteLine("  **TimeoutException** (ResponseDataReceived) " + ex.Message);
                 _lastException = ex;
                 resendCommand();
             }
             catch (Exception ex)
             {
-                CTecUtil.Debug.WriteLine("  **Exception** (ResponseDataReceived) " + ex.Message);
+                Debug.WriteLine("  **Exception** (ResponseDataReceived) " + ex.Message);
                 _lastException = ex;
                 resendCommand();
             }
@@ -694,12 +705,12 @@ namespace CTecUtil.IO
                     if (bytes > 0)
                     {
                         port.Read(buffer, offset, bytes);
-                        //CTecUtil.Debug.WriteLine("readIncomingResponse() -          ...read " + bytes + " bytes");
+                        //Debug.WriteLine("readIncomingResponse() -          ...read " + bytes + " bytes");
                     }
                     offset += bytes;
                 }
 
-                //CTecUtil.Debug.WriteLine("readIncomingResponse() -          incoming: [" + ByteArrayProcessing.ByteArrayToHexString(buffer) + "]");
+                //Debug.WriteLine("readIncomingResponse() -          incoming: [" + ByteArrayProcessing.ByteArrayToHexString(buffer) + "]");
 
                 if (!checkChecksum(buffer))
                     throw new FormatException();
@@ -708,7 +719,7 @@ namespace CTecUtil.IO
             }
             catch (Exception ex)
             {
-                CTecUtil.Debug.WriteLine("  **Exception** (readIncomingResponse) " + ex.Message);
+                Debug.WriteLine("  **Exception** (readIncomingResponse) " + ex.Message);
                 _lastException = ex;
                 return null;
             }
@@ -738,7 +749,7 @@ namespace CTecUtil.IO
             }
             catch (Exception ex)
             {
-                CTecUtil.Debug.WriteLine("  **Exception** (ListenerDataReceived) " + ex.Message);
+                Debug.WriteLine("  **Exception** (ListenerDataReceived) " + ex.Message);
                 _lastException = ex;
                 resendCommand();
             }
@@ -767,7 +778,7 @@ namespace CTecUtil.IO
             }
             catch (Exception ex)
             {
-                CTecUtil.Debug.WriteLine("  **Exception** (readIncomingListenerData) " + ex.Message);
+                Debug.WriteLine("  **Exception** (readIncomingListenerData) " + ex.Message);
                 return null;
             }
             finally
@@ -793,7 +804,7 @@ namespace CTecUtil.IO
 
         private static void responseTimerTimeout()
         {
-            //CTecUtil.Debug.WriteLine("responseTimerTimeout()");
+            //Debug.WriteLine("responseTimerTimeout()");
             if (_connectionStatus != ConnectionStatus.Listening)
             {
                 //try again...
@@ -833,7 +844,7 @@ namespace CTecUtil.IO
         /// </summary>
         private static void error(string message, Exception ex = null)
         {
-            CTecUtil.Debug.WriteLine("  **Exception** ex: '" + ex?.Message + "'");
+            Debug.WriteLine("  **Exception** ex: '" + ex?.Message + "'");
 
             //check queue - avoids erroring on ping fail
             var showError = _commandQueue.TotalCommandCount > 0;
@@ -849,13 +860,13 @@ namespace CTecUtil.IO
         {
             if (_port is null)
             {
-                CTecUtil.Debug.WriteLine("OpenPort() - port was null");
+                Debug.WriteLine("OpenPort() - port was null");
                 getNewSerialPort();
             }
 
             if (_port?.IsOpen == false)
             {
-                CTecUtil.Debug.WriteLine("OpenPort() - port was closed");
+                Debug.WriteLine("OpenPort() - port was closed");
                 _port?.Open();
             }
 
@@ -869,7 +880,7 @@ namespace CTecUtil.IO
         {
             try
             {
-                CTecUtil.Debug.WriteLine("ClosePort()");
+                Debug.WriteLine("ClosePort()");
                 CancelCommandQueue();
 
                 lock (_portLock)
@@ -891,7 +902,7 @@ namespace CTecUtil.IO
             }
             catch (Exception ex)
             {
-                CTecUtil.Debug.WriteLine("  **Exception** (ClosePort) " + ex.Message);
+                Debug.WriteLine("  **Exception** (ClosePort) " + ex.Message);
                 return false;
             }
         }
@@ -951,7 +962,7 @@ namespace CTecUtil.IO
             }
             catch (Exception ex)
             {
-                CTecUtil.Debug.WriteLine("  **Exception** (openNewSerialPort) " + ex.Message);
+                Debug.WriteLine("  **Exception** (openNewSerialPort) " + ex.Message);
                 error(Cultures.Resources.Error_Serial_Port, ex);
             }
             return null;
@@ -1014,7 +1025,7 @@ namespace CTecUtil.IO
 
             }), DispatcherPriority.Send);
 
-            CTecUtil.Debug.WriteLine("progressBarThread() - start sending commands...");
+            Debug.WriteLine("progressBarThread() - start sending commands...");
             Application.Current.Dispatcher.Invoke(new Action(() => sendNextCommandInQueue()));
 
             var timeout = DateTime.Now.AddSeconds(_timeoutSeconds);
@@ -1029,7 +1040,7 @@ namespace CTecUtil.IO
                 }
                 catch (Exception ex)
                 {
-                    CTecUtil.Debug.WriteLine("  **Exception** (progressBarThread) " + ex.Message);
+                    Debug.WriteLine("  **Exception** (progressBarThread) " + ex.Message);
                     continue;
                 }
 
@@ -1045,7 +1056,7 @@ namespace CTecUtil.IO
                     break;
                 }
 
-                CTecUtil.Debug.WriteLine("---progress: " + _progressOverall + " (" + lastProgress + ")");
+                Debug.WriteLine("---progress: " + _progressOverall + " (" + lastProgress + ")");
 
                 if (_progressOverall > lastProgress)
                 {
