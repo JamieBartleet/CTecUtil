@@ -173,6 +173,7 @@ namespace CTecUtil.IO
 
         private static PingModes _pingMode;
         private static bool _pingStarted;
+        private static bool _checkProtocol;
 
         public static PingModes PingMode
         {
@@ -182,7 +183,7 @@ namespace CTecUtil.IO
                 if (PingCommand is null)            throw new NotImplementedException("SerialComms.PingCommand has not been initialised");
                 if (LoggingModePingCommand is null) throw new NotImplementedException("SerialComms.LoggingModePingCommand has not been initialised");
                 if (CheckFirmwareCommand is null)   throw new NotImplementedException("SerialComms.CheckFirmwareCommand has not been initialised");
-                if (CheckFirmwareCommand is null)   throw new NotImplementedException("SerialComms.CheckFirmwareCommand has not been initialised");
+                _checkProtocol = CheckProtocolCommand is not null;
 
                 var changedMode = _pingMode != value;
 
@@ -216,10 +217,11 @@ namespace CTecUtil.IO
         }
 
         public delegate bool FirmwareVersionNotifier(byte[] firmwareResponse);
-        public static FirmwareVersionNotifier NotifyFirmwareVersion { get; set; }
-
         public delegate void ConnectionStatusNotifier(ConnectionStatus status);
+        public delegate void DeviceProtocolNotifier(byte[] protocol);
+        public static FirmwareVersionNotifier  NotifyFirmwareVersion { get; set; }
         public static ConnectionStatusNotifier NotifyConnectionStatus { get; set; }
+        public static DeviceProtocolNotifier   NotifyDeviceProtocol { get; set; }
 
         /// <summary>Timer for pinging the panel every few seconds</summary>
         private static System.Timers.Timer _pingTimer;
@@ -239,6 +241,7 @@ namespace CTecUtil.IO
         public static Pinger  LoggingModePingCommand;
         public static Pinger  CheckFirmwareCommand;
         public static Pinger  CheckWriteableCommand;
+        public static Pinger  CheckProtocolCommand;
             
         public static ConnectionStatus Status => _connectionStatus;
         public static bool IsConnected => _connectionStatus switch { ConnectionStatus.Listening or ConnectionStatus.ConnectedWriteable or ConnectionStatus.ConnectedReadOnly => true, _ => false };
@@ -295,9 +298,6 @@ namespace CTecUtil.IO
                 return;
 
             //only ping the panel if there is no active upload/download
-            //if (_checkFirmwareVersionCommand is not null)
-            //    if (_commandQueue.SubqueueCount == 0)
-            //        SendData(new Command() { CommandData = _checkFirmwareVersionCommand });
             if (_commandQueue.SubqueueCount == 0)
                 SendData(new Command() { CommandData = CheckFirmwareCommand?.Invoke() });
         }
@@ -308,11 +308,18 @@ namespace CTecUtil.IO
                 return;
 
             //only ping the panel if there is no active upload/download
-            //if (_checkWriteableCommand is not null)
-            //    if (_commandQueue.SubqueueCount == 0)
-            //        SendData(new Command() { CommandData = _checkWriteableCommand });
             if (_commandQueue.SubqueueCount == 0)
                 SendData(new Command() { CommandData = CheckWriteableCommand?.Invoke() });
+        }
+
+        private static void sendProtocolCheck()
+        {
+            if (_disconnected)
+                return;
+
+            //only ping the panel if there is no active upload/download
+            if (_commandQueue.SubqueueCount == 0)
+                SendData(new Command() { CommandData = CheckProtocolCommand?.Invoke() });
         }
         #endregion
 
@@ -551,6 +558,11 @@ namespace CTecUtil.IO
                     //read-only response received?
                     var readOnly = incoming.Length > 2 && incoming[2] == 0;
                     NotifyConnectionStatus?.Invoke(setConnectionStatus(readOnly ? ConnectionStatus.ConnectedReadOnly : ConnectionStatus.ConnectedWriteable));
+                    sendProtocolCheck();
+                }
+                else if (isCheckProtocolResponse(incoming))
+                {
+                    NotifyDeviceProtocol?.Invoke(incoming);
                 }
                 else if (isNak(incoming))
                 {
@@ -799,6 +811,7 @@ Debug.WriteLine("SerialComms.responseDataReceived(" + ByteArrayProcessing.ByteAr
         private static bool isPingResponse(byte[] data)           => data is not null && data.Length > 0 && data[0] == PingCommand?.Invoke()?[^3];
         private static bool isCheckFirmwareResponse(byte[] data)  => data is not null && data.Length > 0 && data[0] == CheckFirmwareCommand?.Invoke()?[^3];
         private static bool isCheckWriteableResponse(byte[] data) => data is not null && data.Length > 0 && data[0] == CheckWriteableCommand?.Invoke()?[^3];
+        private static bool isCheckProtocolResponse(byte[] data)  => data is not null && data.Length > 0 && data[0] == CheckProtocolCommand?.Invoke()?[^3];
         #endregion
 
 
