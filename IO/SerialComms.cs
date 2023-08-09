@@ -48,7 +48,7 @@ namespace CTecUtil.IO
         }
 
 
-        //direction of the current data
+        //direction of the current data transfer, if any
         public enum Direction
         {
             /// <summary>No data transfer in progress</summary>
@@ -173,7 +173,6 @@ namespace CTecUtil.IO
 
         private static PingModes _pingMode;
         private static bool _pingStarted;
-        private static bool _checkProtocol;
 
         public static PingModes PingMode
         {
@@ -183,7 +182,6 @@ namespace CTecUtil.IO
                 if (PingCommand is null)            throw new NotImplementedException("SerialComms.PingCommand has not been initialised");
                 if (LoggingModePingCommand is null) throw new NotImplementedException("SerialComms.LoggingModePingCommand has not been initialised");
                 if (CheckFirmwareCommand is null)   throw new NotImplementedException("SerialComms.CheckFirmwareCommand has not been initialised");
-                _checkProtocol = CheckProtocolCommand is not null;
 
                 var changedMode = _pingMode != value;
 
@@ -314,6 +312,9 @@ namespace CTecUtil.IO
 
         private static void sendProtocolCheck()
         {
+            if (CheckProtocolCommand is null)
+                return;
+
             if (_disconnected)
                 return;
 
@@ -369,6 +370,7 @@ namespace CTecUtil.IO
 
 
         public static void CancelCommandQueue() => _commandQueue?.Clear();
+        public static void CancelCurrentQueue() => _commandQueue?.CancelCurrentQueue();
 
 
         private static void sendFirstCommandInQueue()

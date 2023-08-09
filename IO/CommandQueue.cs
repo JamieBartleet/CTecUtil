@@ -114,7 +114,6 @@ namespace CTecUtil.IO
                     return Dequeue();
                 else
                     CTecUtil.Debug.WriteLine("Dequeue(" + (command?.ToString()??"null") + ") - >>>>>>> not found in queue");
-
             return false;
         }
 
@@ -144,6 +143,15 @@ namespace CTecUtil.IO
                 try { q.Clear(); } catch { }
             } catch { }
             try { _subqueues.Clear(); } catch { }
+        }
+
+
+        internal void CancelCurrentQueue()
+        {
+            try
+            {
+                _subqueues.Dequeue();
+            } catch { }
         }
 
 
