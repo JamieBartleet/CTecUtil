@@ -727,7 +727,7 @@ Debug.WriteLine("SerialComms.responseDataReceived(" + ByteArrayProcessing.ByteAr
                 //Debug.WriteLine("readIncomingResponse() -          incoming: [" + ByteArrayProcessing.ByteArrayToHexString(buffer) + "]");
 
                 if (!checkChecksum(buffer))
-                    throw new FormatException();
+                    throw new FormatException("CTecUtil.IO.SerialComms.readIncomingResponse(): checksum error");
 
                 return buffer;
             }
@@ -1065,7 +1065,7 @@ Debug.WriteLine("SerialComms.responseDataReceived(" + ByteArrayProcessing.ByteAr
                     Application.Current.Dispatcher.Invoke(new Action(() =>
                     {
                         if (_commandQueue.Direction != Direction.Idle)
-                            error(_commandQueue.Direction == Direction.Upload ? Cultures.Resources.Error_Upload_Timeout : Cultures.Resources.Error_Download_Timeout, new TimeoutException());
+                            error(_commandQueue.Direction == Direction.Upload ? Cultures.Resources.Error_Upload_Timeout : Cultures.Resources.Error_Download_Timeout, new TimeoutException("CTecUtil.IO.SerialComms.progressBarThread(): timeout"));
 
                     }), DispatcherPriority.Send);
                     break;
