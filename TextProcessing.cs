@@ -363,7 +363,6 @@ namespace CTecUtil
                                                   1);
 
             return new Size(formattedText.Width, formattedText.Height);
-
         }
 
 
@@ -426,5 +425,13 @@ namespace CTecUtil
 
             return null;
         }
+
+
+        /// <summary>
+        /// Returns the given int value as a string, left-zero-padded to the specified length.
+        /// </summary>
+        /// <returns></returns>
+        public static string IntToZeroPaddedString(int value, int length) => string.Format("{0:" + new string('0', length) + "}", value);
+
     }
 }

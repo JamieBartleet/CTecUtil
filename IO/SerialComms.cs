@@ -534,12 +534,8 @@ namespace CTecUtil.IO
             {
                 var incoming = readIncomingResponse(port);
 
-                //Debug.WriteLine("responseDataReceived() - incoming=" + ByteArrayProcessing.ByteArrayToHexString(incoming));
-
                 if (isPingResponse(incoming))
                 {
-                    //Debug.WriteLine("responseDataReceived() - ping response");
-                    
                     //status is one of the Connected statuses: if not already thought to be writeable set it to read-only
                     if (_connectionStatus != ConnectionStatus.ConnectedWriteable)
                         setConnectionStatus(ConnectionStatus.ConnectedReadOnly);
@@ -590,14 +586,9 @@ namespace CTecUtil.IO
                 else if (_commandQueue.TotalCommandCount > 0)
                 {
                     var ok = false;
-Debug.WriteLine("SerialComms.responseDataReceived(" + ByteArrayProcessing.ByteArrayToHexString(incoming) + ")");
                     
                     NotifyConnectionStatus?.Invoke(_connectionStatus);
                     var cmd = _commandQueue.Peek();
-                    //if (cmd is null)
-                    //    Debug.WriteLine("responseDataReceived() - cmd is null");
-                    //else
-                    //    Debug.WriteLine("responseDataReceived() - cmd=" + cmd.ToString());
 
                     if (cmd is not null)
                     {
@@ -606,15 +597,12 @@ Debug.WriteLine("SerialComms.responseDataReceived(" + ByteArrayProcessing.ByteAr
 
                         if (incoming is not null)
                         {
-                            //Debug.WriteLine("responseDataReceived() - incoming=" + ByteArrayProcessing.ByteArrayToHexString(incoming));
-                            //Debug.WriteLine("responseDataReceived() - send response to data receiver");
                             //send response to data receiver
                             await Task.Run(new Action(() =>
                             {
                                 if ((cmd = _commandQueue.Peek()) is not null)
                                     ok = cmd.DataReceiver?.Invoke(incoming, cmd.Index) == true;
                             }));
-                            //Debug.WriteLine("responseDataReceived() - ...sent");
 
                             Debug.WriteLine("responseDataReceived() - progress: subq=" + _progressWithinSubqueue + " o/a=" + _progressOverall + "/" + _numCommandsToProcess);
                         }
@@ -622,12 +610,9 @@ Debug.WriteLine("SerialComms.responseDataReceived(" + ByteArrayProcessing.ByteAr
 
                         if (ok)
                         {
-                            //Debug.WriteLine("responseDataReceived() - ok");
                             //NB: cmd.DataReceiver may have started a new command queue, so check the Id before dequeueing
                             if (_commandQueue.Id == savedQueueId && _commandQueue.Dequeue(cmd))
                             {
-                                //Debug.WriteLine("responseDataReceived() - dequeued         : Qs=" + _commandQueue.SubqueueCount + " this=" + _commandQueue.CurrentSubqueueName + "(" + _commandQueue.CommandsInCurrentSubqueue + ") tot=" + _commandQueue.TotalCommandCount);
-                                
                                 //new queue - reset the count
                                 _progressWithinSubqueue = 0;
                                 Application.Current.Dispatcher.Invoke(new Action(() =>
