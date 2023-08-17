@@ -37,7 +37,7 @@ namespace CTecUtil.IO
         internal void Dequeue()
         {
             _commandQueue.Dequeue();
-            CTecUtil.Debug.WriteLine("Dequeue() - _commandQueue.Count=" + _commandQueue.Count);
+            //CTecUtil.Debug.WriteLine("Dequeue() - _commandQueue.Count=" + _commandQueue.Count);
         }
 
         internal Command Peek()  { try { return _commandQueue?.Peek(); } catch { return null; } }
