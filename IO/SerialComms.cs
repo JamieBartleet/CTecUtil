@@ -923,7 +923,7 @@ namespace CTecUtil.IO
         /// </summary>
         public static bool Disconnect()
         {
-            if (ClosePort());
+            if (ClosePort())
             {
                 _disconnected = true;
                 return true;
