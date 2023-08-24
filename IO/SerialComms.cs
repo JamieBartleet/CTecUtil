@@ -121,6 +121,7 @@ namespace CTecUtil.IO
 
         /// <summary>Use of this delegate allows house style message box to be used</summary>
         public delegate void MessageHandler(string message);
+        public delegate void Message2Handler(string message, string message2);
 
         /// <summary>Delegate called when a command subqueue's requests have been completed</summary>
         public delegate void SubqueueCompletedHandler();
@@ -131,6 +132,7 @@ namespace CTecUtil.IO
 
         /// <summary>Set this to provide house style message box for any error messages generated during serial comms</summary>
         public static MessageHandler ShowErrorMessage { get; set; }
+        public static Message2Handler ShowErrorMessage2 { get; set; }
 
 
         public static byte AckByte { get; set; }
@@ -851,7 +853,7 @@ namespace CTecUtil.IO
             CancelCommandQueue();
             NotifyConnectionStatus?.Invoke(setConnectionStatus(ConnectionStatus.Disconnected));
             if (showError)
-                ShowErrorMessage?.Invoke(message + "\n\n" + ex?.Message);
+                ShowErrorMessage2?.Invoke(message, ex?.Message);
         }
 
 
