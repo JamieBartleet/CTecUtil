@@ -606,7 +606,7 @@ namespace CTecUtil.IO
                                     ok = cmd.DataReceiver?.Invoke(incoming, cmd.Index) == true;
                             }));
 
-                            Debug.WriteLine("responseDataReceived() - progress: subq=" + _progressWithinSubqueue + " o/a=" + _progressOverall + "/" + _numCommandsToProcess);
+                            //Debug.WriteLine("responseDataReceived() - progress: subq=" + _progressWithinSubqueue + " o/a=" + _progressOverall + "/" + _numCommandsToProcess);
                         }
 
 
@@ -1005,7 +1005,7 @@ namespace CTecUtil.IO
 
         private static void progressBarThread()
         {
-            _numCommandsToProcess   = _commandQueue.TotalCommandCount;
+            //_numCommandsToProcess   = _commandQueue.TotalCommandCount;
             var commandsInSubqueue  = _commandQueue.CommandsInCurrentSubqueue;
             var commsDirection      = _commandQueue.Direction;
             string currentCommsDesc = _commandQueue.SubqueueNames?.Count > 0 ? _commandQueue.SubqueueNames?[0] : "";
@@ -1019,7 +1019,7 @@ namespace CTecUtil.IO
                 //launch the progress bar window
                 _progressBarWindow.ProgressBarLegend      = _commandQueue.OperationDesc;
                 _progressBarWindow.SubqueueCount          = _commandQueue.SubqueueCount;
-                _progressBarWindow.ProgressBarOverallMax  = _numCommandsToProcess;
+                _progressBarWindow.ProgressBarOverallMax  = _commandQueue.TotalCommandCount;
                 _progressBarWindow.ProgressBarSubqueueMax = commandsInSubqueue;
 
                 _progressBarWindow.Show(OwnerWindow);
