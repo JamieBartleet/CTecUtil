@@ -432,6 +432,5 @@ namespace CTecUtil
         /// </summary>
         /// <returns></returns>
         public static string IntToZeroPaddedString(int value, int length) => string.Format("{0:" + new string('0', length) + "}", value);
-
     }
 }

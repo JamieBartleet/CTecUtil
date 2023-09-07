@@ -1,8 +1,10 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -55,6 +57,31 @@ namespace CTecUtil
             //pad to length
             for (int i = strEnd; i < length; i++)
                 result[i] = (byte)' ';
+
+            return result;
+        }
+
+
+        public static byte[] IntStrToByteArray(string value, int length)
+        {
+            int num;
+            if (int.TryParse(value, out num))
+                return IntToByteArray(num, length);
+            return new byte[] { };
+        }
+
+
+        public static byte[] IntToByteArray(int value, int? length = null)
+        {
+            var temp = BitConverter.GetBytes(value);
+            if (!BitConverter.IsLittleEndian)
+                Array.Reverse(temp);
+
+            var resultLen = length??temp.Length;
+            var result    = new byte[resultLen];
+
+            for (int i = 0; i < resultLen; i++)
+                result[i] = (byte)(i < temp.Length ? temp[i] : 0);
 
             return result;
         }
