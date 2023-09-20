@@ -666,7 +666,7 @@ namespace CTecUtil.IO
                 {
                     Thread.Sleep(10);
                     if (DateTime.Now > timeout)
-                        throw new TimeoutException("1 waiting for first byte");
+                        throw new TimeoutException("");
                 }
 
                 //read first byte: either Ack/Nak or the command ID
@@ -681,7 +681,7 @@ namespace CTecUtil.IO
                 {
                     Thread.Sleep(5);
                     if (DateTime.Now > timeout)
-                        throw new TimeoutException("2 waiting for payload byte");
+                        throw new TimeoutException("");
                 }
 
                 port.Read(header, 1, 1);
@@ -698,7 +698,7 @@ namespace CTecUtil.IO
                     {
                         Thread.Sleep(20);
                         if (DateTime.Now > timeout)
-                            throw new TimeoutException("3 waiting for data");
+                            throw new TimeoutException("");
                     }
 
                     //Read payload & checksum
@@ -767,7 +767,7 @@ namespace CTecUtil.IO
                 while (port.BytesToRead == 0)
                 {
                     if (DateTime.Now > timeout)
-                        throw new TimeoutException("4 listener");
+                        throw new TimeoutException("");
                 }
 
                 Thread.Sleep(100);
@@ -1052,7 +1052,7 @@ namespace CTecUtil.IO
                     Application.Current.Dispatcher.Invoke(new Action(() =>
                     {
                         if (_commandQueue.Direction != Direction.Idle)
-                            error(_commandQueue.Direction == Direction.Upload ? Cultures.Resources.Error_Upload_Timeout : Cultures.Resources.Error_Download_Timeout, new TimeoutException("CTecUtil.IO.SerialComms.progressBarThread(): timeout"));
+                            error(_commandQueue.Direction == Direction.Upload ? Cultures.Resources.Error_Upload_Timeout : Cultures.Resources.Error_Download_Timeout, new TimeoutException(""));
 
                     }), DispatcherPriority.Send);
                     break;
