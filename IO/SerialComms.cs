@@ -226,58 +226,35 @@ namespace CTecUtil.IO
         /// <summary>Timer for pinging the panel every few seconds</summary>
         private static System.Timers.Timer _pingTimer;
 
-        private static bool             _disconnected         = false;
+        private static int              _disconnected         = 0;
         private static ConnectionStatus _connectionStatus     = ConnectionStatus.Unknown;
         private static ConnectionStatus _prevConnectionStatus = ConnectionStatus.Unknown;
-        //private static byte[] _pingCommand;
-        //private static byte[] _checkFirmwareVersionCommand;
-        //private static byte[] _checkWriteableCommand;
-
-        /// <summary>
-        /// Delegate for getting the current ping command.<br/>
-        /// </summary>
-        public delegate byte[] Pinger();
-        public static Pinger  PingCommand;
-        public static Pinger  LoggingModePingCommand;
-        public static Pinger  CheckFirmwareCommand;
-        public static Pinger  CheckWriteableCommand;
-        public static Pinger  CheckProtocolCommand;
+        
+        public static byte[]  PingCommand;
+        public static byte[]  LoggingModePingCommand;
+        public static byte[]  CheckFirmwareCommand;
+        public static byte[]  CheckWriteableCommand;
+        public static byte[]  CheckProtocolCommand;
             
         public static ConnectionStatus Status => _connectionStatus;
-        public static bool IsConnected => _connectionStatus switch { ConnectionStatus.Listening or ConnectionStatus.ConnectedWriteable or ConnectionStatus.ConnectedReadOnly => true, _ => false };
+        
+        /// <summary>True if the port is available</summary>
+        public static bool IsConnected    => _connectionStatus switch { ConnectionStatus.Listening or ConnectionStatus.ConnectedWriteable or ConnectionStatus.ConnectedReadOnly => true, _ => false };
+
+        /// <summary>True if the port has been explicitly disconnected, i.e. via Disconnect()</summary>
+        public static bool IsDisconnected => _disconnected > 0;
 
         private static ConnectionStatus setConnectionStatus(ConnectionStatus status) => _connectionStatus = status;
 
-        //public static void SetPingCommands(byte[] pingCommand, byte[] checkFirmwareVersionCommand = null, byte[] checkWriteableCommand = null)
-        //{
-        //    if (pingCommand is not null)
-        //    {
-        //        var start = _pingCommand is null;
-        //        _pingCommand = pingCommand;
-        //        _checkFirmwareVersionCommand = checkFirmwareVersionCommand;
-        //        _checkWriteableCommand = checkWriteableCommand;
-
-        //        if (start)
-        //        {
-        //            _pingTimer = new()
-        //            {
-        //                AutoReset = true,
-        //                Enabled = true,
-        //                Interval = _pingTimerPeriod
-        //            };
-        //            _pingTimer.Elapsed += new(sendPing);
-        //        }
-        //    }
-        //    else
-        //    {
-        //        _pingTimer?.Stop();
-        //        _pingCommand = null;
-        //    }
-        //}
-
         private static void sendPing(object sender, ElapsedEventArgs e)
         {
-            if (_disconnected)
+            if (_disconnected == 1)
+            {
+                doDisconnect();
+                return;
+            }
+
+            if (IsDisconnected)
                 return;
 
             //only ping the panel if there is no active upload/download
@@ -286,45 +263,66 @@ namespace CTecUtil.IO
                 //SendData(new Command() { CommandData = _pingCommand });
                 switch (PingMode)
                 {
-                    case PingModes.KeepAlive: SendData(new Command() { CommandData = PingCommand?.Invoke() }); break;
-                    case PingModes.Listening: SendData(new Command() { CommandData = LoggingModePingCommand?.Invoke() }); break;
+                    case PingModes.KeepAlive: SendData(new Command() { CommandData = PingCommand }); break;
+                    case PingModes.Listening: SendData(new Command() { CommandData = LoggingModePingCommand }); break;
                 }
             }
         }
 
         private static void sendFirmwareVersionCheck()
         {
-            if (_disconnected)
+            if (_disconnected == 1)
+            {
+                doDisconnect();
+                return;
+            }
+
+            if (IsDisconnected)
                 return;
 
             //only ping the panel if there is no active upload/download
             if (_commandQueue.SubqueueCount == 0)
-                SendData(new Command() { CommandData = CheckFirmwareCommand?.Invoke() });
+                SendData(new Command() { CommandData = CheckFirmwareCommand });
         }
 
         private static void sendWriteableCheck()
         {
-            if (_disconnected)
+            if (_disconnected == 1)
+            {
+                doDisconnect();
+                return;
+            }
+
+            if (IsDisconnected)
                 return;
 
             //only ping the panel if there is no active upload/download
             if (_commandQueue.SubqueueCount == 0)
-                SendData(new Command() { CommandData = CheckWriteableCommand?.Invoke() });
+                SendData(new Command() { CommandData = CheckWriteableCommand });
         }
 
         private static void sendProtocolCheck()
         {
+            if (_disconnected == 1)
+            {
+                doDisconnect();
+                return;
+            }
+
             if (CheckProtocolCommand is null)
                 return;
 
-            if (_disconnected)
+            if (IsDisconnected)
                 return;
 
             //only ping the panel if there is no active upload/download
             if (_commandQueue.SubqueueCount == 0)
-                SendData(new Command() { CommandData = CheckProtocolCommand?.Invoke() });
+                SendData(new Command() { CommandData = CheckProtocolCommand });
         }
         #endregion
+
+        
+        public static bool IsIdle => _commandQueue is null || _commandQueue.TotalCommandCount == 0;
 
 
         #region command queue
@@ -361,7 +359,13 @@ namespace CTecUtil.IO
 
         public static void StartSendingCommandQueue(Action onStart, OnFinishedHandler onEnd)
         {
-            if (_disconnected)
+            if (_disconnected == 1)
+            {
+                doDisconnect();
+                return;
+            }
+
+            if (IsDisconnected)
                 return;
 
             //_transferInProgress = true;
@@ -375,26 +379,32 @@ namespace CTecUtil.IO
         public static void CancelCurrentQueue() => _commandQueue?.CancelCurrentQueue();
 
 
-        private static void sendFirstCommandInQueue()
-        {
-            if (_disconnected)
-                return;
+        //private static void sendFirstCommandInQueue()
+        //{
+        //    if (IsDisconnected)
+        //        return;
 
-            //Debug.WriteLine("SendFirstCommandInQueue()   SubqueueCount " + _commandQueue.SubqueueCount);
+        //    //Debug.WriteLine("SendFirstCommandInQueue()   SubqueueCount " + _commandQueue.SubqueueCount);
 
-            Application.Current.Dispatcher.Invoke(new Action(() =>
-            {
-                _progressBarWindow.SubqueueCount = _commandQueue.SubqueueCount;
+        //    Application.Current.Dispatcher.Invoke(new Action(() =>
+        //    {
+        //        _progressBarWindow.SubqueueCount = _commandQueue.SubqueueCount;
 
-            }), DispatcherPriority.Normal);
+        //    }), DispatcherPriority.Normal);
 
-            SendData(_commandQueue.Peek());
-        }
+        //    SendData(_commandQueue.Peek());
+        //}
 
 
         private static void sendNextCommandInQueue()
         {
-            if (_disconnected)
+            if (_disconnected == 1)
+            {
+                doDisconnect();
+                return;
+            }
+
+            if (IsDisconnected)
                 return;
 
             _progressOverall++;
@@ -414,7 +424,13 @@ namespace CTecUtil.IO
 
         private static void resendCommand()
         {
-            if (_disconnected)
+            if (_disconnected == 1)
+            {
+                doDisconnect();
+                return;
+            }
+
+            if (IsDisconnected)
                 return;
 
             var cmd = _commandQueue.Peek();
@@ -456,7 +472,13 @@ namespace CTecUtil.IO
 
         internal static void SendData(Command command)
         {
-            if (_disconnected)
+            if (_disconnected == 1)
+            {
+                doDisconnect();
+                return;
+            }
+
+            if (IsDisconnected)
                 return;
 
             lock (_portLock)
@@ -494,6 +516,15 @@ namespace CTecUtil.IO
         /// </summary>
         private static void dataReceived(object sender, SerialDataReceivedEventArgs e)
         {
+            if (_disconnected == 1)
+            {
+                doDisconnect();
+                return;
+            }
+
+            if (IsDisconnected)
+                return;
+
             //Debug.WriteLine("dataReceived()");
 
             //lock (_portLock)
@@ -624,7 +655,6 @@ namespace CTecUtil.IO
                                 }), DispatcherPriority.Normal);
                             }
                         }
-                        else Debug.WriteLine("responseDataReceived() - !ok");
 
                         if (ok)
                             sendNextCommandInQueue();
@@ -797,10 +827,10 @@ namespace CTecUtil.IO
         //private static bool isPingResponse(byte[] data)           => data is not null && data.Length > 0 && data[0] == _pingCommand?[_pingCommand.Length - 3];
         //private static bool isCheckFirmwareResponse(byte[] data)  => data is not null && _checkFirmwareVersionCommand is not null && data.Length > 0 && data[0] == _checkFirmwareVersionCommand[_checkFirmwareVersionCommand.Length - 3];
         //private static bool isCheckWriteableResponse(byte[] data) => data is not null && _checkWriteableCommand is not null && data.Length > 0 && data[0] == _checkWriteableCommand[_checkWriteableCommand.Length - 3];
-        private static bool isPingResponse(byte[] data)           => data is not null && data.Length > 0 && data[0] == PingCommand?.Invoke()?[^3];
-        private static bool isCheckFirmwareResponse(byte[] data)  => data is not null && data.Length > 0 && data[0] == CheckFirmwareCommand?.Invoke()?[^3];
-        private static bool isCheckWriteableResponse(byte[] data) => data is not null && data.Length > 0 && data[0] == CheckWriteableCommand?.Invoke()?[^3];
-        private static bool isCheckProtocolResponse(byte[] data)  => data is not null && data.Length > 0 && data[0] == CheckProtocolCommand?.Invoke()?[^3];
+        private static bool isPingResponse(byte[] data)           => data is not null && data.Length > 0 && data[0] == PingCommand?[^3];
+        private static bool isCheckFirmwareResponse(byte[] data)  => data is not null && data.Length > 0 && data[0] == CheckFirmwareCommand?[^3];
+        private static bool isCheckWriteableResponse(byte[] data) => data is not null && data.Length > 0 && data[0] == CheckWriteableCommand?[^3];
+        private static bool isCheckProtocolResponse(byte[] data)  => data is not null && data.Length > 0 && data[0] == CheckProtocolCommand?[^3];
         #endregion
 
 
@@ -869,7 +899,8 @@ namespace CTecUtil.IO
             if (_port?.IsOpen == false)
             {
                 Debug.WriteLine("OpenPort() - port was closed");
-                _port?.Open();
+                try
+                { _port?.Open(); } catch { }
             }
 
             return _port?.IsOpen == true;
@@ -891,11 +922,15 @@ namespace CTecUtil.IO
                     {
                         GC.SuppressFinalize(_port.BaseStream);
                         try
-                        { _port.Close(); }
+                        {
+                            _port.DiscardInBuffer();
+                            _port.DiscardOutBuffer();
+                            _port.Close();
+                        }
                         catch { }
 
-                        //pause to allow port's internal threads to terminate per MS documentation (though they dont' specify a time)
-                        //- we would typically get an UnauthorizedAccessException if we try to open it immediately after closing
+                        //pause to allow port's internal threads to terminate per MS documentation (though they don't specify a time)
+                        // - otherwise we would typically get an UnauthorizedAccessException if we try to open it immediately after closing
                         Thread.Sleep(666);
                         _port = null;
                     }
@@ -915,7 +950,7 @@ namespace CTecUtil.IO
         /// </summary>
         public static bool Connect()
         {
-            _disconnected = false;
+            _disconnected = 0;
             return openPort();
         }
 
@@ -923,14 +958,26 @@ namespace CTecUtil.IO
         /// <summary>
         /// Cancel any queued commands, close the serial port and stop further activity until Connect() is called
         /// </summary>
-        public static bool Disconnect()
+        public static void Disconnect()
+        {
+            _disconnected = 1;
+            //if (ClosePort())
+            //{
+            //    _disconnected = 1;
+            //    NotifyConnectionStatus?.Invoke(setConnectionStatus(ConnectionStatus.Disconnected));
+            //    return true;
+            //}
+            //return false;
+        }
+
+
+        private static void doDisconnect()
         {
             if (ClosePort())
             {
-                _disconnected = true;
-                return true;
+                _disconnected = 2;
+                NotifyConnectionStatus?.Invoke(setConnectionStatus(ConnectionStatus.Disconnected));
             }
-            return false;
         }
 
 
@@ -959,7 +1006,7 @@ namespace CTecUtil.IO
                 if (available.Count > 0 && !available.Contains(_port.PortName))
                     _port.PortName = available[0];
 
-                _port.DataReceived += dataReceived;
+                _port.DataReceived  += dataReceived;
                 _port.ErrorReceived += errorReceived;
             }
             catch (Exception ex)
