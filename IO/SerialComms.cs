@@ -417,7 +417,7 @@ namespace CTecUtil.IO
             else
             {
                 _queueWasCompleted = true;
-                Debug.WriteLine("SendNextCommandInQueue() - queue was completed");
+                //Debug.WriteLine("SendNextCommandInQueue() - queue was completed");
             }
         }
 
@@ -626,7 +626,7 @@ namespace CTecUtil.IO
                     if (cmd is not null)
                     {
                         var savedQueueId = _commandQueue.Id;
-                        Debug.WriteLine("responseDataReceived() - _commandQueue.Id=" + _commandQueue.Id);
+                        //Debug.WriteLine("responseDataReceived() - _commandQueue.Id=" + _commandQueue.Id);
 
                         if (incoming is not null)
                         {
@@ -1105,7 +1105,7 @@ namespace CTecUtil.IO
                     break;
                 }
 
-                Debug.WriteLine("---progress: " + _progressOverall + " (" + lastProgress + ")");
+               // Debug.WriteLine("---progress: " + _progressOverall + " (" + lastProgress + ")");
 
                 if (_progressOverall > lastProgress)
                 {
