@@ -71,16 +71,15 @@ namespace CTecUtil
         }
 
 
-        public static byte[] IntToByteArray(int value, int? length = null)
+        public static byte[] IntToByteArray(int value, int length)
         {
             var temp = BitConverter.GetBytes(value);
             if (!BitConverter.IsLittleEndian)
                 Array.Reverse(temp);
 
-            var resultLen = length??temp.Length;
-            var result    = new byte[resultLen];
+            var result = new byte[length];
 
-            for (int i = 0; i < resultLen; i++)
+            for (int i = 0; i < length; i++)
                 result[i] = (byte)(i < temp.Length ? temp[i] : 0);
 
             return result;
