@@ -93,6 +93,7 @@ namespace CTecUtil.IO
 
         
         public delegate bool ReceivedResponseDataHandler(byte[] incomingData, int? index);
+        public delegate bool MultiIndexResponseDataHandler(byte[] incomingData, int? index1, int? index2);
         public delegate void ReceivedListenerDataHandler(byte[] incomingData);
         public delegate void ProgressMaxSetter(int maxValue);
         public delegate void ProgressValueUpdater(int value);
@@ -353,8 +354,9 @@ namespace CTecUtil.IO
         /// </summary>
         /// <param name="commandData">The command data.</param>
         /// <param name="dataReceiver">Handler to which the response will be sent.</param>
-        public static void EnqueueCommand(byte[] commandData, ReceivedResponseDataHandler dataReceiver = null)            => _commandQueue.Enqueue(new Command() { CommandData = commandData, DataReceiver = dataReceiver });
-        public static void EnqueueCommand(byte[] commandData, int index, ReceivedResponseDataHandler dataReceiver = null) => _commandQueue.Enqueue(new Command() { CommandData = commandData, Index = index, DataReceiver = dataReceiver });
+        public static void EnqueueCommand(byte[] commandData, ReceivedResponseDataHandler dataReceiver = null)                          => _commandQueue.Enqueue(new Command() { CommandData = commandData, DataReceiver = dataReceiver });
+        public static void EnqueueCommand(byte[] commandData, int index, ReceivedResponseDataHandler dataReceiver = null)               => _commandQueue.Enqueue(new Command() { CommandData = commandData, Index = index, DataReceiver = dataReceiver });
+        public static void EnqueueCommand(byte[] commandData, int index, int? index2, MultiIndexResponseDataHandler dataReceiver = null) => _commandQueue.Enqueue(new Command() { CommandData = commandData, Index = index, Index2 = index2, DataReceiver2 = dataReceiver });
 
 
         public static void StartSendingCommandQueue(Action onStart, OnFinishedHandler onEnd)
@@ -634,7 +636,12 @@ namespace CTecUtil.IO
                             await Task.Run(new Action(() =>
                             {
                                 if ((cmd = _commandQueue.Peek()) is not null)
-                                    ok = cmd.DataReceiver?.Invoke(incoming, cmd.Index) == true;
+                                {
+                                    if (cmd.DataReceiver2 is not null)
+                                        ok = cmd.DataReceiver2?.Invoke(incoming, cmd.Index, cmd.Index2) == true;
+                                    else
+                                        ok = cmd.DataReceiver?.Invoke(incoming, cmd.Index) == true;
+                                }
                             }));
 
                             //Debug.WriteLine("responseDataReceived() - progress: subq=" + _progressWithinSubqueue + " o/a=" + _progressOverall + "/" + _numCommandsToProcess);

@@ -19,6 +19,7 @@ namespace CTecUtil.IO
 
 
         internal int Index { get; set; }
+        internal int? Index2 { get; set; }
 
         /// <summary>The command data</summary>
         internal byte[] CommandData { get; set; }
@@ -28,6 +29,7 @@ namespace CTecUtil.IO
 
         /// <summary>Handler to which the response will be sent.</summary>
         internal SerialComms.ReceivedResponseDataHandler DataReceiver { get; set; }
+        internal SerialComms.MultiIndexResponseDataHandler DataReceiver2 { get; set; }
 
         /// <summary>Returns the string representation of the CommandData in hexadecimal format</summary>
         public override string ToString() => ByteArrayProcessing.ByteArrayToHexString(CommandData);
