@@ -569,6 +569,35 @@ namespace CTecUtil.IO
             {
                 var incoming = readIncomingResponse(port);
 
+                //if (isPingResponse(incoming))
+                //{
+                //    //status is one of the Connected statuses: if not already thought to be writeable set it to read-only
+                //    if (_connectionStatus != ConnectionStatus.ConnectedWriteable)
+                //        setConnectionStatus(ConnectionStatus.ConnectedReadOnly);
+
+                //    //panel responded to ping, so request its firmware version
+                //    sendFirmwareVersionCheck();
+                //}
+                //else if (isCheckFirmwareResponse(incoming))
+                //{
+                //    //panel responded to ping, so notify the version number and request its read-only status
+                //    if (!NotifyFirmwareVersion?.Invoke(incoming) ?? true)
+                //        NotifyConnectionStatus?.Invoke(setConnectionStatus(ConnectionStatus.FirmwareNotSupported));
+                //    else
+                //        sendWriteableCheck();
+                //}
+                //else if (isCheckWriteableResponse(incoming))
+                //{
+                //    //read-only response received?
+                //    var readOnly = incoming.Length > 2 && incoming[2] == 0;
+                //    NotifyConnectionStatus?.Invoke(setConnectionStatus(readOnly ? ConnectionStatus.ConnectedReadOnly : ConnectionStatus.ConnectedWriteable));
+                //    sendProtocolCheck();
+                //}
+                //else if (isCheckProtocolResponse(incoming))
+                //{
+                //    NotifyDeviceProtocol?.Invoke(incoming);
+                //}
+
                 if (isPingResponse(incoming))
                 {
                     //status is one of the Connected statuses: if not already thought to be writeable set it to read-only
@@ -576,6 +605,13 @@ namespace CTecUtil.IO
                         setConnectionStatus(ConnectionStatus.ConnectedReadOnly);
 
                     //panel responded to ping, so request its firmware version
+                    sendWriteableCheck();
+                }
+                else if (isCheckWriteableResponse(incoming))
+                {
+                    //read-only response received?
+                    var readOnly = incoming.Length > 2 && incoming[2] == 0;
+                    NotifyConnectionStatus?.Invoke(setConnectionStatus(readOnly ? ConnectionStatus.ConnectedReadOnly : ConnectionStatus.ConnectedWriteable));
                     sendFirmwareVersionCheck();
                 }
                 else if (isCheckFirmwareResponse(incoming))
@@ -584,14 +620,7 @@ namespace CTecUtil.IO
                     if (!NotifyFirmwareVersion?.Invoke(incoming) ?? true)
                         NotifyConnectionStatus?.Invoke(setConnectionStatus(ConnectionStatus.FirmwareNotSupported));
                     else
-                        sendWriteableCheck();
-                }
-                else if (isCheckWriteableResponse(incoming))
-                {
-                    //read-only response received?
-                    var readOnly = incoming.Length > 2 && incoming[2] == 0;
-                    NotifyConnectionStatus?.Invoke(setConnectionStatus(readOnly ? ConnectionStatus.ConnectedReadOnly : ConnectionStatus.ConnectedWriteable));
-                    sendProtocolCheck();
+                        sendProtocolCheck();
                 }
                 else if (isCheckProtocolResponse(incoming))
                 {
