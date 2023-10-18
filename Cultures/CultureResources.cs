@@ -37,7 +37,7 @@ namespace CTecUtil.Cultures
 
         public static void ChangeCulture(CultureInfo culture)
         {
-            if (culture == null)
+            if (culture == null || culture == Cultures.Resources.Culture)
                 return;
 
             Cultures.Resources.Culture = culture;
