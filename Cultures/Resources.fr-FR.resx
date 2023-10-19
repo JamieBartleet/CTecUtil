@@ -118,31 +118,31 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Error_Checksum_Fail" xml:space="preserve">
-    <value>Des données non valides ont été reçues du contrôleur.</value>
+    <value>Des données non valides ont été reçues du centrale.</value>
   </data>
   <data name="Error_Download_Retries" xml:space="preserve">
-    <value>Téléchargement du contrôleur a été annulé après trop de tentatives.</value>
+    <value>Téléchargement du centrale a été annulé après trop de tentatives.</value>
   </data>
   <data name="Error_Download_Timeout" xml:space="preserve">
-    <value>Le téléchargement du contrôleur a échoué car il n’a pas répondu dans le délai imparti.</value>
+    <value>Le téléchargement du centrale a échoué car il n’a pas répondu dans le délai imparti.</value>
   </data>
   <data name="Error_Downloading_Data" xml:space="preserve">
-    <value>Une erreur s’est produite lors de la lecture des données du contrôleur.</value>
+    <value>Une erreur s’est produite lors de la lecture des données du centrale.</value>
   </data>
   <data name="Error_Serial_Port" xml:space="preserve">
     <value>Une erreur s’est produite lors de l’ouverture du port série.</value>
   </data>
   <data name="Error_Upload_Retries" xml:space="preserve">
-    <value>Téléchargement au contrôleur a été annulé après trop de tentatives.</value>
+    <value>Téléchargement au centrale a été annulé après trop de tentatives.</value>
   </data>
   <data name="Error_Upload_Timeout" xml:space="preserve">
-    <value>Le téléchargement au contrôleur a échoué car il n’a pas répondu dans le délai imparti.</value>
+    <value>Le téléchargement au centrale a échoué car il n’a pas répondu dans le délai imparti.</value>
   </data>
   <data name="Option_Cancel" xml:space="preserve">
     <value>Annuler</value>
   </data>
   <data name="Error_Uploading_Data" xml:space="preserve">
-    <value>Une erreur s’est produite lors de l'envoi des données du contrôleur.</value>
+    <value>Une erreur s’est produite lors de l'envoi des données du centrale.</value>
   </data>
   <data name="Comms_Connected_Writeable" xml:space="preserve">
     <value>Connecté - les données peuvent être écrites</value>
@@ -157,7 +157,7 @@
     <value>Connecté - les données sont en lecture seule</value>
   </data>
   <data name="Comms_Firmware_Not_Supported" xml:space="preserve">
-    <value>La version du micrologiciel du contrôleur ne peut pas être maintenue par cet outil de programmation.</value>
+    <value>La version du micrologiciel du centrale ne peut pas être maintenue par cet outil de programmation.</value>
   </data>
   <data name="File_Save_As" xml:space="preserve">
     <value>Enregistrer Sous...</value>

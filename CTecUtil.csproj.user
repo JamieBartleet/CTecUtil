@@ -4,6 +4,11 @@
     <_LastSelectedProfileId>C:\Users\jamie.bartleet\Documents\Dev\CTecUtil\Properties\PublishProfiles\FolderProfile.pubxml</_LastSelectedProfileId>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Update="Cultures\Resources.fr-FR.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
     <Page Update="Cultures\CultureResourceDictionary.xaml">
       <SubType>Designer</SubType>
     </Page>
