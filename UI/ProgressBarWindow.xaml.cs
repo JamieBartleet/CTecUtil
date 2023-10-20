@@ -86,6 +86,7 @@ namespace CTecUtil.UI
             txtNext2.Text        = subqueueNames.Count > 2 ? subqueueNames[2] : "";
             txtNext3.Text        = subqueueNames.Count > 3 ? subqueueNames[3] : "";
             txtNext4.Text        = subqueueNames.Count > 4 ? subqueueNames[4] : "";
+            txtNext5.Text        = subqueueNames.Count > 5 ? subqueueNames[5] : "";
             stpQueue.Visibility = Visibility.Visible;
         }
 
