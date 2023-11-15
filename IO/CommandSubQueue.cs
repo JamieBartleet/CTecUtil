@@ -25,6 +25,7 @@ namespace CTecUtil.IO
 
 
         private Queue<Command> _commandQueue = new();
+        public int InitialCommandsInQueue { get; private set; } = 0;
 
 
         internal string Name { get; set; }
@@ -32,7 +33,7 @@ namespace CTecUtil.IO
         internal SerialComms.Direction Direction { get; set; }
 
 
-        internal void    Enqueue(Command command) => _commandQueue.Enqueue(command);
+        internal void Enqueue(Command command) { _commandQueue.Enqueue(command); InitialCommandsInQueue++; }
 
         internal void Dequeue()
         {

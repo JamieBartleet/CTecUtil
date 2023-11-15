@@ -171,6 +171,7 @@ namespace CTecUtil.IO
         /// Count of commands in current subqueue.
         /// </summary>
         internal int CommandsInCurrentSubqueue { get => _subqueues.Count > 0 ? _subqueues.Peek()?.Count ?? 0 : 0; }
+        internal int InitialCommandsInCurrentSubqueue => _subqueues.Count > 0 ? _subqueues.Peek()?.InitialCommandsInQueue ?? 0 : 0;
 
 
         public override string ToString()

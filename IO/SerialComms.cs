@@ -48,7 +48,7 @@ namespace CTecUtil.IO
         }
 
 
-        //direction of the current data transfer, if any
+        /// <summary>Direction of the current data transfer, if any</summary>
         public enum Direction
         {
             /// <summary>No data transfer in progress</summary>
@@ -62,9 +62,14 @@ namespace CTecUtil.IO
         }
 
 
-        private const int _incomingDataTimerPeriod = 1250;
-        private const int _responseTimerPeriod     = 5500;
-        private const int _pingTimerPeriod         = 2000;
+        /// <summary>Panel polling interval (ms)</summary>
+        public static int PingTimerPeriod         { get; set; } = 2000;
+
+        /// <summary>Timeout period (ms) during receipt of successive incoming data packets</summary>
+        public static int IncomingDataTimerPeriod { get; set; } = 1250;
+        
+        /// <summary>Wait timeout (ms) for a response to a sent command</summary>
+        public static int ResponseTimerPeriod     { get; set; } = 5500;
 
 
         public static string PortName
@@ -115,7 +120,7 @@ namespace CTecUtil.IO
             {
                 _settings = value;
                 _responseTimer.OnTimedOut = responseTimerTimeout;
-                _responseTimer.Start(_responseTimerPeriod);
+                _responseTimer.Start(ResponseTimerPeriod);
             }
         }
 
@@ -169,7 +174,7 @@ namespace CTecUtil.IO
         public enum PingModes
         {
             NoPing,
-            KeepAlive,
+            Polling,
             Listening
         }
 
@@ -196,7 +201,7 @@ namespace CTecUtil.IO
                         {
                             AutoReset = true,
                             Enabled = true,
-                            Interval = _pingTimerPeriod
+                            Interval = PingTimerPeriod
                         };
                         _pingTimer.Elapsed += new(sendPing);
                         _pingStarted = true;
@@ -261,10 +266,9 @@ namespace CTecUtil.IO
             //only ping the panel if there is no active upload/download
             if (_commandQueue.TotalCommandCount == 0)
             {
-                //SendData(new Command() { CommandData = _pingCommand });
                 switch (PingMode)
                 {
-                    case PingModes.KeepAlive: SendData(new Command() { CommandData = PingCommand }); break;
+                    case PingModes.Polling:   SendData(new Command() { CommandData = PingCommand }); break;
                     case PingModes.Listening: SendData(new Command() { CommandData = LoggingModePingCommand }); break;
                 }
             }
@@ -354,8 +358,8 @@ namespace CTecUtil.IO
         /// </summary>
         /// <param name="commandData">The command data.</param>
         /// <param name="dataReceiver">Handler to which the response will be sent.</param>
-        public static void EnqueueCommand(byte[] commandData, ReceivedResponseDataHandler dataReceiver = null)                          => _commandQueue.Enqueue(new Command() { CommandData = commandData, DataReceiver = dataReceiver });
-        public static void EnqueueCommand(byte[] commandData, int index, ReceivedResponseDataHandler dataReceiver = null)               => _commandQueue.Enqueue(new Command() { CommandData = commandData, Index = index, DataReceiver = dataReceiver });
+        public static void EnqueueCommand(byte[] commandData, ReceivedResponseDataHandler dataReceiver = null)                           => _commandQueue.Enqueue(new Command() { CommandData = commandData, DataReceiver = dataReceiver });
+        public static void EnqueueCommand(byte[] commandData, int index, ReceivedResponseDataHandler dataReceiver = null)                => _commandQueue.Enqueue(new Command() { CommandData = commandData, Index = index, DataReceiver = dataReceiver });
         public static void EnqueueCommand(byte[] commandData, int index, int? index2, MultiIndexResponseDataHandler dataReceiver = null) => _commandQueue.Enqueue(new Command() { CommandData = commandData, Index = index, Index2 = index2, DataReceiver2 = dataReceiver });
 
 
@@ -539,7 +543,7 @@ namespace CTecUtil.IO
                         return;
                     }
 
-                    _responseTimer.Start(_responseTimerPeriod);
+                    _responseTimer.Start(ResponseTimerPeriod);
 
                     //if (ListenerMode)
                     if (PingMode == PingModes.Listening)
@@ -641,7 +645,7 @@ namespace CTecUtil.IO
                         _progressWithinSubqueue = 0;
                         Application.Current.Dispatcher.Invoke(new Action(() =>
                         {
-                            _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.CommandsInCurrentSubqueue;
+                            _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.InitialCommandsInCurrentSubqueue;
 
                         }), DispatcherPriority.Normal);
                     }
@@ -686,7 +690,7 @@ namespace CTecUtil.IO
                                 _progressWithinSubqueue = 0;
                                 Application.Current.Dispatcher.Invoke(new Action(() =>
                                 {
-                                    _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.CommandsInCurrentSubqueue;
+                                    _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.InitialCommandsInCurrentSubqueue;
 
                                 }), DispatcherPriority.Normal);
                             }
@@ -725,7 +729,7 @@ namespace CTecUtil.IO
         {
             try
             {
-                var timeout = DateTime.Now.AddMilliseconds(_incomingDataTimerPeriod);
+                var timeout = DateTime.Now.AddMilliseconds(IncomingDataTimerPeriod);
 
                 //wait data to start appearing - note: SerialPort.DataReceived is often called by the port when BytesToRead is still zero
                 while (port.BytesToRead == 0)
@@ -827,7 +831,7 @@ namespace CTecUtil.IO
         {
             try
             {
-                var timeout = DateTime.Now.AddMilliseconds(_incomingDataTimerPeriod);
+                var timeout = DateTime.Now.AddMilliseconds(IncomingDataTimerPeriod);
 
                 //wait for buffering [sometimes SerialPort.DataReceived is called by the port when BytesToRead is still zero]
                 while (port.BytesToRead == 0)
@@ -882,7 +886,7 @@ namespace CTecUtil.IO
                     NotifyConnectionStatus?.Invoke(setConnectionStatus(ConnectionStatus.Disconnected));
             }
 
-            _responseTimer.Start(_responseTimerPeriod);
+            _responseTimer.Start(ResponseTimerPeriod);
         }
 
 
@@ -1089,7 +1093,7 @@ namespace CTecUtil.IO
         private static void progressBarThread()
         {
             //_numCommandsToProcess   = _commandQueue.TotalCommandCount;
-            var commandsInSubqueue  = _commandQueue.CommandsInCurrentSubqueue;
+            //var commandsInSubqueue  = _commandQueue.CommandsInCurrentSubqueue;
             var commsDirection      = _commandQueue.Direction;
             string currentCommsDesc = _commandQueue.SubqueueNames?.Count > 0 ? _commandQueue.SubqueueNames?[0] : "";
 
@@ -1103,7 +1107,7 @@ namespace CTecUtil.IO
                 _progressBarWindow.ProgressBarLegend      = _commandQueue.OperationDesc;
                 _progressBarWindow.SubqueueCount          = _commandQueue.SubqueueCount;
                 _progressBarWindow.ProgressBarOverallMax  = _commandQueue.TotalCommandCount;
-                _progressBarWindow.ProgressBarSubqueueMax = commandsInSubqueue;
+                _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.InitialCommandsInCurrentSubqueue;
 
                 _progressBarWindow.Show(OwnerWindow);
 
@@ -1120,6 +1124,7 @@ namespace CTecUtil.IO
             {
                 try
                 {
+                    Application.Current.Dispatcher.Invoke(new Action(() => _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.InitialCommandsInCurrentSubqueue ));
                     if (_commandQueue.TotalCommandCount == 0)
                         break;
                 }

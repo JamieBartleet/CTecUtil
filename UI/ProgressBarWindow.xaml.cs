@@ -69,7 +69,7 @@ namespace CTecUtil.UI
                 tx.Elapsed += new((s, e) => Application.Current.Dispatcher.Invoke(new Action(() => updateText(subqueueNames))));
             }
 
-            pbProgressOverall.Value = (double)valueOverall / ProgressBarOverallMax * 100;
+            pbProgressOverall.Value  = (double)valueOverall / ProgressBarOverallMax * 100;
             pbProgressSubqueue.Value = valueSubqueue;
             txtProgressSubqueue.Text = valueSubqueue + " / " + ProgressBarSubqueueMax;
 
