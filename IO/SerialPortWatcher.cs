@@ -54,7 +54,8 @@ namespace CTecUtil.IO
         {
             lock (_lock)
             {
-                IEnumerable<string> ports = SerialPort.GetPortNames().OrderBy(s => s);
+                // note: GetPortNames can return stale ports - i.e. names found in the Registry that no longer exist in reality
+                List<string> ports = SerialPort.GetPortNames().ToList();
 
                 try
                 {
@@ -70,12 +71,25 @@ namespace CTecUtil.IO
                         if (!_comPorts.Contains(port))
                             _comPorts.Add(port);
                     
-                    _comPorts.Sort();
+                    _comPorts.Sort(COMparer);
                 }
                 catch (InvalidOperationException) { }
 
                 PortsChanged?.Invoke(_comPorts);
             }
+        }
+
+        /// <summary>
+        /// Sort COM port names correctly (i.e. so that COM3 is listed before COM20)
+        /// </summary>
+        private int COMparer(string portName1, string portName2)
+        {
+            int n1, n2;
+            if (portName1.StartsWith("COM") && int.TryParse(portName1.Substring(3), out n1)
+             && portName2.StartsWith("COM") && int.TryParse(portName2.Substring(3), out n2))
+                return n1.CompareTo(n2);
+            
+            return portName1.CompareTo(portName2);
         }
 
 
