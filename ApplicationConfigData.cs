@@ -25,7 +25,7 @@ namespace CTecUtil
         public float              ZoomLevel = 0.75f;
         public float              SerialMonitorZoomLevel = 0.75f;
         public SerialPortSettings SerialPort = new();
-        public string             Protocol = "CAST";
+        public string             Protocol = "XfpCAST";
         public RecentFilesList    RecentPanelFiles = new();
         public RecentFilesList    RecentConfiguratorFiles = new();
     }
