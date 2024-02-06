@@ -17,6 +17,9 @@ namespace CTecUtil
             RecentConfiguratorFiles.RecentFileListHasChanged = new(() => ApplicationConfig.RecentConfiguratorFileListHasChanged?.Invoke());
         }
 
+        public static SupportedApps OwnerApp { get; set; } = SupportedApps.NotSet;
+
+
         public Layouts            Layout;
         public string             CultureName = "en-GB";
         public WindowSizeParams   MainWindow;
@@ -25,7 +28,7 @@ namespace CTecUtil
         public float              ZoomLevel = 0.75f;
         public float              SerialMonitorZoomLevel = 0.75f;
         public SerialPortSettings SerialPort = new();
-        public string             Protocol = "XfpCAST";
+        public string             Protocol = "";
         public RecentFilesList    RecentPanelFiles = new();
         public RecentFilesList    RecentConfiguratorFiles = new();
     }

@@ -14,12 +14,17 @@ namespace CTecUtil
 {
     public class ApplicationConfig
     {
+        public static SupportedApps OwnerApp { get; private set; } = SupportedApps.NotSet;
+
+
         /// <summary>
         /// Initialise the CTecUtil.ApplicationConfig class.
         /// </summary>
         /// <param name="productName">The software's name ("Quantec Programming Tools", etc.)</param>
-        public static void InitConfigSettings(string productName)
+        public static void InitConfigSettings(SupportedApps ownerApp)
         {
+            OwnerApp = ownerApp;
+            var productName = OwnerApp switch { SupportedApps.Quantec => "QuantecTools", SupportedApps.ZFP => "XfpTools", _ => "ZfpTools" };
             _initialised = true;
             Directory.CreateDirectory(AppDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), _companyName));
             _configFilePath = Path.Combine(AppDataFolder, productName + TextFile.JsonFileExt);
@@ -82,8 +87,8 @@ namespace CTecUtil
 
         private static void notInitialisedError()
         {
-            MessageBox.Show("***Code error***\n\nThe ApplicationConfig class has not been initialised.\nCall ApplicationConfig.InitConfigSettings(<productName>).", _companyName);
-            Environment.Exit(0);
+            MessageBox.Show("***Code error***\n\nThe CTecUtil.ApplicationConfig class has not been initialised.\nCall ApplicationConfig.InitConfigSettings(<ownerApp>).", _companyName + "App Error");
+            Application.Current.Shutdown();
         }
 
 
