@@ -24,7 +24,7 @@ namespace CTecUtil
         public static void InitConfigSettings(SupportedApps ownerApp)
         {
             OwnerApp = ownerApp;
-            var productName = OwnerApp switch { SupportedApps.Quantec => "QuantecTools", SupportedApps.ZFP => "XfpTools", _ => "ZfpTools" };
+            var productName = OwnerApp switch { SupportedApps.Quantec => "QuantecTools", SupportedApps.XFP => "XfpTools", _ => "ZfpTools" };
             _initialised = true;
             Directory.CreateDirectory(AppDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), _companyName));
             _configFilePath = Path.Combine(AppDataFolder, productName + TextFile.JsonFileExt);
