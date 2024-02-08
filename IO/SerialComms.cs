@@ -1036,6 +1036,9 @@ namespace CTecUtil.IO
             {
                 ClosePort();
 
+                if (Settings is null)
+                    return null;
+
                 _port = new SerialPort(Settings.PortName, Settings.BaudRate, Settings.Parity, Settings.DataBits, Settings.StopBits)
                 {
                     ReadTimeout  = Settings.ReadTimeout,
