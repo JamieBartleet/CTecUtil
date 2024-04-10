@@ -236,11 +236,18 @@ namespace CTecUtil.IO
         private static ConnectionStatus _connectionStatus     = ConnectionStatus.Unknown;
         private static ConnectionStatus _prevConnectionStatus = ConnectionStatus.Unknown;
         
-        public static byte[]  PingCommand;
-        public static byte[]  LoggingModePingCommand;
-        public static byte[]  CheckFirmwareCommand;
-        public static byte[]  CheckWriteableCommand;
-        public static byte[]  CheckProtocolCommand;
+        //public static byte[]  PingCommand;
+        //public static byte[]  LoggingModePingCommand;
+        //public static byte[]  CheckFirmwareCommand;
+        //public static byte[]  CheckWriteableCommand;
+        //public static byte[]  CheckProtocolCommand;
+
+        public delegate byte[] PingCommandGetter();
+        public static PingCommandGetter PingCommand;
+        public static PingCommandGetter LoggingModePingCommand;
+        public static PingCommandGetter CheckFirmwareCommand;
+        public static PingCommandGetter CheckWriteableCommand;
+        public static PingCommandGetter CheckProtocolCommand;
             
         public static ConnectionStatus Status => _connectionStatus;
         
@@ -268,8 +275,8 @@ namespace CTecUtil.IO
             {
                 switch (PingMode)
                 {
-                    case PingModes.Polling:   SendData(new Command() { CommandData = PingCommand }); break;
-                    case PingModes.Listening: SendData(new Command() { CommandData = LoggingModePingCommand }); break;
+                    case PingModes.Polling:   SendData(new Command() { CommandData = PingCommand() }); break;
+                    case PingModes.Listening: SendData(new Command() { CommandData = LoggingModePingCommand() }); break;
                 }
             }
         }
@@ -287,7 +294,7 @@ namespace CTecUtil.IO
 
             //only ping the panel if there is no active upload/download
             if (_commandQueue.SubqueueCount == 0)
-                SendData(new Command() { CommandData = CheckFirmwareCommand });
+                SendData(new Command() { CommandData = CheckFirmwareCommand() });
         }
 
         private static void sendWriteableCheck()
@@ -303,7 +310,7 @@ namespace CTecUtil.IO
 
             //only ping the panel if there is no active upload/download
             if (_commandQueue.SubqueueCount == 0)
-                SendData(new Command() { CommandData = CheckWriteableCommand });
+                SendData(new Command() { CommandData = CheckWriteableCommand() });
         }
 
         private static void sendProtocolCheck()
@@ -322,7 +329,7 @@ namespace CTecUtil.IO
 
             //only ping the panel if there is no active upload/download
             if (_commandQueue.SubqueueCount == 0)
-                SendData(new Command() { CommandData = CheckProtocolCommand });
+                SendData(new Command() { CommandData = CheckProtocolCommand() });
         }
         #endregion
 
@@ -867,10 +874,10 @@ namespace CTecUtil.IO
         //private static bool isPingResponse(byte[] data)           => data is not null && data.Length > 0 && data[0] == _pingCommand?[_pingCommand.Length - 3];
         //private static bool isCheckFirmwareResponse(byte[] data)  => data is not null && _checkFirmwareVersionCommand is not null && data.Length > 0 && data[0] == _checkFirmwareVersionCommand[_checkFirmwareVersionCommand.Length - 3];
         //private static bool isCheckWriteableResponse(byte[] data) => data is not null && _checkWriteableCommand is not null && data.Length > 0 && data[0] == _checkWriteableCommand[_checkWriteableCommand.Length - 3];
-        private static bool isPingResponse(byte[] data)           => data is not null && data.Length > 0 && data[0] == PingCommand?[^3];
-        private static bool isCheckFirmwareResponse(byte[] data)  => data is not null && data.Length > 0 && data[0] == CheckFirmwareCommand?[^3];
-        private static bool isCheckWriteableResponse(byte[] data) => data is not null && data.Length > 0 && data[0] == CheckWriteableCommand?[^3];
-        private static bool isCheckProtocolResponse(byte[] data)  => data is not null && data.Length > 0 && data[0] == CheckProtocolCommand?[^3];
+        private static bool isPingResponse(byte[] data)           => data is not null && data.Length > 0 && data[0] == PingCommand()?[^3];
+        private static bool isCheckFirmwareResponse(byte[] data)  => data is not null && data.Length > 0 && data[0] == CheckFirmwareCommand()?[^3];
+        private static bool isCheckWriteableResponse(byte[] data) => data is not null && data.Length > 0 && data[0] == CheckWriteableCommand()?[^3];
+        private static bool isCheckProtocolResponse(byte[] data)  => data is not null && data.Length > 0 && data[0] == CheckProtocolCommand()?[^3];
         #endregion
 
 
