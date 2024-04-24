@@ -13,4 +13,16 @@ namespace CTecUtil
         ZFP,
         Quantec,
     }
+
+    class Enums
+    {
+        public static string SupportedAppsToString(SupportedApps app)
+         => app switch
+         {
+            SupportedApps.XFP     => "XfpTools",
+            SupportedApps.ZFP     => "ZfpTools",
+            SupportedApps.Quantec => "Quantec",
+            _                     => "Unknown C-Tec app",
+        };
+    }
 }

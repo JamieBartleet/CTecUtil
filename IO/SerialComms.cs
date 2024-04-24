@@ -392,23 +392,6 @@ namespace CTecUtil.IO
         public static void CancelCurrentQueue() => _commandQueue?.CancelCurrentQueue();
 
 
-        //private static void sendFirstCommandInQueue()
-        //{
-        //    if (IsDisconnected)
-        //        return;
-
-        //    //Debug.WriteLine("SendFirstCommandInQueue()   SubqueueCount " + _commandQueue.SubqueueCount);
-
-        //    Application.Current.Dispatcher.Invoke(new Action(() =>
-        //    {
-        //        _progressBarWindow.SubqueueCount = _commandQueue.SubqueueCount;
-
-        //    }), DispatcherPriority.Normal);
-
-        //    SendData(_commandQueue.Peek());
-        //}
-
-
         private static void sendNextCommandInQueue()
         {
             if (_disconnected == 1)
@@ -422,16 +405,11 @@ namespace CTecUtil.IO
 
             _progressOverall++;
             _progressWithinSubqueue++;
+
             if (_commandQueue.TotalCommandCount > 0)
-            {
                 SendData(_commandQueue.Peek());
-                //Debug.WriteLine("SendNextCommandInQueue() - ...command sent");
-            }
             else
-            {
                 _queueWasCompleted = true;
-                //Debug.WriteLine("SendNextCommandInQueue() - queue was completed");
-            }
         }
 
 
@@ -538,21 +516,15 @@ namespace CTecUtil.IO
             if (IsDisconnected)
                 return;
 
-            //Debug.WriteLine("dataReceived()");
-
             //lock (_portLock)
             {
                 try
                 {
                     if (sender is not SerialPort port)
-                    {
-                        //Debug.WriteLine("dataReceived() - sender is not SerialPort");
                         return;
-                    }
 
                     _responseTimer.Start(ResponseTimerPeriod);
 
-                    //if (ListenerMode)
                     if (PingMode == PingModes.Listening)
                         listenerDataReceived(port);
                     else
@@ -572,42 +544,11 @@ namespace CTecUtil.IO
         }
 
 
-        //public static CommandQueue TheQueue { get => _commandQueue; }
-
         private static async void responseDataReceived(SerialPort port)
         {
             try
             {
                 var incoming = readIncomingResponse(port);
-
-                //if (isPingResponse(incoming))
-                //{
-                //    //status is one of the Connected statuses: if not already thought to be writeable set it to read-only
-                //    if (_connectionStatus != ConnectionStatus.ConnectedWriteable)
-                //        setConnectionStatus(ConnectionStatus.ConnectedReadOnly);
-
-                //    //panel responded to ping, so request its firmware version
-                //    sendFirmwareVersionCheck();
-                //}
-                //else if (isCheckFirmwareResponse(incoming))
-                //{
-                //    //panel responded to ping, so notify the version number and request its read-only status
-                //    if (!NotifyFirmwareVersion?.Invoke(incoming) ?? true)
-                //        NotifyConnectionStatus?.Invoke(setConnectionStatus(ConnectionStatus.FirmwareNotSupported));
-                //    else
-                //        sendWriteableCheck();
-                //}
-                //else if (isCheckWriteableResponse(incoming))
-                //{
-                //    //read-only response received?
-                //    var readOnly = incoming.Length > 2 && incoming[2] == 0;
-                //    NotifyConnectionStatus?.Invoke(setConnectionStatus(readOnly ? ConnectionStatus.ConnectedReadOnly : ConnectionStatus.ConnectedWriteable));
-                //    sendProtocolCheck();
-                //}
-                //else if (isCheckProtocolResponse(incoming))
-                //{
-                //    NotifyDeviceProtocol?.Invoke(incoming);
-                //}
 
                 if (isPingResponse(incoming))
                 {
@@ -668,7 +609,6 @@ namespace CTecUtil.IO
                     if (cmd is not null)
                     {
                         var savedQueueId = _commandQueue.Id;
-                        //Debug.WriteLine("responseDataReceived() - _commandQueue.Id=" + _commandQueue.Id);
 
                         if (incoming is not null)
                         {
@@ -683,8 +623,6 @@ namespace CTecUtil.IO
                                         ok = cmd.DataReceiver?.Invoke(incoming, cmd.Index) == true;
                                 }
                             }));
-
-                            //Debug.WriteLine("responseDataReceived() - progress: subq=" + _progressWithinSubqueue + " o/a=" + _progressOverall + "/" + _numCommandsToProcess);
                         }
 
 
@@ -781,14 +719,9 @@ namespace CTecUtil.IO
                     //Read payload & checksum
                     var bytes = Math.Min(port.BytesToRead, buffer.Length - offset);
                     if (bytes > 0)
-                    {
                         port.Read(buffer, offset, bytes);
-                        //Debug.WriteLine("readIncomingResponse() -          ...read " + bytes + " bytes");
-                    }
                     offset += bytes;
                 }
-
-                //Debug.WriteLine("readIncomingResponse() -          incoming: [" + ByteArrayProcessing.ByteArrayToHexString(buffer) + "]");
 
                 if (!checkChecksum(buffer))
                     throw new FormatException("CTecUtil.IO.SerialComms.readIncomingResponse(): checksum error");
@@ -883,7 +816,6 @@ namespace CTecUtil.IO
 
         private static void responseTimerTimeout()
         {
-            //Debug.WriteLine("responseTimerTimeout()");
             if (_connectionStatus != ConnectionStatus.Listening)
             {
                 //try again...
@@ -1124,7 +1056,6 @@ namespace CTecUtil.IO
 
             }), DispatcherPriority.Send);
 
-            Debug.WriteLine("progressBarThread() - start sending commands...");
             Application.Current.Dispatcher.Invoke(new Action(() => sendNextCommandInQueue()));
 
             var timeout = DateTime.Now.AddSeconds(_timeoutSeconds);
