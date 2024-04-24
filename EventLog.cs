@@ -23,7 +23,7 @@ namespace CTecUtil
 
         private static string write(string message, EventLogEntryType level)
         {
-            System.Diagnostics.EventLog.WriteEntry(_source, Enums.SupportedAppsToString(ApplicationConfig.OwnerApp) + " - " + message, level, _eventId);
+            System.Diagnostics.EventLog.WriteEntry(_source, "Application: " + Process.GetCurrentProcess().ProcessName + "\n" + message, level, _eventId);
             return message;
         }
     }
