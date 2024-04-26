@@ -54,7 +54,7 @@ namespace CTecUtil.UI
         /// Set the window's size, position and state.
         /// </summary>
         public static WindowState SetWindowDimensions(Window window, WindowSizeParams? dimensions)
-        {
+            {
             if (dimensions?.Size is not null)
             {
                 window.Width  = dimensions.Size.Value.Width;
