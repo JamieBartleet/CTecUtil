@@ -5,9 +5,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CTecUtil.API
+namespace CTecUtil.UI
 {
-    public class gdi32API
+    public class IconUtil
     {
         [DllImport("gdi32.dll", SetLastError = true)]
         public static extern bool DeleteObject(IntPtr hObject);

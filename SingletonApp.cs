@@ -1,5 +1,4 @@
-﻿using CTecUtil.API;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -32,11 +31,11 @@ namespace CTecUtil
                             IntPtr otherInstance = p.MainWindowHandle;
 
                             //if other app is minimised retore it
-                            if (User32API.IsIconic(otherInstance)) 
-                                User32API.ShowWindow(otherInstance, User32API.SW_RESTORE);
+                            if (CTecUtil.UI.WindowUtil.IsIconic(otherInstance)) 
+                                CTecUtil.UI.WindowUtil.ShowWindow(otherInstance, CTecUtil.UI.WindowUtil.SW_RESTORE);
 
                             //activate the other app
-                            User32API.SetForegroundWindow(otherInstance); 
+                            CTecUtil.UI.WindowUtil.SetForegroundWindow(otherInstance); 
                             break;
                         }
                     }

@@ -8,12 +8,55 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Interop;
-using static CTecUtil.API.User32API;
 
 namespace CTecUtil.UI
 {
-    public class WindowUtils
+    public class WindowUtil
     {
+        #region app window
+
+        [DllImport("User32.dll")]
+        public static extern bool IsIconic(IntPtr hWnd);
+
+        [DllImport("User32.dll")]
+        public static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [DllImport("User32.dll")]
+        public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        public const int SW_RESTORE = 9;
+
+        #endregion
+
+
+        #region window helpers
+
+        [DllImport("user32.dll")]
+        public static extern int GetWindowLong(IntPtr hwnd, int index);
+
+        [DllImport("user32.dll")]
+        public static extern int SetWindowLong(IntPtr hwnd, int index, int newStyle);
+
+        [DllImport("user32.dll")]
+        public static extern bool SetWindowPos(IntPtr hwnd, IntPtr hwndInsertAfter, int x, int y, int width, int height, uint flags);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr SendMessage(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
+
+        public const int GWL_EXSTYLE = -20;
+        public const int WS_EX_DLGMODALFRAME = 0x0001;
+        public const int WS_EX_RIGHT = 0x00001000;
+        public const int WS_EX_RTLREADING = 0x00002000;
+
+        public const int SWP_NOSIZE = 0x0001;
+        public const int SWP_NOMOVE = 0x0002;
+        public const int SWP_NOZORDER = 0x0004;
+        public const int SWP_FRAMECHANGED = 0x0020;
+        public const uint WM_SETICON = 0x0080;
+
+        #endregion
+
+
         /// <summary>
         /// Ensure that a window maximises to the correct size when its Shell:WindowChrome 
         /// has been overridden, otherwise the extremities may be clipped.
@@ -23,20 +66,20 @@ namespace CTecUtil.UI
 
         public static IntPtr HookGetMinMaxInfo(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
-            if (msg == WM_GETMINMAXINFO)
+            if (msg == MonitorUtil.WM_GETMINMAXINFO)
             {
                 // We need to tell the system what our size should be when maximized so the extremities aren't clipped
-                MINMAXINFO mmi = (MINMAXINFO)Marshal.PtrToStructure(lParam, typeof(MINMAXINFO));
+                MonitorUtil.MINMAXINFO mmi = (MonitorUtil.MINMAXINFO)Marshal.PtrToStructure(lParam, typeof(MonitorUtil.MINMAXINFO));
 
                 // Adjust the maximized size and position to fit the work area of the correct monitor
-                IntPtr monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+                IntPtr monitor = MonitorUtil.MonitorFromWindow(hwnd, MonitorUtil.MONITOR_DEFAULTTONEAREST);
 
                 if (monitor != IntPtr.Zero)
                 {
-                    MONITORINFO monitorInfo = new MONITORINFO { cbSize = Marshal.SizeOf(typeof(MONITORINFO)) };
-                    GetMonitorInfo(monitor, ref monitorInfo);
-                    RECT rcWorkArea     = monitorInfo.rcWork;
-                    RECT rcMonitorArea  = monitorInfo.rcMonitor;
+                    MonitorUtil.MONITORINFO monitorInfo = new MonitorUtil.MONITORINFO { cbSize = Marshal.SizeOf(typeof(MonitorUtil.MONITORINFO)) };
+                    MonitorUtil.GetMonitorInfo(monitor, ref monitorInfo);
+                    MonitorUtil.RECT rcWorkArea     = monitorInfo.rcWork;
+                    MonitorUtil.RECT rcMonitorArea  = monitorInfo.rcMonitor;
                     mmi.ptMaxPosition.X = Math.Abs(rcWorkArea.Left - rcMonitorArea.Left);
                     mmi.ptMaxPosition.Y = Math.Abs(rcWorkArea.Top - rcMonitorArea.Top);
                     mmi.ptMaxSize.X     = Math.Abs(rcWorkArea.Right - rcWorkArea.Left);
