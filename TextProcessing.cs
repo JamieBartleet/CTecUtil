@@ -366,25 +366,6 @@ namespace CTecUtil
         }
 
 
-        public static string NumberListToString(List<int> numberList)
-        {
-            StringBuilder result = new StringBuilder();
-            for (int i = 0; i < numberList.Count; i++)
-            {
-                if (result.Length > 0)
-                {
-                    if (i == numberList.Count - 1)
-                        result.Append(" & " + numberList[i].ToString());
-                    else
-                        result.Append(", " + numberList[i].ToString());
-                }
-                else
-                    result.Append(numberList[i]);
-            }
-            return result.ToString();
-        }
-
-
         /// <summary>
         /// Attempts to retrieve the int value from a formatted string, i.e. one built using string.Format and containing a '{0}' placeholder.
         /// </summary>

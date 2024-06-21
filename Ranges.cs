@@ -124,6 +124,57 @@ namespace CTecUtil
         }
 
 
+        /// <summary>
+        /// Returns a string representing a range of numbers.  Duplicates are removed and the list sorted.
+        /// </summary>
+        /// <param name="numberList"></param>
+        /// <returns>Formatted number range string, e.g. "1-5,8,11-15"</returns>
+        public static string NumberListToString(List<int> numberList)
+        {
+            if ((numberList?.Count??0) == 0)
+                return "";
+
+            numberList = Ranges.normaliseIntList(numberList);
+
+            StringBuilder result = new StringBuilder();
+            var seq = 0;
+            
+            for (int i = 0; i < numberList.Count; i++)
+            {
+                if (result.Length > 0)
+                {
+                    if (i > 0)
+                    {
+                        if (numberList[i] == numberList[i - 1] + 1)
+                        {
+                            if (seq == 0)
+                                result.Append("-");
+                            seq++;
+                        }
+                        else if (i > 0)
+                        {
+                            if (seq > 0)
+                                result.Append(numberList[i - 1]);
+                            result.Append("," + numberList[i]);
+                            seq = 0;
+                        }
+                    }
+                    else
+                    {
+                        result.Append(numberList[i]);
+                    }
+                }
+                else
+                    result.Append(numberList[i]);
+            }
+
+            if (seq > 0)
+                result.Append(numberList[^1]);
+
+            return result.ToString();
+        }
+
+
         private static bool checkValidTokens(string stringValue, char lowLimit, char highLimit)
         {
             foreach (var _ in from c in stringValue
