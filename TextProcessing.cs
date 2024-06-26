@@ -367,6 +367,57 @@ namespace CTecUtil
 
 
         /// <summary>
+        /// Returns a string representing a range of numbers.  Duplicates are removed and the list sorted.
+        /// </summary>
+        /// <param name="numberList"></param>
+        /// <returns>Formatted number range string, e.g. "1-5,8,11-15"</returns>
+        public static string NumberListToString(List<int> numberList)
+        {
+            if ((numberList?.Count??0) == 0)
+                return "";
+
+            numberList = Ranges.NormaliseIntList(numberList);
+
+            StringBuilder result = new StringBuilder();
+            var seq = 0;
+            
+            for (int i = 0; i < numberList.Count; i++)
+            {
+                if (result.Length > 0)
+                {
+                    if (i > 0)
+                    {
+                        if (numberList[i] == numberList[i - 1] + 1)
+                        {
+                            if (seq == 0)
+                                result.Append("-");
+                            seq++;
+                        }
+                        else if (i > 0)
+                        {
+                            if (seq > 0)
+                                result.Append(numberList[i - 1]);
+                            result.Append("," + numberList[i]);
+                            seq = 0;
+                        }
+                    }
+                    else
+                    {
+                        result.Append(numberList[i]);
+                    }
+                }
+                else
+                    result.Append(numberList[i]);
+            }
+
+            if (seq > 0)
+                result.Append(numberList[^1]);
+
+            return result.ToString();
+        }
+
+
+        /// <summary>
         /// Attempts to retrieve the int value from a formatted string, i.e. one built using string.Format and containing a '{0}' placeholder.
         /// </summary>
         /// <param name="text">The text string to analyse</param>
