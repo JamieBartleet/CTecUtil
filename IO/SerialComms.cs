@@ -807,10 +807,10 @@ namespace CTecUtil.IO
         //private static bool isPingResponse(byte[] data)           => data is not null && data.Length > 0 && data[0] == _pingCommand?[_pingCommand.Length - 3];
         //private static bool isCheckFirmwareResponse(byte[] data)  => data is not null && _checkFirmwareVersionCommand is not null && data.Length > 0 && data[0] == _checkFirmwareVersionCommand[_checkFirmwareVersionCommand.Length - 3];
         //private static bool isCheckWriteableResponse(byte[] data) => data is not null && _checkWriteableCommand is not null && data.Length > 0 && data[0] == _checkWriteableCommand[_checkWriteableCommand.Length - 3];
-        private static bool isPingResponse(byte[] data)           => data is not null && data.Length > 0 && data[0] == PingCommand()?[^3];
-        private static bool isCheckFirmwareResponse(byte[] data)  => data is not null && data.Length > 0 && data[0] == CheckFirmwareCommand()?[^3];
-        private static bool isCheckWriteableResponse(byte[] data) => data is not null && data.Length > 0 && data[0] == CheckWriteableCommand()?[^3];
-        private static bool isCheckProtocolResponse(byte[] data)  => data is not null && data.Length > 0 && data[0] == CheckProtocolCommand()?[^3];
+        private static bool isPingResponse(byte[] data)           => data is not null && PingCommand is not null && data.Length > 0 && data[0] == PingCommand()?[^3];
+        private static bool isCheckFirmwareResponse(byte[] data)  => data is not null && CheckFirmwareCommand is not null && data.Length > 0 && data[0] == CheckFirmwareCommand()?[^3];
+        private static bool isCheckWriteableResponse(byte[] data) => data is not null && CheckWriteableCommand is not null && data.Length > 0 && data[0] == CheckWriteableCommand()?[^3];
+        private static bool isCheckProtocolResponse(byte[] data)  => data is not null && CheckProtocolCommand is not null && data.Length > 0 && data[0] == CheckProtocolCommand()?[^3];
         #endregion
 
 
