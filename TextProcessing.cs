@@ -464,5 +464,92 @@ namespace CTecUtil
         /// </summary>
         /// <returns></returns>
         public static string IntToZeroPaddedString(int value, int length) => string.Format("{0:" + new string('0', length) + "}", value);
+
+
+        /// <summary>
+        /// Compares two firmware version numbers.  Both must be in format 99A99.<br/><br/>
+        /// <i><b>NB:</b> does not account for hex numbers, should that be a thing.</i>
+        /// </summary>
+        /// <param name="firmwareVersion1"></param>
+        /// <param name="firmwareVersion2"></param>
+        /// <returns>1, 0 or -1 as per string Compare(), or null if either value is invalid or null</returns>
+        public static int? CompareFirmwareVersion(string firmwareVersion1, string firmwareVersion2)
+        {
+            if (firmwareVersion1 is null || firmwareVersion2 is null)
+                return null;
+
+            //check the major and minor revision numbers; ignore the
+            //char element as that denotes variants that are functionally
+            //equivalent (e.g. different language versions)
+
+            var alphas = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
+            var idxAlpha1 = firmwareVersion1.IndexOfAny(alphas);
+            var idxAlpha2 = firmwareVersion2.IndexOfAny(alphas);
+
+            if (idxAlpha1 < 0 || idxAlpha2 < 0)
+                return null;
+
+            var a1 = firmwareVersion1.Substring(idxAlpha1, 1);
+            var a2 = firmwareVersion2.Substring(idxAlpha2, 1);
+
+            var split1 = firmwareVersion1.Split(a1);
+            var split2 = firmwareVersion2.Split(a2);
+
+            if (split1.Length < 2 || split2.Length < 2)
+                return null;
+
+            var n1 = 0;
+            var n2 = 0;
+
+            if (!int.TryParse(split1[0], out n1)) return null;
+            if (!int.TryParse(split2[0], out n2)) return null;
+            var result = n1 > n2 ? 1 : n1 < n2 ? -1 : 0;
+
+            if (result == 0)
+            {
+                if (!int.TryParse(split1[1], out n1)) return null;
+                if (!int.TryParse(split2[1], out n2)) return null;
+                result = n1 > n2 ? 1 : n1 < n2 ? -1 : 0;
+            }
+            return result;
+        }
+
+
+        /// <summary>
+        /// Compares two software version numbers.  Both must be in format 9.9[.9[.9]].
+        /// </summary>
+        /// <param name="softwareVersion1"></param>
+        /// <param name="softwareVersion2"></param>
+        /// <returns>1, 0 or -1 as per string Compare(), or null if either value is invalid or null</returns>
+        public static int? CompareSoftwareVersion(string softwareVersion1, string softwareVersion2)
+        {
+            if (softwareVersion1 is null || softwareVersion2 is null)
+                return null;
+
+            var split1 = softwareVersion1.Split(".");
+            var split2 = softwareVersion2.Split(".");
+
+            if (split1.Length < 2 || split2.Length < 2 || split1.Length > 4 || split2.Length > 4)
+                return null;
+
+            var result = string.Compare(split1[0], split2[0]);
+
+            if (result == 0)
+                result = string.Compare(split1[1], split2[1]);
+
+            if (result == 0 && (split1.Length < 3 || split2.Length < 3))
+                result = split1.Length < split2.Length ? -1 : split1.Length > split2.Length ? 1 : 0;
+
+            if (result == 0)
+                result = string.Compare(split1[2], split2[2]);
+
+            if (result == 0 && (split1.Length < 4 || split2.Length < 4))
+                result = split1.Length < split2.Length ? -1 : split1.Length > split2.Length ? 1 : 0;
+
+            if (result == 0)
+                result = string.Compare(split1[3], split2[3]);
+
+            return result;
+        }
     }
 }
