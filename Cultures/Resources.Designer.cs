@@ -212,5 +212,248 @@ namespace CTecUtil.Cultures {
                 return ResourceManager.GetString("Option_Cancel", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Busy.
+        /// </summary>
+        public static string PrintQueueStatus_Busy {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_Busy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Door open.
+        /// </summary>
+        public static string PrintQueueStatus_DoorOpen {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_DoorOpen", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error.
+        /// </summary>
+        public static string PrintQueueStatus_Error {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Initialising.
+        /// </summary>
+        public static string PrintQueueStatus_Initialising {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_Initialising", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Receiving data.
+        /// </summary>
+        public static string PrintQueueStatus_IOActive {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_IOActive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for manual feed.
+        /// </summary>
+        public static string PrintQueueStatus_ManualFeed {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_ManualFeed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Status is not specified.
+        /// </summary>
+        public static string PrintQueueStatus_None {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_None", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Status information is unavailable.
+        /// </summary>
+        public static string PrintQueueStatus_NotAvailable {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_NotAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Out of toner.
+        /// </summary>
+        public static string PrintQueueStatus_NoToner {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_NoToner", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Offline.
+        /// </summary>
+        public static string PrintQueueStatus_Offline {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_Offline", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Out of memory.
+        /// </summary>
+        public static string PrintQueueStatus_OutOfMemory {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_OutOfMemory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Output bin is full.
+        /// </summary>
+        public static string PrintQueueStatus_OutputBinFull {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_OutputBinFull", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to print current page.
+        /// </summary>
+        public static string PrintQueueStatus_PagePunt {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_PagePunt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Paper jam.
+        /// </summary>
+        public static string PrintQueueStatus_PaperJam {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_PaperJam", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Out of paper.
+        /// </summary>
+        public static string PrintQueueStatus_PaperOut {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_PaperOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Paper problem.
+        /// </summary>
+        public static string PrintQueueStatus_PaperProblem {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_PaperProblem", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Print queue paused.
+        /// </summary>
+        public static string PrintQueueStatus_Paused {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_Paused", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Deleting print job.
+        /// </summary>
+        public static string PrintQueueStatus_PendingDeletion {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_PendingDeletion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Power save mode.
+        /// </summary>
+        public static string PrintQueueStatus_PowerSave {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_PowerSave", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Printing.
+        /// </summary>
+        public static string PrintQueueStatus_Printing {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_Printing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Processing.
+        /// </summary>
+        public static string PrintQueueStatus_Processing {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_Processing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ready.
+        /// </summary>
+        public static string PrintQueueStatus_Ready {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_Ready", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error.
+        /// </summary>
+        public static string PrintQueueStatus_ServerUnknown {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_ServerUnknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Toner low.
+        /// </summary>
+        public static string PrintQueueStatus_TonerLow {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_TonerLow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: requires user action.
+        /// </summary>
+        public static string PrintQueueStatus_UserIntervention {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_UserIntervention", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for print job.
+        /// </summary>
+        public static string PrintQueueStatus_Waiting {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_Waiting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warming up.
+        /// </summary>
+        public static string PrintQueueStatus_WarmingUp {
+            get {
+                return ResourceManager.GetString("PrintQueueStatus_WarmingUp", resourceCulture);
+            }
+        }
     }
 }

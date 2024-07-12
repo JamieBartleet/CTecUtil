@@ -115,8 +115,7 @@ namespace CTecUtil
         /// </summary>
         public static void UpdateMainWindowParams(Window window, bool saveSettings = false)
         {
-            if (_config.MainWindow is null)
-                _config.MainWindow = new();
+            _config.MainWindow ??= new();
 
             updateWindowParams(window, _config.MainWindow, saveSettings);
         }
@@ -127,8 +126,7 @@ namespace CTecUtil
         /// </summary>
         public static void UpdateMonitorWindowParams(Window window, bool saveSettings = false)
         {
-            if (_config.MonitorWindow is null)
-                _config.MonitorWindow = new();
+            _config.MonitorWindow ??= new();
 
             updateWindowParams(window, _config.MonitorWindow, saveSettings);
         }
@@ -139,8 +137,7 @@ namespace CTecUtil
         /// </summary>
         public static void UpdateValidationWindowParams(Window window, bool saveSettings = false)
         {
-            if (_config.ValidationWindow is null)
-                _config.ValidationWindow = new();
+            _config.ValidationWindow ??= new();
 
             updateWindowParams(window, _config.ValidationWindow, saveSettings);
         }

@@ -168,4 +168,85 @@
   <data name="Comms_x_Upload_Complete" xml:space="preserve">
     <value>{0}: upload complete.</value>
   </data>
+  <data name="PrintQueueStatus_Busy" xml:space="preserve">
+    <value>Busy</value>
+  </data>
+  <data name="PrintQueueStatus_DoorOpen" xml:space="preserve">
+    <value>Door open</value>
+  </data>
+  <data name="PrintQueueStatus_Error" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="PrintQueueStatus_Initialising" xml:space="preserve">
+    <value>Initialising</value>
+  </data>
+  <data name="PrintQueueStatus_IOActive" xml:space="preserve">
+    <value>Receiving data</value>
+  </data>
+  <data name="PrintQueueStatus_ManualFeed" xml:space="preserve">
+    <value>Waiting for manual feed</value>
+  </data>
+  <data name="PrintQueueStatus_None" xml:space="preserve">
+    <value>Status is not specified</value>
+  </data>
+  <data name="PrintQueueStatus_NotAvailable" xml:space="preserve">
+    <value>Status information is unavailable</value>
+  </data>
+  <data name="PrintQueueStatus_NoToner" xml:space="preserve">
+    <value>Out of toner</value>
+  </data>
+  <data name="PrintQueueStatus_Offline" xml:space="preserve">
+    <value>Offline</value>
+  </data>
+  <data name="PrintQueueStatus_OutOfMemory" xml:space="preserve">
+    <value>Out of memory</value>
+  </data>
+  <data name="PrintQueueStatus_OutputBinFull" xml:space="preserve">
+    <value>Output bin is full</value>
+  </data>
+  <data name="PrintQueueStatus_PagePunt" xml:space="preserve">
+    <value>Unable to print current page</value>
+  </data>
+  <data name="PrintQueueStatus_PaperJam" xml:space="preserve">
+    <value>Paper jam</value>
+  </data>
+  <data name="PrintQueueStatus_PaperOut" xml:space="preserve">
+    <value>Out of paper</value>
+  </data>
+  <data name="PrintQueueStatus_PaperProblem" xml:space="preserve">
+    <value>Paper problem</value>
+  </data>
+  <data name="PrintQueueStatus_Paused" xml:space="preserve">
+    <value>Print queue paused</value>
+  </data>
+  <data name="PrintQueueStatus_PendingDeletion" xml:space="preserve">
+    <value>Deleting print job</value>
+  </data>
+  <data name="PrintQueueStatus_PowerSave" xml:space="preserve">
+    <value>Power save mode</value>
+  </data>
+  <data name="PrintQueueStatus_Printing" xml:space="preserve">
+    <value>Printing</value>
+  </data>
+  <data name="PrintQueueStatus_Processing" xml:space="preserve">
+    <value>Processing</value>
+  </data>
+  <data name="PrintQueueStatus_Ready" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="PrintQueueStatus_ServerUnknown" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="PrintQueueStatus_TonerLow" xml:space="preserve">
+    <value>Toner low</value>
+  </data>
+  <data name="PrintQueueStatus_UserIntervention" xml:space="preserve">
+    <value>Error: requires user action</value>
+  </data>
+  <data name="PrintQueueStatus_Waiting" xml:space="preserve">
+    <value>Waiting for print job</value>
+  </data>
+  <data name="PrintQueueStatus_WarmingUp" xml:space="preserve">
+    <value>Warming up</value>
+  </data>
 </root>

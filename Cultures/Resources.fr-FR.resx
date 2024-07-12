@@ -168,4 +168,85 @@
   <data name="Comms_x_Upload_Complete" xml:space="preserve">
     <value>{0} : téléchargement est terminé.</value>
   </data>
+  <data name="PrintQueueStatus_Busy" xml:space="preserve">
+    <value>Occupée</value>
+  </data>
+  <data name="PrintQueueStatus_DoorOpen" xml:space="preserve">
+    <value>Porte ouverte</value>
+  </data>
+  <data name="PrintQueueStatus_Error" xml:space="preserve">
+    <value>Erreur</value>
+  </data>
+  <data name="PrintQueueStatus_Initialising" xml:space="preserve">
+    <value>Initialisation</value>
+  </data>
+  <data name="PrintQueueStatus_IOActive" xml:space="preserve">
+    <value>Réception des données</value>
+  </data>
+  <data name="PrintQueueStatus_ManualFeed" xml:space="preserve">
+    <value>En attente d’une alimentation manuelle</value>
+  </data>
+  <data name="PrintQueueStatus_None" xml:space="preserve">
+    <value>Statut non spécifié</value>
+  </data>
+  <data name="PrintQueueStatus_NotAvailable" xml:space="preserve">
+    <value>Les informations sur l’état ne sont pas disponibles</value>
+  </data>
+  <data name="PrintQueueStatus_NoToner" xml:space="preserve">
+    <value>Manque d'encre</value>
+  </data>
+  <data name="PrintQueueStatus_Offline" xml:space="preserve">
+    <value>Hors-ligne</value>
+  </data>
+  <data name="PrintQueueStatus_OutOfMemory" xml:space="preserve">
+    <value>Mémoire insuffisante</value>
+  </data>
+  <data name="PrintQueueStatus_OutputBinFull" xml:space="preserve">
+    <value>Le bac de sortie est plein</value>
+  </data>
+  <data name="PrintQueueStatus_PagePunt" xml:space="preserve">
+    <value>Impossible d’imprimer la page actuelle</value>
+  </data>
+  <data name="PrintQueueStatus_PaperJam" xml:space="preserve">
+    <value>Bourrage</value>
+  </data>
+  <data name="PrintQueueStatus_PaperOut" xml:space="preserve">
+    <value>À court de papier</value>
+  </data>
+  <data name="PrintQueueStatus_PaperProblem" xml:space="preserve">
+    <value>Problème de papier</value>
+  </data>
+  <data name="PrintQueueStatus_Paused" xml:space="preserve">
+    <value>File d’attente d’impression en pause</value>
+  </data>
+  <data name="PrintQueueStatus_PendingDeletion" xml:space="preserve">
+    <value>Suppression de travail d’impression</value>
+  </data>
+  <data name="PrintQueueStatus_PowerSave" xml:space="preserve">
+    <value>Mode d’économie d’énergie</value>
+  </data>
+  <data name="PrintQueueStatus_Printing" xml:space="preserve">
+    <value>En cours d’impression</value>
+  </data>
+  <data name="PrintQueueStatus_Processing" xml:space="preserve">
+    <value>Traitement</value>
+  </data>
+  <data name="PrintQueueStatus_Ready" xml:space="preserve">
+    <value>Prête</value>
+  </data>
+  <data name="PrintQueueStatus_ServerUnknown" xml:space="preserve">
+    <value>Erreur</value>
+  </data>
+  <data name="PrintQueueStatus_TonerLow" xml:space="preserve">
+    <value>Niveau d’encre faible</value>
+  </data>
+  <data name="PrintQueueStatus_UserIntervention" xml:space="preserve">
+    <value>Erreur : nécessite une action de l’utilisateur</value>
+  </data>
+  <data name="PrintQueueStatus_Waiting" xml:space="preserve">
+    <value>En attente d’un travail d’impression</value>
+  </data>
+  <data name="PrintQueueStatus_WarmingUp" xml:space="preserve">
+    <value>Échauffement</value>
+  </data>
 </root>
