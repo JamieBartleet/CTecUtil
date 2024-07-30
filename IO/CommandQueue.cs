@@ -68,7 +68,7 @@ namespace CTecUtil.IO
         /// <param name="command"></param>
         internal void Enqueue(Command command)
         {
-            CTecUtil.Debug.WriteLine("Enqueue(" + command?.ToString() + ")");
+            CTecUtil.Debug.WriteLine("tot=" + TotalCommandCount + " " + _currentQueue.Name + "=" + _currentQueue.InitialCommandsInQueue + 1 + " Enqueue(" + command?.ToString() + ")");
             _currentQueue?.Enqueue(command);
         }
 

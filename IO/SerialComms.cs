@@ -389,7 +389,17 @@ namespace CTecUtil.IO
 
 
         public static void CancelCommandQueue() => _commandQueue?.Clear();
-        public static void CancelCurrentQueue() => _commandQueue?.CancelCurrentQueue();
+        public static void CancelCurrentQueue()
+        {
+            try
+            {
+                //subtract the discarded queue's items from the total
+                Application.Current.Dispatcher.Invoke(new Action(() => _progressBarWindow.ProgressBarOverallMax -= _commandQueue.CommandsInCurrentSubqueue));
+            }
+            catch { };
+
+            _commandQueue?.CancelCurrentQueue();
+        }
 
 
         private static void sendNextCommandInQueue()
@@ -871,13 +881,13 @@ namespace CTecUtil.IO
         {
             if (_port is null)
             {
-                Debug.WriteLine("OpenPort() - port was null");
+                //Debug.WriteLine("OpenPort() - port was null");
                 getNewSerialPort();
             }
 
             if (_port?.IsOpen == false)
             {
-                Debug.WriteLine("OpenPort() - port was closed");
+                //Debug.WriteLine("OpenPort() - port was closed");
                 try
                 { _port?.Open(); } catch { }
             }
@@ -892,7 +902,7 @@ namespace CTecUtil.IO
         {
             try
             {
-                Debug.WriteLine("ClosePort()");
+                //Debug.WriteLine("ClosePort()");
                 CancelCommandQueue();
 
                 lock (_portLock)
