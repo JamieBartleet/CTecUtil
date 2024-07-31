@@ -881,13 +881,11 @@ namespace CTecUtil.IO
         {
             if (_port is null)
             {
-                //Debug.WriteLine("OpenPort() - port was null");
                 getNewSerialPort();
             }
 
             if (_port?.IsOpen == false)
             {
-                //Debug.WriteLine("OpenPort() - port was closed");
                 try
                 { _port?.Open(); } catch { }
             }
@@ -902,7 +900,6 @@ namespace CTecUtil.IO
         {
             try
             {
-                //Debug.WriteLine("ClosePort()");
                 CancelCommandQueue();
 
                 lock (_portLock)
