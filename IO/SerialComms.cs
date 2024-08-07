@@ -1010,7 +1010,7 @@ namespace CTecUtil.IO
 
         #region progress bar
         private static ProgressBarWindow _progressBarWindow = new();
-        private static int _progressOverall, _progressWithinSubqueue, _numCommandsToProcess;
+        private static int _progressOverall, _progressWithinSubqueue;
 
         private static Action _onStartProgress;
         private static OnFinishedHandler _onEndProgress;
@@ -1041,8 +1041,6 @@ namespace CTecUtil.IO
 
         private static void progressBarThread()
         {
-            //_numCommandsToProcess   = _commandQueue.TotalCommandCount;
-            //var commandsInSubqueue  = _commandQueue.CommandsInCurrentSubqueue;
             var commsDirection      = _commandQueue.Direction;
             string currentCommsDesc = _commandQueue.SubqueueNames?.Count > 0 ? _commandQueue.SubqueueNames?[0] : "";
 

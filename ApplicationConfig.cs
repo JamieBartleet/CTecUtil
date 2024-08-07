@@ -68,7 +68,7 @@ namespace CTecUtil
                     }
                 }
             }
-            catch (FileNotFoundException ex) { }
+            catch (FileNotFoundException) { }
             catch (DirectoryNotFoundException ex) { Debug.WriteLine(ex.Message); }
             catch (UnauthorizedAccessException ex) { Debug.WriteLine(ex.Message); }
             catch (IOException ex) { Debug.WriteLine(ex.Message); }
