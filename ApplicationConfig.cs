@@ -105,6 +105,12 @@ namespace CTecUtil
 
 
         /// <summary>
+        /// Node Summary window's size and position.
+        /// </summary>
+        public static WindowSizeParams NodeSummaryWindow { get => _config.NodeSummaryWindow; }
+
+
+        /// <summary>
         /// Validation window's size and position.
         /// </summary>
         public static WindowSizeParams ValidationWindow { get => _config.ValidationWindow; }
@@ -129,6 +135,17 @@ namespace CTecUtil
             _config.MonitorWindow ??= new();
 
             updateWindowParams(window, _config.MonitorWindow, saveSettings);
+        }
+
+
+        /// <summary>
+        /// Save the Node Summary window's size and position.
+        /// </summary>
+        public static void UpdateNodeSummaryWindowParams(Window window, bool saveSettings = false)
+        {
+            _config.NodeSummaryWindow ??= new();
+
+            updateWindowParams(window, _config.NodeSummaryWindow, saveSettings);
         }
 
 
