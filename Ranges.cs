@@ -19,7 +19,7 @@ namespace CTecUtil
         /// E.g. "1-4, 7, 13-15" would parse to 1,2,3,4,7,13,14,15
         /// </summary>
         /// <param name="stringValue"></param>
-        /// <returns></returns>
+        /// <returns>Sorted list</returns>
         public static List<int> ParseIntList(string stringValue)
         {
             if (!checkValidTokens(stringValue, '0', '9'))
