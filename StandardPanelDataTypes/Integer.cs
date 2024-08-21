@@ -25,7 +25,7 @@ namespace CTecUtil.StandardPanelDataTypes
         /// <param name="length"></param>
         /// <param name="startOffset">Index of start of data.<br/>Default is 2, which allows for the first 2 bytes being the type code.</param>
         /// <returns></returns>
-        public static Integer Parse(byte[] data, Func<byte[], bool> typeCheck, int length, int startOffset)
+        public static Integer Parse(byte[] data, Func<byte[], bool> typeCheck, int length, int startOffset = 2)
         {
             if (!typeCheck?.Invoke(data)??false)
                 return null;

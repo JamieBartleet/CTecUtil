@@ -17,12 +17,16 @@ namespace CTecUtil.StandardPanelDataTypes
         [JsonIgnore]
         public int    Length { get; set; }
 
+        [JsonIgnore]
+        public bool Centred { get; set; } = false;
+
 
         /// <summary>
         /// Convert Text to a byte array
         /// </summary>
         /// <returns></returns>
-        public byte[] ToByteArray() => ByteArrayProcessing.StringToByteArray(Value, Length);
+        public byte[] ToByteArray() => ToByteArray(Centred);
+        public byte[] ToByteArray(bool centred) => ByteArrayProcessing.StringToByteArray(Value, Length, centred);
 
 
         /// <summary>
@@ -50,7 +54,7 @@ namespace CTecUtil.StandardPanelDataTypes
         /// <param name="trim">Trim any leading and trailing white space (default is True).</param>
         /// <param name="startOffset">Index of start of string data.</param>
         /// <returns></returns>
-        internal static string ExtractString(byte[] data, int length, bool trim = true, int startOffset = 2)
+        public static string ExtractString(byte[] data, int length, bool trim = true, int startOffset = 2)
         {
             try
             {
