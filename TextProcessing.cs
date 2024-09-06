@@ -141,8 +141,8 @@ namespace CTecUtil
         /// <summary>
         /// Converts KeyEventArgs key to a string.
         /// </summary>
-        public static string KeyToString(KeyEventArgs e) => e.SystemKey != Key.None ? TextProcessing.KeyToString(e.SystemKey)   // if Alt+key was pressed, the key 
-                                                                                    : TextProcessing.KeyToString(e.Key);        // is e.SystemKey rather than e.Key
+        public static string KeyToString(KeyEventArgs e) => e.SystemKey != Key.None ? TextProcessing.KeyToString(e.SystemKey)   // if Alt+key was pressed then what we want is e.SystemKey rather than e.Key
+                                                                                    : TextProcessing.KeyToString(e.Key);
 
 
         /// <summary>
