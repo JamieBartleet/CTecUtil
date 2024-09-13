@@ -10,7 +10,7 @@
         AllowsTransparency="True"
         WindowStyle="None"
         Style="{StaticResource CTecMessageBoxStyle}"
-        Width="250" Height="160"
+        Width="260" Height="170"
         Title="ProgressBarWindow"
         ShowInTaskbar="False">
     
@@ -19,7 +19,8 @@
                 BorderBrush="#707070" 
                 BorderThickness="2"
                 CornerRadius="5"
-                Margin="10">
+                Margin="10"
+                Padding="10">
 
             <Border.Effect>
                 <DropShadowEffect Color="Black"

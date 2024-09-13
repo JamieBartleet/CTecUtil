@@ -82,7 +82,11 @@ namespace CTecUtil.IO
                     Settings.PortName = value;
 
                     if (_port is null || _port.PortName != value)
+                    {
+                        if (_port is not null && _port.IsOpen)
+                            _port.Close();
                         getNewSerialPort();
+                    }
                 }
             }
         }
@@ -991,9 +995,9 @@ namespace CTecUtil.IO
                     WriteTimeout = Settings.WriteTimeout
                 };
 
-                var available = GetAvailablePorts();
-                if (available.Count > 0 && !available.Contains(_port.PortName))
-                    _port.PortName = available[0];
+                //var available = GetAvailablePorts();
+                //if (available.Count > 0 && !available.Contains(_port.PortName))
+                //    _port.PortName = available[0];
 
                 _port.DataReceived  += dataReceived;
                 _port.ErrorReceived += errorReceived;
