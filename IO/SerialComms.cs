@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.DirectoryServices;
 using System.IO.Ports;
 using System.Linq;
 using System.Text;
@@ -417,6 +418,7 @@ namespace CTecUtil.IO
             if (IsDisconnected)
                 return;
 
+Debug.WriteLine("SerialComms.sendNextCommandInQueue()");
             _progressOverall++;
             _progressWithinSubqueue++;
 
@@ -429,6 +431,7 @@ namespace CTecUtil.IO
 
         private static void resendCommand()
         {
+Debug.WriteLine("SerialComms.resendCommand()");
             if (_disconnected == 1)
             {
                 doDisconnect();
@@ -495,6 +498,7 @@ namespace CTecUtil.IO
                     if (command is not null && command.CommandData is not null)
                     {
                         command.Tries++;
+Debug.WriteLine("SerialComms.SendData() #" + command.Tries + " " + ByteArrayProcessing.ByteArrayToHexString(command.CommandData));
 
                         try
                         {
@@ -530,6 +534,7 @@ namespace CTecUtil.IO
             if (IsDisconnected)
                 return;
 
+Debug.WriteLine("SerialComms.dataReceived()");
             //lock (_portLock)
             {
                 try
@@ -566,6 +571,7 @@ namespace CTecUtil.IO
 
                 if (isPingResponse(incoming))
                 {
+Debug.WriteLine("SerialComms.responseDataReceived() - ping response");
                     //status is one of the Connected statuses: if not already thought to be writeable set it to read-only
                     if (_connectionStatus != ConnectionStatus.ConnectedWriteable)
                         setConnectionStatus(ConnectionStatus.ConnectedReadOnly);
@@ -575,6 +581,7 @@ namespace CTecUtil.IO
                 }
                 else if (isCheckWriteableResponse(incoming))
                 {
+Debug.WriteLine("SerialComms.responseDataReceived() - check writeable response");
                     //read-only response received?
                     var readOnly = incoming.Length > 2 && incoming[2] == 0;
                     NotifyConnectionStatus?.Invoke(setConnectionStatus(readOnly ? ConnectionStatus.ConnectedReadOnly : ConnectionStatus.ConnectedWriteable));
@@ -582,6 +589,7 @@ namespace CTecUtil.IO
                 }
                 else if (isCheckFirmwareResponse(incoming))
                 {
+Debug.WriteLine("SerialComms.responseDataReceived() - check firmware response");
                     //panel responded to ping, so notify the version number and request its read-only status
                     if (!NotifyFirmwareVersion?.Invoke(incoming) ?? true)
                         NotifyConnectionStatus?.Invoke(setConnectionStatus(ConnectionStatus.FirmwareNotSupported));
@@ -590,16 +598,17 @@ namespace CTecUtil.IO
                 }
                 else if (isCheckProtocolResponse(incoming))
                 {
+Debug.WriteLine("SerialComms.responseDataReceived() - check protocol response");
                     NotifyDeviceProtocol?.Invoke(incoming);
                 }
                 else if (isNak(incoming))
                 {
-                    Debug.WriteLine("responseDataReceived() - NAK");
+                    Debug.WriteLine("SerialComms.responseDataReceived() - NAK");
                     resendCommand();
                 }
                 else if (isAck(incoming))
                 {
-                    Debug.WriteLine("responseDataReceived() - ACK");
+                    Debug.WriteLine("SerialComms.responseDataReceived() - ACK");
 
                     if (_commandQueue.Dequeue())
                     {
@@ -615,6 +624,7 @@ namespace CTecUtil.IO
                 }
                 else if (_commandQueue.TotalCommandCount > 0)
                 {
+Debug.WriteLine("SerialComms.responseDataReceived() - something...");
                     var ok = false;
                     
                     NotifyConnectionStatus?.Invoke(_connectionStatus);
@@ -622,6 +632,7 @@ namespace CTecUtil.IO
 
                     if (cmd is not null)
                     {
+Debug.WriteLine("SerialComms.responseDataReceived() - " + _commandQueue.CurrentSubqueueName + " - " + cmd.Index + ": " + ByteArrayProcessing.ByteArrayToHexString(cmd.CommandData));
                         var savedQueueId = _commandQueue.Id;
 
                         if (incoming is not null)
@@ -639,6 +650,7 @@ namespace CTecUtil.IO
                             }));
                         }
 
+Debug.WriteLine("SerialComms.responseDataReceived() - ok=" + ok);
 
                         if (ok)
                         {
@@ -686,6 +698,7 @@ namespace CTecUtil.IO
 
         private static byte[] readIncomingResponse(SerialPort port)
         {
+Debug.WriteLine("SerialComms.listereadIncomingResponse()");
             try
             {
                 var timeout = DateTime.Now.AddMilliseconds(IncomingDataTimerPeriod);
@@ -757,6 +770,7 @@ namespace CTecUtil.IO
 
         private static async void listenerDataReceived(SerialPort port)
         {
+Debug.WriteLine("SerialComms.listenerDataReceived()");
             try
             {
                 NotifyConnectionStatus?.Invoke(setConnectionStatus(ConnectionStatus.Listening));
@@ -783,6 +797,7 @@ namespace CTecUtil.IO
 
         private static byte[] readIncomingListenerData(SerialPort port)
         {
+Debug.WriteLine("SerialComms.readIncomingListenerData()");
             try
             {
                 var timeout = DateTime.Now.AddMilliseconds(IncomingDataTimerPeriod);
@@ -869,10 +884,10 @@ namespace CTecUtil.IO
         /// </summary>
         private static void error(string message, Exception ex = null)
         {
-            Debug.WriteLine("  **Exception** ex: '" + ex?.Message + "'");
+            Debug.WriteLine("SerialComms.error(" + message + ", " + ex?.Message + ")");
 
             //check queue - avoids erroring on ping fail
-            var showError = _commandQueue.TotalCommandCount > 0;
+            var showError = _commandQueue.TotalCommandCount > 0 || string.IsNullOrEmpty(ex?.Message);
             CancelCommandQueue();
             NotifyConnectionStatus?.Invoke(setConnectionStatus(ConnectionStatus.Disconnected));
             if (showError)
@@ -890,6 +905,7 @@ namespace CTecUtil.IO
 
             if (_port?.IsOpen == false)
             {
+Debug.WriteLine("SerialComms.openPort()");
                 try
                 { _port?.Open(); } catch { }
             }
@@ -902,6 +918,7 @@ namespace CTecUtil.IO
         /// </summary>
         public static bool ClosePort()
         {
+Debug.WriteLine("SerialComms.ClosePort()");
             try
             {
                 CancelCommandQueue();
@@ -982,6 +999,7 @@ namespace CTecUtil.IO
         /// </summary>
         private static SerialPort getNewSerialPort()
         {
+Debug.WriteLine("SerialComms.getNewSerialPort()");
             try
             {
                 ClosePort();
@@ -1062,10 +1080,9 @@ namespace CTecUtil.IO
 
                 _progressBarWindow.Show(OwnerWindow);
 
-
             }), DispatcherPriority.Send);
 
-            Application.Current.Dispatcher.Invoke(new Action(() => sendNextCommandInQueue()));
+            Application.Current.Dispatcher.Invoke(new Action(sendNextCommandInQueue));
 
             var timeout = DateTime.Now.AddSeconds(_timeoutSeconds);
             int lastProgress = 0;

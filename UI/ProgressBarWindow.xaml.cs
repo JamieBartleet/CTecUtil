@@ -61,6 +61,7 @@ namespace CTecUtil.UI
 
         internal void UpdateProgress(List<string> subqueueNames, int valueOverall, int valueSubqueue)
         {
+Debug.WriteLine("  ProgressBarWindow.UpdateProgress() - start");
             if ((subqueueNames?.Count??0) > 0 && txtSubqueueName.Text != subqueueNames[0])
             {
                 txtSubqueueName.Visibility = Visibility.Hidden;
@@ -76,6 +77,7 @@ namespace CTecUtil.UI
             // When progress reaches 100%, close the progress bar window.
             if (valueOverall >= ProgressBarOverallMax)
                 Hide();
+Debug.WriteLine("  ProgressBarWindow.UpdateProgress() - end");
         }
 
         private void updateText(List<string> subqueueNames)
