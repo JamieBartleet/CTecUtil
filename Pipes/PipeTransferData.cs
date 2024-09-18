@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CTecUtil.Comms
+namespace CTecUtil.Pipes
 {
     public class PipeTransferData
     {

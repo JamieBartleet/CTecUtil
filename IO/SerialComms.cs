@@ -1,20 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.DirectoryServices;
 using System.IO.Ports;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows;
-using System.Windows.Markup;
 using System.Windows.Threading;
-using CTecUtil;
 using CTecUtil.UI;
-using static CTecUtil.IO.CommsTimer;
 
 namespace CTecUtil.IO
 {
@@ -22,7 +15,7 @@ namespace CTecUtil.IO
     {
         static SerialComms()
         {
-            _progressBarWindow.OnCancel = CancelCommandQueue;
+            //_progressBarWindow.OnCancel = CancelCommandQueue;
         }
 
 
@@ -71,6 +64,28 @@ namespace CTecUtil.IO
         
         /// <summary>Wait timeout (ms) for a response to a sent command</summary>
         public static int ResponseTimerPeriod     { get; set; } = 5500;
+
+
+        public static List<string> GetPortNames()
+        {
+            var names = SerialPort.GetPortNames().ToList();
+            names.Sort(COMparer);
+            return names;
+        }
+        
+
+        /// <summary>
+        /// Sort COM port names sensibly, not alphabetically - i.e. so that COM3 is listed before COM20
+        /// </summary>
+        internal static int COMparer(string portName1, string portName2)
+        {
+            int n1, n2;
+            if (portName1.StartsWith("COM") && int.TryParse(portName1.Substring(3), out n1)
+             && portName2.StartsWith("COM") && int.TryParse(portName2.Substring(3), out n2))
+                return n1.CompareTo(n2);
+            
+            return portName1.CompareTo(portName2);
+        }
 
 
         public static string PortName
@@ -208,7 +223,7 @@ namespace CTecUtil.IO
                             Enabled = true,
                             Interval = PingTimerPeriod
                         };
-                        _pingTimer.Elapsed += new(sendPing);
+                        _pingTimer.Elapsed += sendPing;
                         _pingStarted = true;
                     }
                 }
@@ -280,8 +295,8 @@ namespace CTecUtil.IO
             {
                 switch (PingMode)
                 {
-                    case PingModes.Polling:   SendData(new Command() { CommandData = PingCommand() }); break;
-                    case PingModes.Listening: SendData(new Command() { CommandData = LoggingModePingCommand() }); break;
+                    case PingModes.Polling:   SendData(new Command() { CommandData = PingCommand?.Invoke() }); break;
+                    case PingModes.Listening: SendData(new Command() { CommandData = LoggingModePingCommand?.Invoke() }); break;
                 }
             }
         }
@@ -399,7 +414,7 @@ namespace CTecUtil.IO
             try
             {
                 //subtract the discarded queue's items from the total
-                Application.Current.Dispatcher.Invoke(new Action(() => _progressBarWindow.ProgressBarOverallMax -= _commandQueue.CommandsInCurrentSubqueue));
+                Application.Current.Dispatcher.Invoke(new Action(() => { if (_progressBarWindow is not null) _progressBarWindow.ProgressBarOverallMax -= _commandQueue.CommandsInCurrentSubqueue; }));
             }
             catch { };
 
@@ -616,7 +631,8 @@ Debug.WriteLine("SerialComms.responseDataReceived() - check protocol response");
                         _progressWithinSubqueue = 0;
                         Application.Current.Dispatcher.Invoke(new Action(() =>
                         {
-                            _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.InitialCommandsInCurrentSubqueue;
+                            if (_progressBarWindow is not null)
+                                _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.InitialCommandsInCurrentSubqueue;
 
                         }), DispatcherPriority.Normal);
                     }
@@ -661,7 +677,8 @@ Debug.WriteLine("SerialComms.responseDataReceived() - ok=" + ok);
                                 _progressWithinSubqueue = 0;
                                 Application.Current.Dispatcher.Invoke(new Action(() =>
                                 {
-                                    _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.InitialCommandsInCurrentSubqueue;
+                                    if (_progressBarWindow is not null)
+                                        _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.InitialCommandsInCurrentSubqueue;
 
                                 }), DispatcherPriority.Normal);
                             }
@@ -698,7 +715,7 @@ Debug.WriteLine("SerialComms.responseDataReceived() - ok=" + ok);
 
         private static byte[] readIncomingResponse(SerialPort port)
         {
-Debug.WriteLine("SerialComms.listereadIncomingResponse()");
+Debug.WriteLine("SerialComms.readIncomingResponse()");
             try
             {
                 var timeout = DateTime.Now.AddMilliseconds(IncomingDataTimerPeriod);
@@ -991,7 +1008,7 @@ Debug.WriteLine("SerialComms.ClosePort()");
         /// <summary>
         /// Gets a list of serial ports available on the system
         /// </summary>
-        public static List<string> GetAvailablePorts() => SerialPort.GetPortNames().ToList();
+        public static List<string> GetAvailablePorts() => [.. SerialPort.GetPortNames()];
 
 
         /// <summary>
@@ -1031,7 +1048,7 @@ Debug.WriteLine("SerialComms.getNewSerialPort()");
 
 
         #region progress bar
-        private static ProgressBarWindow _progressBarWindow = new();
+        private static ProgressBarWindow _progressBarWindow;
         private static int _progressOverall, _progressWithinSubqueue;
 
         private static Action _onStartProgress;
@@ -1073,16 +1090,19 @@ Debug.WriteLine("SerialComms.getNewSerialPort()");
                 _onStartProgress?.Invoke();
 
                 //launch the progress bar window
+                _progressBarWindow = new();
                 _progressBarWindow.ProgressBarLegend      = _commandQueue.OperationDesc;
                 _progressBarWindow.SubqueueCount          = _commandQueue.SubqueueCount;
                 _progressBarWindow.ProgressBarOverallMax  = _commandQueue.TotalCommandCount;
                 _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.InitialCommandsInCurrentSubqueue;
+                _progressBarWindow.OnCancel               = CancelCommandQueue;
 
                 _progressBarWindow.Show(OwnerWindow);
 
             }), DispatcherPriority.Send);
 
-            Application.Current.Dispatcher.Invoke(new Action(sendNextCommandInQueue));
+Debug.WriteLine("progressBarThread() - start sending commands...");
+            Application.Current.Dispatcher.Invoke(new Action(() => sendNextCommandInQueue()));
 
             var timeout = DateTime.Now.AddSeconds(_timeoutSeconds);
             int lastProgress = 0;
@@ -1107,7 +1127,7 @@ Debug.WriteLine("SerialComms.getNewSerialPort()");
                     Application.Current.Dispatcher.Invoke(new Action(() =>
                     {
                         if (_commandQueue.Direction != Direction.Idle)
-                            error(_commandQueue.Direction == Direction.Upload ? Cultures.Resources.Error_Upload_Timeout : Cultures.Resources.Error_Download_Timeout, new TimeoutException(""));
+                            error(_commandQueue.Direction == Direction.Upload ? Cultures.Resources.Error_Upload_Timeout : Cultures.Resources.Error_Download_Timeout, new TimeoutException("Timeout"));
 
                     }), DispatcherPriority.Send);
                     break;

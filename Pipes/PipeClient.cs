@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace CTecUtil.Comms
+namespace CTecUtil.Pipes
 {
     public class PipeClient
     {

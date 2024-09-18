@@ -13,7 +13,7 @@ namespace CTecUtil
     /// </summary>
     public class Debug
     {
-        private static string debugPrefix { get => DateTime.Now + " " + String.Format("{0,-3}", Thread.CurrentThread.ManagedThreadId) + " - "; }
+        private static string debugPrefix => DateTime.Now + " " + string.Format("tid:{0,-3}", Thread.CurrentThread.ManagedThreadId) + " - ";
 
 
         /// <summary>
