@@ -9,7 +9,7 @@
         BorderThickness="0"
         AllowsTransparency="True"
         WindowStyle="None"
-        Style="{StaticResource CTecMessageBoxStyle}"
+        Style="{StaticResource PopupWindowStyle}"
         Width="260" Height="170"
         Title="ProgressBarWindow"
         ShowInTaskbar="False">
