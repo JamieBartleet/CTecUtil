@@ -551,5 +551,28 @@ namespace CTecUtil
 
             return result;
         }
+
+
+        public static string CombineWithForwardSlashes(params string[] strings)
+        {
+            var components = new List<string>();
+            foreach (string s in strings)
+            {
+                var split = s.Split(new char[]{ '/', '\\' }, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                foreach (var ss in split)
+                    components.Add(ss);
+            }
+
+            StringBuilder result = new();
+
+            foreach (var c in components)
+            {
+                if (result.Length > 0)
+                    result.Append("/");
+                result.Append(c);
+            }
+
+            return result.ToString();
+        }
     }
 }

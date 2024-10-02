@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 
-namespace CTecUtil.UI
+namespace CTecUtil.UI.Util
 {
     public class MouseUtil
     {
@@ -34,8 +34,8 @@ namespace CTecUtil.UI
         /// <param name="relativeTo">The Visual to which the mouse coordinates will be relative.</param>
         public static Point GetMousePosition(Visual relativeTo)
         {
-            var mouse = new MouseUtil.Win32Point();
-            MouseUtil.GetCursorPos(ref mouse);
+            var mouse = new Win32Point();
+            GetCursorPos(ref mouse);
             return relativeTo.PointFromScreen(new Point(mouse.X, mouse.Y));
         }
     }

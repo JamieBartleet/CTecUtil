@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CTecUtil.UI
+namespace CTecUtil.UI.Util
 {
     public class MonitorUtil
     {
@@ -14,10 +14,10 @@ namespace CTecUtil.UI
         public const uint MONITOR_DEFAULTTONEAREST = 0x00000002;
 
         [DllImport("user32.dll")]
-        public static extern IntPtr MonitorFromWindow(IntPtr handle, uint flags);
+        public static extern nint MonitorFromWindow(nint handle, uint flags);
 
         [DllImport("user32.dll")]
-        public static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+        public static extern bool GetMonitorInfo(nint hMonitor, ref MONITORINFO lpmi);
 
         [StructLayout(LayoutKind.Sequential)]
         public struct MONITORINFO
@@ -39,10 +39,10 @@ namespace CTecUtil.UI
 
             public RECT(int left, int top, int right, int bottom)
             {
-                this.Left = left;
-                this.Top = top;
-                this.Right = right;
-                this.Bottom = bottom;
+                Left = left;
+                Top = top;
+                Right = right;
+                Bottom = bottom;
             }
         }
 
@@ -55,8 +55,8 @@ namespace CTecUtil.UI
 
             public POINT(int x, int y)
             {
-                this.X = x;
-                this.Y = y;
+                X = x;
+                Y = y;
             }
         }
 
@@ -68,5 +68,6 @@ namespace CTecUtil.UI
             public POINT ptMaxPosition;
             public POINT ptMinTrackSize;
             public POINT ptMaxTrackSize;
-        }    }
+        }
+    }
 }

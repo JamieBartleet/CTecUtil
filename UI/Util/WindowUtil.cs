@@ -9,20 +9,20 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Interop;
 
-namespace CTecUtil.UI
+namespace CTecUtil.UI.Util
 {
     public class WindowUtil
     {
         #region app window
 
         [DllImport("User32.dll")]
-        public static extern bool IsIconic(IntPtr hWnd);
+        public static extern bool IsIconic(nint hWnd);
 
         [DllImport("User32.dll")]
-        public static extern bool SetForegroundWindow(IntPtr hWnd);
+        public static extern bool SetForegroundWindow(nint hWnd);
 
         [DllImport("User32.dll")]
-        public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+        public static extern bool ShowWindow(nint hWnd, int nCmdShow);
 
         public const int SW_RESTORE = 9;
 
@@ -32,16 +32,16 @@ namespace CTecUtil.UI
         #region window helpers
 
         [DllImport("user32.dll")]
-        public static extern int GetWindowLong(IntPtr hwnd, int index);
+        public static extern int GetWindowLong(nint hwnd, int index);
 
         [DllImport("user32.dll")]
-        public static extern int SetWindowLong(IntPtr hwnd, int index, int newStyle);
+        public static extern int SetWindowLong(nint hwnd, int index, int newStyle);
 
         [DllImport("user32.dll")]
-        public static extern bool SetWindowPos(IntPtr hwnd, IntPtr hwndInsertAfter, int x, int y, int width, int height, uint flags);
+        public static extern bool SetWindowPos(nint hwnd, nint hwndInsertAfter, int x, int y, int width, int height, uint flags);
 
         [DllImport("user32.dll")]
-        public static extern IntPtr SendMessage(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
+        public static extern nint SendMessage(nint hwnd, uint msg, nint wParam, nint lParam);
 
         public const int GWL_EXSTYLE = -20;
         public const int WS_EX_DLGMODALFRAME = 0x0001;
@@ -62,21 +62,21 @@ namespace CTecUtil.UI
         /// has been overridden, otherwise the extremities may be clipped.
         /// </summary>
         /// <param name="window"></param>
-        public static void PreventClipWhenMaximised(System.Windows.Window window) => ((HwndSource)System.Windows.PresentationSource.FromVisual(window)).AddHook(HookGetMinMaxInfo);
+        public static void PreventClipWhenMaximised(Window window) => ((HwndSource)PresentationSource.FromVisual(window)).AddHook(HookGetMinMaxInfo);
 
-        public static IntPtr HookGetMinMaxInfo(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        public static nint HookGetMinMaxInfo(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
         {
             if (msg == MonitorUtil.WM_GETMINMAXINFO)
             {
                 // We need to tell the system what our size should be when maximized so the extremities aren't clipped
-                MonitorUtil.MINMAXINFO mmi = (MonitorUtil.MINMAXINFO)Marshal.PtrToStructure(lParam, typeof(MonitorUtil.MINMAXINFO));
+                var mmi = (MonitorUtil.MINMAXINFO)Marshal.PtrToStructure(lParam, typeof(MonitorUtil.MINMAXINFO));
 
                 // Adjust the maximized size and position to fit the work area of the correct monitor
-                IntPtr monitor = MonitorUtil.MonitorFromWindow(hwnd, MonitorUtil.MONITOR_DEFAULTTONEAREST);
+                var monitor = MonitorUtil.MonitorFromWindow(hwnd, MonitorUtil.MONITOR_DEFAULTTONEAREST);
 
-                if (monitor != IntPtr.Zero)
+                if (monitor != nint.Zero)
                 {
-                    MonitorUtil.MONITORINFO monitorInfo = new MonitorUtil.MONITORINFO { cbSize = Marshal.SizeOf(typeof(MonitorUtil.MONITORINFO)) };
+                    var monitorInfo = new MonitorUtil.MONITORINFO { cbSize = Marshal.SizeOf(typeof(MonitorUtil.MONITORINFO)) };
                     MonitorUtil.GetMonitorInfo(monitor, ref monitorInfo);
                     MonitorUtil.RECT rcWorkArea     = monitorInfo.rcWork;
                     MonitorUtil.RECT rcMonitorArea  = monitorInfo.rcMonitor;
@@ -89,7 +89,7 @@ namespace CTecUtil.UI
                 Marshal.StructureToPtr(mmi, lParam, true);
             }
 
-            return IntPtr.Zero;
+            return nint.Zero;
         }
 
 
@@ -97,7 +97,7 @@ namespace CTecUtil.UI
         /// Set the window's size, position and state.
         /// </summary>
         public static WindowState SetWindowDimensions(Window window, WindowSizeParams dimensions)
-            {
+        {
             if (dimensions?.Size is not null)
             {
                 window.Width  = dimensions.Size.Value.Width;
@@ -284,7 +284,7 @@ namespace CTecUtil.UI
         /// <returns>The adjusted position of the window</returns>
         internal static System.Drawing.Point AdjustXY(System.Drawing.Point topLeft, System.Drawing.Point maxSize, int offset, int margin)
         {
-            Screen currentScreen = Screen.FromPoint(topLeft);
+            var currentScreen = Screen.FromPoint(topLeft);
             Rectangle rect = currentScreen.WorkingArea;
 
             if (topLeft.Y < rect.Top)
@@ -298,7 +298,7 @@ namespace CTecUtil.UI
             // Check if the window needs to go above the task bar, 
             // when the task bar shadows the HUD window.
             //int totalHeight = Math.Max(topLeft.Y, 0) + Math.Max(maxSize.Y, 0) + margin;
-            int totalHeight = maxSize.Y + margin;
+            var totalHeight = maxSize.Y + margin;
 
             if (topLeft.Y + totalHeight > rect.Bottom)
             {
@@ -311,7 +311,7 @@ namespace CTecUtil.UI
             }
 
             //int totalWidth = Math.Max(topLeft.X, 0) + Math.Max(maxSize.X, 0) + margin;
-            int totalWidth = maxSize.X + margin;
+            var totalWidth = maxSize.X + margin;
 
             // Check if the window needs to move to the left of the mouse, 
             // when the HUD exceeds the right window bounds.
