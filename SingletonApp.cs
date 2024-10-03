@@ -11,6 +11,27 @@ namespace CTecUtil
     public class SingletonApp
     {
         /// <summary>
+        /// Check for another instance of this app.
+        /// </summary>
+        /// <returns>True if another instance of the app is already running.</returns>
+        public static bool CheckForAnotherInstance()
+        {
+            try
+            {
+                Process currentProcess = Process.GetCurrentProcess();
+
+                //check wheter another instance is already running
+                foreach (var p in Process.GetProcesses())
+                    if (p.Id != currentProcess.Id)
+                        if (p.ProcessName.Equals(currentProcess.ProcessName))
+                            return true;
+            }
+            catch { }
+            return false;
+        }
+
+    
+        /// <summary>
         /// Check for another instance of this app and, if found, switch focus to it (restores if minimised).
         /// </summary>
         /// <returns>True if another instance of the app is already running.</returns>
@@ -21,7 +42,7 @@ namespace CTecUtil
             {
                 Process currentProcess = Process.GetCurrentProcess();
 
-                //check wheter another instance is already running
+                //check whether another instance is already running
                 foreach (var p in Process.GetProcesses())
                 {
                     if (p.Id != currentProcess.Id)
