@@ -59,7 +59,7 @@ namespace CTecUtil.StandardPanelDataTypes
             try
             {
                 StringBuilder result = new();
-                for (int i = startOffset; i < length + startOffset && i <= data[1] + 1; i++)
+                for (int i = startOffset; i < (double)(length + startOffset) && i <= data[1] + 1; i++)
                     if (data[i] > 0)
                         result.Append((char)data[i]);
                 return trim ? result.ToString().Trim() : result.ToString();
