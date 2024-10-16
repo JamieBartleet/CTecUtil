@@ -55,7 +55,11 @@ namespace CTecUtil.IO
             lock (_lock)
             {
                 // note: GetPortNames can return stale ports - i.e. names found in the Registry that no longer exist in reality
+#if NET8_0_OR_GREATER
                 List<string> ports = [.. SerialPort.GetPortNames()];
+#else
+                List<string> ports = SerialPort.GetPortNames().ToList();
+#endif
 
                 try
                 {

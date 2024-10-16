@@ -18,8 +18,11 @@ namespace CTecUtil.StandardPanelDataTypes
         /// Convert IndextText to a byte array
         /// </summary>
         /// <returns></returns>
+#if NET8_0_OR_GREATER
         public byte[] ToByteArray() => ByteArrayProcessing.CombineByteArrays([ (byte)(Index + 1) ], ByteArrayProcessing.StringToByteArray(Value, Length));
-
+#else
+        public byte[] ToByteArray() => ByteArrayProcessing.CombineByteArrays(new byte[] { (byte)Index }, ByteArrayProcessing.StringToByteArray(Value, Length));
+#endif
 
         /// <summary>
         /// Parse an index and string from the byte data.

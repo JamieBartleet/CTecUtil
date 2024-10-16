@@ -14,7 +14,11 @@ namespace CTecUtil.StandardPanelDataTypes
         /// Convert Boolean to byte array consisting of 1 byte (0=false, 1=true).
         /// </summary>
         /// <returns></returns>
+#if NET8_0_OR_GREATER
         public byte[] ToByteArray() => [ (byte)(Value ? 1 : 0) ];
+#else
+        public byte[] ToByteArray() => new byte[] { (byte)(Value ? 1 : 0) };
+#endif
 
 
         /// <summary>

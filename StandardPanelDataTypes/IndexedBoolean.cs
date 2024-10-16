@@ -15,7 +15,11 @@ namespace CTecUtil.StandardPanelDataTypes
         /// Convert IndexedBoolean to a two-byte array, consisting of the index and 0 or 1
         /// </summary>
         /// <returns></returns>
+#if NET8_0_OR_GREATER
         public byte[] ToByteArray() => [ (byte)Index, (byte)(Value ? 1 : 0) ];
+#else
+        public byte[] ToByteArray() => new byte[] { (byte)Index, (byte)(Value ? 1 : 0) };
+#endif
 
 
         /// <summary>

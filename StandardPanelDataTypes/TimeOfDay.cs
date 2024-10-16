@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 
 namespace CTecUtil.StandardPanelDataTypes
 {
@@ -18,8 +19,11 @@ namespace CTecUtil.StandardPanelDataTypes
         /// </summary>
         /// <param name="hoursAndMinutes">If true (default) the result represents the hours and minutes, else it is the minutes and seconds</param>
         /// <returns></returns>
+#if NET8_0_OR_GREATER
         public byte[] ToByteArray(bool hoursAndMinutes = true) => hoursAndMinutes ? [ (byte)Value.Hours, (byte)Value.Minutes ] : [ (byte)Value.Minutes, (byte)Value.Seconds ];
-
+#else
+        public byte[] ToByteArray(bool hoursAndMinutes = true) => hoursAndMinutes ? new[] { (byte)Value.Hours, (byte)Value.Minutes } : new[] { (byte)Value.Minutes, (byte)Value.Seconds };
+#endif
 
         /// <summary>
         /// Parse a TimeOfDay from the byte data

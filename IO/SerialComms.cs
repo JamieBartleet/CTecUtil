@@ -1008,8 +1008,11 @@ Debug.WriteLine("SerialComms.ClosePort()");
         /// <summary>
         /// Gets a list of serial ports available on the system
         /// </summary>
+#if NET8_0_OR_GREATER
         public static List<string> GetAvailablePorts() => [.. SerialPort.GetPortNames()];
-
+#else
+        public static List<string> GetAvailablePorts() => SerialPort.GetPortNames().ToList();
+#endif
 
         /// <summary>
         /// Gets a new serial port Initialised with the current PortName, BaudRate, etc. properties.
@@ -1044,7 +1047,7 @@ Debug.WriteLine("SerialComms.getNewSerialPort()");
             }
             return null;
         }
-        #endregion
+#endregion
 
 
         #region progress bar

@@ -74,7 +74,11 @@ namespace CTecUtil.UI.Util
                 // Adjust the maximized size and position to fit the work area of the correct monitor
                 var monitor = MonitorUtil.MonitorFromWindow(hwnd, MonitorUtil.MONITOR_DEFAULTTONEAREST);
 
+#if NET8_0_OR_GREATER
                 if (monitor != nint.Zero)
+#else
+                    if (monitor != 0)
+#endif
                 {
                     var monitorInfo = new MonitorUtil.MONITORINFO { cbSize = Marshal.SizeOf(typeof(MonitorUtil.MONITORINFO)) };
                     MonitorUtil.GetMonitorInfo(monitor, ref monitorInfo);
@@ -89,7 +93,11 @@ namespace CTecUtil.UI.Util
                 Marshal.StructureToPtr(mmi, lParam, true);
             }
 
+#if NET8_0_OR_GREATER
             return nint.Zero;
+#else
+            return 0;
+#endif
         }
 
 
