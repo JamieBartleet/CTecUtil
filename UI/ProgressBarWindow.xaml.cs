@@ -61,23 +61,27 @@ namespace CTecUtil.UI
 
         internal void UpdateProgress(List<string> subqueueNames, int valueOverall, int valueSubqueue)
         {
-Debug.WriteLine("  ProgressBarWindow.UpdateProgress() - start");
-            if ((subqueueNames?.Count??0) > 0 && txtSubqueueName.Text != subqueueNames[0])
+            try
             {
-                txtSubqueueName.Visibility = Visibility.Hidden;
-                stpQueue.Visibility = Visibility.Hidden;
-                System.Timers.Timer tx = new(100) { AutoReset = false, Enabled = true };
-                tx.Elapsed += new((s, e) => Application.Current.Dispatcher.Invoke(new Action(() => updateText(subqueueNames))));
+                Debug.WriteLine("  ProgressBarWindow.UpdateProgress() - start");
+                if ((subqueueNames?.Count ?? 0) > 0 && txtSubqueueName.Text != subqueueNames[0])
+                {
+                    txtSubqueueName.Visibility = Visibility.Hidden;
+                    stpQueue.Visibility = Visibility.Hidden;
+                    System.Timers.Timer tx = new(100) { AutoReset = false, Enabled = true };
+                    tx.Elapsed += new((s, e) => Application.Current.Dispatcher.Invoke(new Action(() => updateText(subqueueNames))));
+                }
+
+                pbProgressOverall.Value = (double)valueOverall / ProgressBarOverallMax * 100;
+                pbProgressSubqueue.Value = valueSubqueue;
+                txtProgressSubqueue.Text = valueSubqueue + " / " + ProgressBarSubqueueMax;
+
+                // When progress reaches 100%, close the progress bar window.
+                if (valueOverall >= ProgressBarOverallMax)
+                    Hide();
+                Debug.WriteLine("  ProgressBarWindow.UpdateProgress() - end");
             }
-
-            pbProgressOverall.Value  = (double)valueOverall / ProgressBarOverallMax * 100;
-            pbProgressSubqueue.Value = valueSubqueue;
-            txtProgressSubqueue.Text = valueSubqueue + " / " + ProgressBarSubqueueMax;
-
-            // When progress reaches 100%, close the progress bar window.
-            if (valueOverall >= ProgressBarOverallMax)
-                Hide();
-Debug.WriteLine("  ProgressBarWindow.UpdateProgress() - end");
+            catch (Exception ex) { Debug.WriteLine(ex.ToString()); }
         }
 
         private void updateText(List<string> subqueueNames)
