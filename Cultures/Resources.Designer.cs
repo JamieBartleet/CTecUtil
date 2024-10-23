@@ -133,7 +133,7 @@ namespace CTecUtil.Cultures {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Download cancelled after too many retries..
+        ///   Looks up a localized string similar to The panel is not responding..
         /// </summary>
         public static string Error_Download_Retries {
             get {
@@ -169,7 +169,7 @@ namespace CTecUtil.Cultures {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Upload cancelled after too many retries..
+        ///   Looks up a localized string similar to Upload cancelled because the panel is not responding..
         /// </summary>
         public static string Error_Upload_Retries {
             get {

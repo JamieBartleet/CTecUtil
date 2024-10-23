@@ -17,9 +17,9 @@ namespace CTecUtil.UI.ViewHelpers
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) => SerialComms.IsDisconnected ? new SolidColorBrush(Colors.Orange)
                                                                                                                                   : (SerialComms.ConnectionStatus)value switch
                                                                                                                                     {
-                                                                                                                                        SerialComms.ConnectionStatus.ConnectedWriteable   => new SolidColorBrush(Colors.LimeGreen),
-                                                                                                                                        SerialComms.ConnectionStatus.ConnectedReadOnly    => new SolidColorBrush(Colors.LimeGreen),
-                                                                                                                                        SerialComms.ConnectionStatus.Listening            => new SolidColorBrush(Colors.SeaGreen),
+                                                                                                                                        SerialComms.ConnectionStatus.ConnectedWriteable or
+                                                                                                                                        SerialComms.ConnectionStatus.ConnectedReadOnly or
+                                                                                                                                        SerialComms.ConnectionStatus.Listening            => new SolidColorBrush(Colors.LimeGreen),
                                                                                                                                         SerialComms.ConnectionStatus.FirmwareNotSupported => new SolidColorBrush(Colors.Black),
                                                                                                                                         _                                                 => new SolidColorBrush(Colors.OrangeRed),
                                                                                                                                     };

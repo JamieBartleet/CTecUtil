@@ -237,7 +237,7 @@ namespace CTecUtil.IO
                 {
                     if (_pingMode == PingModes.Listening)
                         _prevConnectionStatus = _connectionStatus;
-                    NotifyConnectionStatus?.Invoke(setConnectionStatus(value == PingModes.Listening ? ConnectionStatus.Listening : _prevConnectionStatus));
+                    notifyConnectionStatus(value == PingModes.Listening ? ConnectionStatus.Listening : _prevConnectionStatus);
                 }
             }
         }
@@ -255,12 +255,6 @@ namespace CTecUtil.IO
         private static int              _disconnected         = 0;
         private static ConnectionStatus _connectionStatus     = ConnectionStatus.Unknown;
         private static ConnectionStatus _prevConnectionStatus = ConnectionStatus.Unknown;
-        
-        //public static byte[]  PingCommand;
-        //public static byte[]  LoggingModePingCommand;
-        //public static byte[]  CheckFirmwareCommand;
-        //public static byte[]  CheckWriteableCommand;
-        //public static byte[]  CheckProtocolCommand;
 
         public delegate byte[] PingCommandGetter();
         public static PingCommandGetter PingCommand;
@@ -277,7 +271,8 @@ namespace CTecUtil.IO
         /// <summary>True if the port has been explicitly disconnected, i.e. via Disconnect()</summary>
         public static bool IsDisconnected => _disconnected > 0;
 
-        private static ConnectionStatus setConnectionStatus(ConnectionStatus status) => _connectionStatus = status;
+        private static void notifyConnectionStatus(ConnectionStatus status) => NotifyConnectionStatus?.Invoke(_connectionStatus = status);
+
 
         private static void sendPing(object sender, ElapsedEventArgs e)
         {
@@ -586,35 +581,47 @@ Debug.WriteLine("SerialComms.dataReceived()");
 
                 if (isPingResponse(incoming))
                 {
-Debug.WriteLine("SerialComms.responseDataReceived() - ping response");
+                    Debug.WriteLine("SerialComms.responseDataReceived() - ping response");
                     //status is one of the Connected statuses: if not already thought to be writeable set it to read-only
                     if (_connectionStatus != ConnectionStatus.ConnectedWriteable)
-                        setConnectionStatus(ConnectionStatus.ConnectedReadOnly);
+                        notifyConnectionStatus(ConnectionStatus.ConnectedReadOnly);
 
                     //panel responded to ping, so request its firmware version
-                    sendWriteableCheck();
+                    //...only if there is no active upload/download
+                    if (_commandQueue.TotalCommandCount == 0)
+                        sendWriteableCheck();
                 }
                 else if (isCheckWriteableResponse(incoming))
                 {
-Debug.WriteLine("SerialComms.responseDataReceived() - check writeable response");
+                    Debug.WriteLine("SerialComms.responseDataReceived() - check writeable response");
                     //read-only response received?
-                    var readOnly = incoming.Length > 2 && incoming[2] == 0;
-                    NotifyConnectionStatus?.Invoke(setConnectionStatus(readOnly ? ConnectionStatus.ConnectedReadOnly : ConnectionStatus.ConnectedWriteable));
-                    sendFirmwareVersionCheck();
+                    //...only if there is no active upload/download
+                    if (_commandQueue.TotalCommandCount == 0)
+                    {
+                        var readOnly = incoming.Length > 2 && incoming[2] == 0;
+                        notifyConnectionStatus(readOnly ? ConnectionStatus.ConnectedReadOnly : ConnectionStatus.ConnectedWriteable);
+                        sendFirmwareVersionCheck();
+                    }
                 }
                 else if (isCheckFirmwareResponse(incoming))
                 {
-Debug.WriteLine("SerialComms.responseDataReceived() - check firmware response");
+                    Debug.WriteLine("SerialComms.responseDataReceived() - check firmware response");
                     //panel responded to ping, so notify the version number and request its read-only status
-                    if (!NotifyFirmwareVersion?.Invoke(incoming) ?? true)
-                        NotifyConnectionStatus?.Invoke(setConnectionStatus(ConnectionStatus.FirmwareNotSupported));
-                    else
-                        sendProtocolCheck();
+                    //...only if there is no active upload/download
+                    if (_commandQueue.TotalCommandCount == 0)
+                    {
+                        if (!NotifyFirmwareVersion?.Invoke(incoming) ?? true)
+                            notifyConnectionStatus(ConnectionStatus.FirmwareNotSupported);
+                        else
+                            sendProtocolCheck();
+                    }
                 }
                 else if (isCheckProtocolResponse(incoming))
                 {
 Debug.WriteLine("SerialComms.responseDataReceived() - check protocol response");
-                    NotifyDeviceProtocol?.Invoke(incoming);
+                    //do this only if there is no active upload/download
+                    if (_commandQueue.TotalCommandCount == 0)
+                        NotifyDeviceProtocol?.Invoke(incoming);
                 }
                 else if (isNak(incoming))
                 {
@@ -643,7 +650,7 @@ Debug.WriteLine("SerialComms.responseDataReceived() - check protocol response");
 Debug.WriteLine("SerialComms.responseDataReceived() - something...");
                     var ok = false;
                     
-                    NotifyConnectionStatus?.Invoke(_connectionStatus);
+                    notifyConnectionStatus(_connectionStatus);
                     var cmd = _commandQueue.Peek();
 
                     if (cmd is not null)
@@ -790,7 +797,7 @@ Debug.WriteLine("SerialComms.readIncomingResponse()");
 Debug.WriteLine("SerialComms.listenerDataReceived()");
             try
             {
-                NotifyConnectionStatus?.Invoke(setConnectionStatus(ConnectionStatus.Listening));
+                notifyConnectionStatus(ConnectionStatus.Listening);
 
                 var incoming = readIncomingListenerData(port);
 
@@ -868,7 +875,7 @@ Debug.WriteLine("SerialComms.readIncomingListenerData()");
                 if (_commandQueue.TotalCommandCount > 0)
                     resendCommand();
                 else
-                    NotifyConnectionStatus?.Invoke(setConnectionStatus(ConnectionStatus.Disconnected));
+                    notifyConnectionStatus(ConnectionStatus.Disconnected);
             }
 
             _responseTimer.Start(ResponseTimerPeriod);
@@ -906,7 +913,7 @@ Debug.WriteLine("SerialComms.readIncomingListenerData()");
             //check queue - avoids erroring on ping fail
             var showError = _commandQueue.TotalCommandCount > 0 || string.IsNullOrEmpty(ex?.Message);
             CancelCommandQueue();
-            NotifyConnectionStatus?.Invoke(setConnectionStatus(ConnectionStatus.Disconnected));
+            notifyConnectionStatus(ConnectionStatus.Disconnected);
             if (showError)
                 ShowErrorMessage2?.Invoke(message, ex?.Message);
         }
@@ -1000,7 +1007,7 @@ Debug.WriteLine("SerialComms.ClosePort()");
             if (ClosePort())
             {
                 _disconnected = 2;
-                NotifyConnectionStatus?.Invoke(setConnectionStatus(ConnectionStatus.Disconnected));
+                notifyConnectionStatus(ConnectionStatus.Disconnected);
             }
         }
 

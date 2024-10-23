@@ -121,7 +121,7 @@
     <value>Invalid data was received from the panel.</value>
   </data>
   <data name="Error_Download_Retries" xml:space="preserve">
-    <value>Download cancelled after too many retries.</value>
+    <value>The panel is not responding.</value>
   </data>
   <data name="Error_Download_Timeout" xml:space="preserve">
     <value>Download failed because the panel did not respond within the time limit.</value>
@@ -133,7 +133,7 @@
     <value>Error opening the serial port.</value>
   </data>
   <data name="Error_Upload_Retries" xml:space="preserve">
-    <value>Upload cancelled after too many retries.</value>
+    <value>Upload cancelled because the panel is not responding.</value>
   </data>
   <data name="Error_Upload_Timeout" xml:space="preserve">
     <value>Upload failed because the panel did not respond within the time limit.</value>

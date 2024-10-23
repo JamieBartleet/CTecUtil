@@ -121,7 +121,7 @@
     <value>Des données non valides ont été reçues du panneau.</value>
   </data>
   <data name="Error_Download_Retries" xml:space="preserve">
-    <value>Téléchargement du panneau a été annulé après trop de tentatives.</value>
+    <value>Le panneau ne répond pas.</value>
   </data>
   <data name="Error_Download_Timeout" xml:space="preserve">
     <value>Le téléchargement du panneau a échoué car il n’a pas répondu dans le délai imparti.</value>
@@ -133,7 +133,7 @@
     <value>Une erreur s’est produite lors de l’ouverture du port série.</value>
   </data>
   <data name="Error_Upload_Retries" xml:space="preserve">
-    <value>Téléchargement au panneau a été annulé après trop de tentatives.</value>
+    <value>Téléchargement annulé parce que le panneau ne répond pas.</value>
   </data>
   <data name="Error_Upload_Timeout" xml:space="preserve">
     <value>Le téléchargement au panneau a échoué car il n’a pas répondu dans le délai imparti.</value>
