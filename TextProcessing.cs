@@ -21,9 +21,8 @@ namespace CTecUtil
         public static bool StringIsNumeric(string text) => new Regex("^[0-9]+").IsMatch(text);
 
 
-        public static bool CharIsAlpha(char c)        => c >= 'A' && c <= 'Z';
+        public static bool CharIsAlpha(char c)        => (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
         public static bool CharIsNumeric(char c)      => c >= '0' && c <= '9';
-        public static bool CharIsPunctuation(char c)  => c >= '0' && c <= '9';
         public static bool CharIsAlphaNumeric(char c) => CharIsAlpha(c) || CharIsNumeric(c);
         public static bool CharIsPossibleMenuOption(char c)
             => CharIsAlphaNumeric(c) || c switch
