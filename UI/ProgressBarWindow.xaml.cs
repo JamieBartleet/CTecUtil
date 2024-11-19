@@ -30,14 +30,8 @@ namespace CTecUtil.UI
         internal void Show(Window owner)
         {
             CTecUtil.Debug.WriteLine(">>> ProgressBarWindow.Show() <<<");
-            if (owner != null)
-            {
-                Top  = (owner.WindowState != WindowState.Maximized ? owner.Top  : owner.Top  <= -owner.Height / 2 ? -owner.ActualHeight : 0) + owner.ActualHeight / 2 - Height / 2;
-                Left = (owner.WindowState != WindowState.Maximized ? owner.Left : owner.Left <= -owner.Width  / 2 ? -owner.ActualWidth  : 0) + owner.ActualWidth  / 2 - Width  / 2;
-            }
-            
             Owner = owner;
-
+            WindowStartupLocation = WindowStartupLocation.CenterOwner;
             Show();
         }
 
