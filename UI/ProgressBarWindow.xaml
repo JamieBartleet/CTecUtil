@@ -24,10 +24,10 @@
 
             <Border.Effect>
                 <DropShadowEffect Color="Black"
-                                    Direction="290"
-                                    BlurRadius="10"
-                                    ShadowDepth="2"
-                                    Opacity="0.3"/>
+                                  Direction="290"
+                                  BlurRadius="10"
+                                  ShadowDepth="2"
+                                  Opacity="0.3"/>
             </Border.Effect>
 
             <Grid HorizontalAlignment="Center">
@@ -46,14 +46,18 @@
                 <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Name="txtOperationName" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11" Height="35" Margin="0,10,0,0"/>
 
                 <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,0">
-                    <ProgressBar Name="pbProgressOverall" Height="18" Width="200" Value="0" Minimum="0" Maximum="100" Foreground="DeepSkyBlue" BorderBrush="{StaticResource Brush06}"/>
+                    <Border BorderBrush="{StaticResource Brush05}" BorderThickness="1">
+                        <ProgressBar Name="pbProgressOverall" Height="18" Width="200" Value="0" Minimum="0" Maximum="100" Foreground="{StaticResource ProgressBar1Background}" BorderThickness="0"/>
+                    </Border>
 
                     <!-- Progress as a percentage - binds 'Value' property of ProgressBar control to TextBlock Text -->
                     <TextBlock Name="txtProgress" Text="{Binding ElementName=pbProgressOverall, Path=Value, StringFormat={}{0:0}%}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0"/>
                 </Grid>
 
-                <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,5,0,0">
-                    <ProgressBar Name="pbProgressSubqueue" Height="10" Width="200" Value="0" Minimum="0" Foreground="Orchid" BorderBrush="{StaticResource Brush06}"/>
+                <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" x:Name="grdProgressSubQueue" Margin="0,5,0,0">
+                    <Border BorderBrush="{StaticResource Brush05}" BorderThickness="1">
+                        <ProgressBar Name="pbProgressSubqueue" Height="10" Width="200" Value="0" Minimum="0" Foreground="{StaticResource ProgressBar2Background}" BorderThickness="0"/>
+                    </Border>
                     <TextBlock Name="txtProgressSubqueue" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="8" Margin="0"/>
                 </Grid>
 

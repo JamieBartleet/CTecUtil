@@ -1,0 +1,61 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:System="clr-namespace:System;assembly=mscorlib"
+                    xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework">
+
+    <!--#region colour palette -->
+    <Color x:Key="Colour00"             A="#ff" R="#00" G="#00" B="#00"/>
+    <Color x:Key="Colour01"             A="#ff" R="#2a" G="#32" B="#3f"/>
+    <Color x:Key="Colour02"             A="#ff" R="#00" G="#36" B="#a0"/>
+    <Color x:Key="Colour02Hi"           A="#d0" R="#60" G="#87" B="#f0"/>
+    <Color x:Key="Colour03"             A="#ff" R="#36" G="#60" B="#b4"/>
+    <Color x:Key="Colour04"             A="#ff" R="#77" G="#87" B="#c0"/>
+    <Color x:Key="Colour05"             A="#ff" R="#87" G="#90" B="#c7"/>
+    <Color x:Key="Colour06"             A="#ff" R="#a0" G="#b0" B="#d7"/>
+    <Color x:Key="Colour07"             A="#ff" R="#c0" G="#cd" B="#e7"/>
+    <Color x:Key="Colour08"             A="#ff" R="#d0" G="#e7" B="#ff"/>
+    <Color x:Key="Colour09"             A="#ff" R="#e7" G="#f0" B="#f7"/>
+    <Color x:Key="Colour095"            A="#ff" R="#f0" G="#f7" B="#ff"/>
+    <Color x:Key="Colour10"             A="#ff" R="#ff" G="#ff" B="#ff"/>
+
+    <SolidColorBrush x:Key="Brush00"   Color="{StaticResource Colour00}"/>
+    <SolidColorBrush x:Key="Brush01"   Color="{StaticResource Colour01}"/>
+    <SolidColorBrush x:Key="Brush02"   Color="{StaticResource Colour02}"/>
+    <SolidColorBrush x:Key="Brush02Hi" Color="{StaticResource Colour02Hi}"/>
+    <SolidColorBrush x:Key="Brush03"   Color="{StaticResource Colour03}"/>
+    <SolidColorBrush x:Key="Brush04"   Color="{StaticResource Colour04}"/>
+    <SolidColorBrush x:Key="Brush05"   Color="{StaticResource Colour05}"/>
+    <SolidColorBrush x:Key="Brush06"   Color="{StaticResource Colour06}"/>
+    <SolidColorBrush x:Key="Brush07"   Color="{StaticResource Colour07}"/>
+    <SolidColorBrush x:Key="Brush08"   Color="{StaticResource Colour08}"/>
+    <SolidColorBrush x:Key="Brush09"   Color="{StaticResource Colour09}"/>
+    <SolidColorBrush x:Key="Brush095"  Color="{StaticResource Colour095}"/>
+    <SolidColorBrush x:Key="Brush10"   Color="{StaticResource Colour10}"/>
+
+    <SolidColorBrush x:Key="ProgressBar1Background" Color="DeepSkyBlue"/>
+    <SolidColorBrush x:Key="ProgressBar2Background" Color="Orchid"/>
+    <!--#endregion-->
+
+
+    <!--#region progress window-->
+    <Style x:Key="ProgressWindowStyle" TargetType="Window">
+        <Setter Property="AllowsTransparency" Value="True"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Height" Value="Auto"/>
+        <Setter Property="ResizeMode" Value="NoResize"/>
+        <Setter Property="ShowInTaskbar" Value="True"/>
+        <Setter Property="ShowInTaskbar" Value="False"/>
+        <Setter Property="SizeToContent" Value="WidthAndHeight"/>
+        <Setter Property="shell:WindowChrome.WindowChrome">
+            <Setter.Value>
+                <shell:WindowChrome CaptionHeight="1"
+                                    CornerRadius="0"
+                                    GlassFrameThickness="0" 
+                                    NonClientFrameEdges="None"/>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <!--#endregion-->
+
+</ResourceDictionary>

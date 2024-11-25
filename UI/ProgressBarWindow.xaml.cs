@@ -42,7 +42,7 @@ namespace CTecUtil.UI
 
         internal int ProgressBarSubqueueMax { get => (int)pbProgressSubqueue.Maximum; set => pbProgressSubqueue.Maximum = value; }
 
-        internal int SubqueueCount { set => pbProgressSubqueue.Visibility = txtProgressSubqueue.Visibility = value > 1 ? Visibility.Visible : Visibility.Collapsed; }
+        internal int SubqueueCount { set => grdProgressSubQueue.Visibility = value > 1 ? Visibility.Visible : Visibility.Collapsed; }
 
 
         internal delegate void CancelHandler();

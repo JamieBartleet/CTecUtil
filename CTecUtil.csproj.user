@@ -15,5 +15,8 @@
     <Page Update="UI\ProgressBarWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
+    <Page Update="UI\Styles\Styles.xaml">
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
 </Project>
