@@ -128,6 +128,7 @@ namespace CTecUtil.IO
 
         public static Window OwnerWindow { get; set; }
 
+
         private static SerialPortSettings _settings = null;
         public static SerialPortSettings Settings
         {

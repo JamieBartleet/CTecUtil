@@ -45,6 +45,14 @@ namespace CTecUtil.UI
         internal int SubqueueCount { set => grdProgressSubQueue.Visibility = value > 1 ? Visibility.Visible : Visibility.Collapsed; }
 
 
+        public ScaleTransform WindowLayoutTransform
+        {
+            get { return (ScaleTransform)GetValue(LayoutTransformProperty); }
+            set { SetValue(LayoutTransformProperty, value); }
+        }
+        public static new readonly DependencyProperty LayoutTransformProperty = DependencyProperty.Register("WindowLayoutTransform", typeof(ScaleTransform), typeof(ProgressBarWindow));
+
+
         internal delegate void CancelHandler();
 
         /// <summary>
