@@ -32,6 +32,7 @@ namespace CTecUtil.UI
             CTecUtil.Debug.WriteLine(">>> ProgressBarWindow.Show() <<<");
             Owner = owner;
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            ProgressBorder.LayoutTransform = Config.UI.LayoutTransform;
             Show();
         }
 
@@ -44,13 +45,6 @@ namespace CTecUtil.UI
 
         internal int SubqueueCount { set => grdProgressSubQueue.Visibility = value > 1 ? Visibility.Visible : Visibility.Collapsed; }
 
-
-        public ScaleTransform WindowLayoutTransform
-        {
-            get { return (ScaleTransform)GetValue(LayoutTransformProperty); }
-            set { SetValue(LayoutTransformProperty, value); }
-        }
-        public static new readonly DependencyProperty LayoutTransformProperty = DependencyProperty.Register("WindowLayoutTransform", typeof(ScaleTransform), typeof(ProgressBarWindow));
 
 
         internal delegate void CancelHandler();

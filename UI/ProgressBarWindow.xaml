@@ -15,11 +15,11 @@
         ShowInTaskbar="False">
     
     <Grid>
-        <Border Background="{StaticResource Brush10}" 
+        <Border x:Name="ProgressBorder"
+                Background="{StaticResource Brush10}" 
                 BorderBrush="#707070" 
                 BorderThickness="2"
                 CornerRadius="5"
-                LayoutTransform="{Binding WindowLayoutTransform}" 
                 Margin="10"
                 Padding="10">
 
