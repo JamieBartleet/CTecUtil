@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using CTecUtil.IO;
 
-namespace CTecUtil
+namespace CTecUtil.Config
 {
     public class ApplicationConfigData
     {
@@ -26,8 +26,9 @@ namespace CTecUtil
         public WindowSizeParams   MonitorWindow;
         public WindowSizeParams   NodeSummaryWindow;
         public WindowSizeParams   ValidationWindow;
-        public float              ZoomLevel = 0.75f;
-        public float              SerialMonitorZoomLevel = 0.75f;
+        public double             ZoomLevel = 0.75;
+        public double             ValidationWindowZoomLevel = 0.75;
+        public double             SerialMonitorZoomLevel = 0.75;
         public SerialPortSettings SerialPort = new();
         public string             Protocol = "";
         public RecentFilesList    RecentPanelFiles = new();
@@ -43,5 +44,6 @@ namespace CTecUtil
         public Point? Location;
         public Size?  Size;
         public bool   IsMaximised;
+        public double Scale = 0.75;
     }
 }

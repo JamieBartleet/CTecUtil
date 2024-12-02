@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace CTecUtil
+namespace CTecUtil.Config
 {
     /// <summary>
     /// Maintains a list of up to Maximum file paths, most-recently added first.
@@ -15,8 +15,8 @@ namespace CTecUtil
         private const int _limit = 10;
         private int _maximum = _limit;
         private List<string> _items = new();
-        
-        
+
+
         /// <summary>Sends notification when the item list has changed</summary>
         [JsonIgnore]
         public ApplicationConfig.RecentFileListChangeNotifier RecentFileListHasChanged;
@@ -39,10 +39,10 @@ namespace CTecUtil
 
             if (_items.Contains(path))
                 _items.Remove(path);
-            
+
             while (_items.Count >= Maximum)
                 _items.RemoveAt(_items.Count - 1);
-         
+
             _items.Insert(0, path);
 
             ApplicationConfig.SaveSettings();

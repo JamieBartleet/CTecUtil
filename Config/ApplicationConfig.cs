@@ -11,7 +11,7 @@ using System.Windows.Media;
 using CTecUtil.IO;
 using Newtonsoft.Json;
 
-namespace CTecUtil
+namespace CTecUtil.Config
 {
     public class ApplicationConfig
     {
@@ -37,7 +37,7 @@ namespace CTecUtil
         private static bool _initialised = false;
         private static string _configFilePath;
         private static ApplicationConfigData _config = new();
-        
+
         public static string AppDataFolder { get; set; }
 
 
@@ -120,69 +120,76 @@ namespace CTecUtil
         /// <summary>
         /// Save the main application window's size and position.
         /// </summary>
-        public static void UpdateMainWindowParams(Window window, bool saveSettings = false)
+        public static void UpdateMainWindowParams(Window window, double zoomLevel, bool saveSettings = false)
         {
             _config.MainWindow ??= new();
 
-            updateWindowParams(window, _config.MainWindow, saveSettings);
+            updateWindowParams(window, zoomLevel, _config.MainWindow, saveSettings);
         }
 
 
         /// <summary>
         /// Save the Configurator Monitor window's size and position.
         /// </summary>
-        public static void UpdateMonitorWindowParams(Window window, bool saveSettings = false)
+        public static void UpdateMonitorWindowParams(Window window, double scale, bool saveSettings = false)
         {
             _config.MonitorWindow ??= new();
 
-            updateWindowParams(window, _config.MonitorWindow, saveSettings);
+            updateWindowParams(window, scale, _config.MonitorWindow, saveSettings);
         }
 
 
         /// <summary>
         /// Save the Node Summary window's size and position.
         /// </summary>
-        public static void UpdateNodeSummaryWindowParams(Window window, bool saveSettings = false)
+        public static void UpdateNodeSummaryWindowParams(Window window, double scale, bool saveSettings = false)
         {
             _config.NodeSummaryWindow ??= new();
 
-            updateWindowParams(window, _config.NodeSummaryWindow, saveSettings);
+            updateWindowParams(window, scale, _config.NodeSummaryWindow, saveSettings);
         }
 
 
         /// <summary>
         /// Save the Validation window's size and position.
         /// </summary>
-        public static void UpdateValidationWindowParams(Window window, bool saveSettings = false)
+        public static void UpdateValidationWindowParams(Window window, double scale, bool saveSettings = false)
         {
             _config.ValidationWindow ??= new();
 
-            updateWindowParams(window, _config.ValidationWindow, saveSettings);
+            updateWindowParams(window, scale, _config.ValidationWindow, saveSettings);
         }
 
 
-        private static void updateWindowParams(Window window, WindowSizeParams dimensions, bool saveSettings)
+        private static void updateWindowParams(Window window, double scale, WindowSizeParams dimensions, bool saveSettings)
         {
             dimensions.Location = new Point((int)window.Left, (int)window.Top);
             dimensions.Size = new Size((int)window.Width, (int)window.Height);
             dimensions.IsMaximised = window.WindowState == WindowState.Maximized;
+            dimensions.Scale = scale;
 
             if (saveSettings)
                 SaveSettings();
         }
 
 
-        public static float MinZoom = 0.45f;
-        public static float MaxZoom = 1.25f;
-        public static float ZoomStep { get => (MaxZoom - MinZoom) / 16; }
+        public static double MinZoom = 0.45;
+        public static double MaxZoom = 1.25;
+        public static double ZoomStep { get => (MaxZoom - MinZoom) / 16; }
 
-        public static float ZoomLevel
+        public static double ZoomLevel
         {
             get => _config.ZoomLevel;
             set => _config.ZoomLevel = value;
         }
 
-        public static float SerialMonitorZoomLevel
+        public static double ValidationWindowZoomLevel
+        {
+            get => _config.ValidationWindowZoomLevel;
+            set => _config.ValidationWindowZoomLevel = value;
+        }
+
+        public static double SerialMonitorZoomLevel
         {
             get => _config.SerialMonitorZoomLevel;
             set => _config.SerialMonitorZoomLevel = value;
