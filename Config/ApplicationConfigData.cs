@@ -17,8 +17,6 @@ namespace CTecUtil.Config
             RecentConfiguratorFiles.RecentFileListHasChanged = new(() => ApplicationConfig.RecentConfiguratorFileListHasChanged?.Invoke());
         }
 
-        public static SupportedApps OwnerApp { get; set; } = SupportedApps.NotSet;
-
 
         public Layouts            Layout;
         public string             CultureName = "en-GB";
