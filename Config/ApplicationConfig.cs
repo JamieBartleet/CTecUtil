@@ -15,28 +15,30 @@ namespace CTecUtil.Config
 {
     public class ApplicationConfig
     {
-        public static SupportedApps OwnerApp { get; private set; } = SupportedApps.NotSet;
+        public static SupportedApps OwnerApp { get; set; } = SupportedApps.NotSet;
+        protected static string productName => OwnerApp switch { SupportedApps.Quantec => "QuantecTools", SupportedApps.XFP => "XfpTools", _ => "ZfpTools" };
 
 
         /// <summary>
         /// Initialise the CTecUtil.ApplicationConfig class.
         /// </summary>
         /// <param name="productName">The software's name ("Quantec Programming Tools", etc.)</param>
-        public static void InitConfigSettings(SupportedApps ownerApp)
+        public static void InitConfigSettings(SupportedApps ownerApp, ApplicationConfigData config)
         {
             OwnerApp = ownerApp;
-            var productName = OwnerApp switch { SupportedApps.Quantec => "QuantecTools", SupportedApps.XFP => "XfpTools", _ => "ZfpTools" };
+            _config = config;
             _initialised = true;
+            var productName = OwnerApp switch { SupportedApps.Quantec => "QuantecTools", SupportedApps.XFP => "XfpTools", _ => "ZfpTools" };
             Directory.CreateDirectory(AppDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), _companyName));
             _configFilePath = Path.Combine(AppDataFolder, productName + TextFile.JsonFileExt);
             readSettings();
         }
 
 
-        private const string _companyName = "C-Tec";
-        private static bool _initialised = false;
-        private static string _configFilePath;
-        private static ApplicationConfigData _config = new();
+        protected const string _companyName = "C-Tec";
+        protected static bool _initialised = false;
+        protected static string _configFilePath;
+        protected static ApplicationConfigData _config;
 
         public static string AppDataFolder { get; set; }
 
@@ -86,7 +88,7 @@ namespace CTecUtil.Config
         }
 
 
-        private static void notInitialisedError()
+        protected static void notInitialisedError()
         {
             MessageBox.Show("***Code error***\n\nThe CTecUtil.ApplicationConfig class has not been initialised.\nCall ApplicationConfig.InitConfigSettings(<ownerApp>).", _companyName + "App Error");
             Application.Current.Shutdown();
@@ -100,24 +102,6 @@ namespace CTecUtil.Config
 
 
         /// <summary>
-        /// Configurator Monitor window's size and position.
-        /// </summary>
-        public static WindowSizeParams MonitorWindow { get => _config.MonitorWindow; }
-
-
-        /// <summary>
-        /// Node Summary window's size and position.
-        /// </summary>
-        public static WindowSizeParams NodeSummaryWindow { get => _config.NodeSummaryWindow; }
-
-
-        /// <summary>
-        /// Validation window's size and position.
-        /// </summary>
-        public static WindowSizeParams ValidationWindow { get => _config.ValidationWindow; }
-
-
-        /// <summary>
         /// Save the main application window's size and position.
         /// </summary>
         public static void UpdateMainWindowParams(Window window, double zoomLevel, bool saveSettings = false)
@@ -128,40 +112,7 @@ namespace CTecUtil.Config
         }
 
 
-        /// <summary>
-        /// Save the Configurator Monitor window's size and position.
-        /// </summary>
-        public static void UpdateMonitorWindowParams(Window window, double scale, bool saveSettings = false)
-        {
-            _config.MonitorWindow ??= new();
-
-            updateWindowParams(window, scale, _config.MonitorWindow, saveSettings);
-        }
-
-
-        /// <summary>
-        /// Save the Node Summary window's size and position.
-        /// </summary>
-        public static void UpdateNodeSummaryWindowParams(Window window, double scale, bool saveSettings = false)
-        {
-            _config.NodeSummaryWindow ??= new();
-
-            updateWindowParams(window, scale, _config.NodeSummaryWindow, saveSettings);
-        }
-
-
-        /// <summary>
-        /// Save the Validation window's size and position.
-        /// </summary>
-        public static void UpdateValidationWindowParams(Window window, double scale, bool saveSettings = false)
-        {
-            _config.ValidationWindow ??= new();
-
-            updateWindowParams(window, scale, _config.ValidationWindow, saveSettings);
-        }
-
-
-        private static void updateWindowParams(Window window, double scale, WindowSizeParams dimensions, bool saveSettings)
+        protected static void updateWindowParams(Window window, double scale, WindowSizeParams dimensions, bool saveSettings)
         {
             dimensions.Location = new Point((int)window.Left, (int)window.Top);
             dimensions.Size = new Size((int)window.Width, (int)window.Height);
@@ -181,18 +132,6 @@ namespace CTecUtil.Config
         {
             get => _config.ZoomLevel;
             set => _config.ZoomLevel = value;
-        }
-
-        public static double ValidationWindowZoomLevel
-        {
-            get => _config.ValidationWindowZoomLevel;
-            set => _config.ValidationWindowZoomLevel = value;
-        }
-
-        public static double SerialMonitorZoomLevel
-        {
-            get => _config.SerialMonitorZoomLevel;
-            set => _config.SerialMonitorZoomLevel = value;
         }
 
 
@@ -224,10 +163,10 @@ namespace CTecUtil.Config
         }
 
 
-        public static RecentFilesList RecentConfiguratorFiles
-        {
-            get => _config.RecentConfiguratorFiles;
-            set { _config.RecentConfiguratorFiles = value; SaveSettings(); }
-        }
+        //public static RecentFilesList RecentConfiguratorFiles
+        //{
+        //    get => _config.RecentConfiguratorFiles;
+        //    set { _config.RecentConfiguratorFiles = value; SaveSettings(); }
+        //}
     }
 }
