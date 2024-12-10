@@ -13,26 +13,24 @@ namespace CTecUtil.Config
     {
         public ApplicationConfigData()
         {
-            RecentPanelFiles.RecentFileListHasChanged        = new(() => ApplicationConfig.RecentPanelFileListHasChanged?.Invoke());
-            //RecentConfiguratorFiles.RecentFileListHasChanged = new(() => ApplicationConfig.RecentConfiguratorFileListHasChanged?.Invoke());
+            RecentPanelFiles = new();
+            RecentPanelFiles.RecentFileListHasChanged = new(() => ApplicationConfigBase.RecentPanelFileListHasChanged?.Invoke());
+            RecentPanelFiles.SaveSettings = SaveSettings;
         }
 
         public static SupportedApps OwnerApp { get; set; } = SupportedApps.NotSet;
+
+        public ApplicationConfigBase.SettingsSaver SaveSettings;
 
 
         public Layouts            Layout;
         public string             CultureName = "en-GB";
         public WindowSizeParams   MainWindow;
-        //public WindowSizeParams   MonitorWindow;
-        //public WindowSizeParams   NodeSummaryWindow;
-        //public WindowSizeParams   ValidationWindow;
+        public WindowSizeParams   ValidationWindow;
         public double             ZoomLevel = 0.75;
-        //public double             ValidationWindowZoomLevel = 0.75;
-        //public double             SerialMonitorZoomLevel = 0.75;
         public SerialPortSettings SerialPort = new();
         public string             Protocol = "";
-        public RecentFilesList    RecentPanelFiles = new();
-        //public RecentFilesList    RecentConfiguratorFiles = new();
+        public RecentFilesList    RecentPanelFiles;
     }
 
 

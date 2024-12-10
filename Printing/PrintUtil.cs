@@ -16,7 +16,7 @@ namespace CTecUtil.Printing
 
         public static string GetTempPrintFileName(string prefix)
         {
-            var tempFolder = Path.Combine(ApplicationConfig.AppDataFolder, _tempPrintFolder);
+            var tempFolder = Path.Combine(ApplicationConfigBase.AppDataFolder, _tempPrintFolder);
             if (string.IsNullOrWhiteSpace(prefix))
                 prefix = "document";                
             var tempFile   = prefix /*+ "_" + DateTime.Now.ToUniversalTime().ToString("u")*/ + _tempPrintFileSuffix;

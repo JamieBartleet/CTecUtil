@@ -19,7 +19,10 @@ namespace CTecUtil.Config
 
         /// <summary>Sends notification when the item list has changed</summary>
         [JsonIgnore]
-        public ApplicationConfig.RecentFileListChangeNotifier RecentFileListHasChanged;
+        public ApplicationConfigBase.RecentFileListChangeNotifier RecentFileListHasChanged;
+
+        public ApplicationConfigBase.SettingsSaver SaveSettings;
+
 
 
         /// <summary>The maximum number of items in the list</summary>
@@ -32,7 +35,7 @@ namespace CTecUtil.Config
 
         /// <summary>Add a new file path to the list.  The most recent items are listed first;
         /// if path is already in the list it will be moved to the first item.</summary>
-        public void Add(string path)
+        public virtual void Add(string path)
         {
             if (string.IsNullOrWhiteSpace(path))
                 return;
@@ -45,8 +48,9 @@ namespace CTecUtil.Config
 
             _items.Insert(0, path);
 
-            ApplicationConfig.SaveSettings();
+            SaveSettings?.Invoke();
             RecentFileListHasChanged?.Invoke();
+            SaveSet tings?.Invoke();
         }
 
 
@@ -59,8 +63,9 @@ namespace CTecUtil.Config
             if (_items.Contains(path))
                 _items.Remove(path);
 
-            ApplicationConfig.SaveSettings();
+            SaveSettings?.Invoke();
             RecentFileListHasChanged?.Invoke();
+            SaveSettings?.Invoke();
         }
     }
 }
