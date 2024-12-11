@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CTecUtil.Config;
+using System;
 using System.Collections.Generic;
 using System.IO.Ports;
 using System.Linq;
@@ -21,7 +22,9 @@ namespace CTecUtil.IO
             WriteTimeout = 500;
         }
 
-        public string    PortName { get; set; }
+        private string   _portName;
+
+        public string    PortName { get => _portName; set { _portName = value; ApplicationConfig.SaveSettings(); } }
         public int       BaudRate { get; set; }
         public Handshake Handshake { get; set; }
         public Parity    Parity { get; set; }

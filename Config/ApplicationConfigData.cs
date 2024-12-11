@@ -11,19 +11,12 @@ namespace CTecUtil.Config
 {
     public class ApplicationConfigData
     {
-        public ApplicationConfigData()
-        {
-            RecentPanelFiles = new();
-            RecentPanelFiles.RecentFileListHasChanged = new(() => ApplicationConfigBase.RecentPanelFileListHasChanged?.Invoke());
-            RecentPanelFiles.SaveSettings = SaveSettings;
-        }
+        public ApplicationConfigData() => RecentPanelFiles = new();
+
 
         public static SupportedApps OwnerApp { get; set; } = SupportedApps.NotSet;
 
-        public ApplicationConfigBase.SettingsSaver SaveSettings;
 
-
-        public Layouts            Layout;
         public string             CultureName = "en-GB";
         public WindowSizeParams   MainWindow;
         public WindowSizeParams   ValidationWindow;
@@ -31,17 +24,5 @@ namespace CTecUtil.Config
         public SerialPortSettings SerialPort = new();
         public string             Protocol = "";
         public RecentFilesList    RecentPanelFiles;
-    }
-
-
-    public enum Layouts { Standard, Classic };
-
-
-    public class WindowSizeParams
-    {
-        public Point? Location;
-        public Size?  Size;
-        public bool   IsMaximised;
-        public double Scale = 0.75;
     }
 }

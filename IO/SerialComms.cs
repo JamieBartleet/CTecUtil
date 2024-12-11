@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using System.Windows;
 using System.Windows.Threading;
+using CTecUtil.Config;
 using CTecUtil.UI;
 
 namespace CTecUtil.IO
@@ -102,6 +103,8 @@ namespace CTecUtil.IO
                         if (_port is not null && _port.IsOpen)
                             _port.Close();
                         getNewSerialPort();
+                        ApplicationConfig.SerialPortName = SerialComms.PortName = value;
+                        ApplicationConfig.SaveSettings();
                     }
                 }
             }
