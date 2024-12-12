@@ -45,7 +45,7 @@ namespace CTecUtil.Config
 
             _items.Insert(0, path);
 
-            ApplicationConfig.SaveSettings();
+            ApplicationConfig.Save = true;
             RecentFileListHasChanged?.Invoke();
         }
 
@@ -59,7 +59,7 @@ namespace CTecUtil.Config
             if (_items.Contains(path))
                 _items.Remove(path);
 
-            ApplicationConfig.SaveSettings();
+            ApplicationConfig.Save = true;
             RecentFileListHasChanged?.Invoke();
         }
     }

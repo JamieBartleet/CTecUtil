@@ -89,6 +89,7 @@ namespace CTecUtil.IO
                 return null;
 
             CTecUtil.Debug.WriteLine("Writing file: " + filePath);
+
             try
             {
                 using var Writer = new StreamWriter(filePath);

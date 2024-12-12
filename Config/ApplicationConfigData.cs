@@ -17,12 +17,12 @@ namespace CTecUtil.Config
         public static SupportedApps OwnerApp { get; set; } = SupportedApps.NotSet;
 
 
-        public string             CultureName = "en-GB";
-        public WindowSizeParams   MainWindow;
-        public WindowSizeParams   ValidationWindow;
-        public double             ZoomLevel = 0.75;
-        public SerialPortSettings SerialPort = new();
-        public string             Protocol = "";
-        public RecentFilesList    RecentPanelFiles;
+        public string             CultureName      { get; set; } = "en-GB";
+        public WindowSizeParams   MainWindow       { get; set; }
+        public WindowSizeParams   ValidationWindow { get; set; }
+        public double             ZoomLevel        { get; set; } = 0.75;
+        public SerialPortSettings SerialPort       { get; set; } = new();
+        public string             Protocol         { get; set; } = "";
+        public RecentFilesList    RecentPanelFiles { get; set; }
     }
 }

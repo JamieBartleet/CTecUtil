@@ -15,8 +15,7 @@ namespace CTecUtil.Config
             Size        = new Size((int)window.Width, (int)window.Height);
             IsMaximised = window.WindowState == WindowState.Maximized;
             Scale       = scale;
-            _updateTimer = new Timer() { Interval = 5000 };
-            _updateTimer.Elapsed += updateTimerTick;
+            ApplicationConfig.Save = true;
         }
 
         
@@ -24,11 +23,10 @@ namespace CTecUtil.Config
         private Size?  _size;
         private bool   _isMaximised;
         private double _scale = 0.75;
-        private static Timer _updateTimer;
 
-        public Point? Location    { get => _location;    set { _location = value;    timedUpdate(); } }
-        public Size?  Size        { get => _size;        set { _size = value;        timedUpdate(); } }
-        public bool   IsMaximised { get => _isMaximised; set { _isMaximised = value; timedUpdate(); } }
+        public Point? Location    { get => _location;    set { _location = value;    ApplicationConfig.Save = true; } }
+        public Size?  Size        { get => _size;        set { _size = value;        ApplicationConfig.Save = true; } }
+        public bool   IsMaximised { get => _isMaximised; set { _isMaximised = value; ApplicationConfig.Save = true; } }
 
         public double Scale
         {
@@ -38,24 +36,9 @@ namespace CTecUtil.Config
                 if (value >= UI.MinZoom && value <= UI.MaxZoom)
                 {
                     _scale = value;
-                    timedUpdate();
+                    ApplicationConfig.Save = true;
                 }
             }
         }
-
-
-        private void timedUpdate()
-        {
-            if (!_updateTimer.Enabled)
-                _updateTimer.Start();
-        }
-
-        private void updateTimerTick(object sender, EventArgs e)
-        {
-            DispatcherTimer timer = (DispatcherTimer)sender;
-            ApplicationConfig.SaveSettings();
-            t i m e r.Stop();
-        }
-
     }
 }

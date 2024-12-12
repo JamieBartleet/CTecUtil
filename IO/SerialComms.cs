@@ -103,8 +103,7 @@ namespace CTecUtil.IO
                         if (_port is not null && _port.IsOpen)
                             _port.Close();
                         getNewSerialPort();
-                        ApplicationConfig.SerialPortName = SerialComms.PortName = value;
-                        ApplicationConfig.SaveSettings();
+                        ApplicationConfig.SerialPortName = _port.PortName = value;
                     }
                 }
             }
@@ -548,7 +547,7 @@ Debug.WriteLine("SerialComms.SendData() #" + command.Tries + " " + ByteArrayProc
             if (IsDisconnected)
                 return;
 
-Debug.WriteLine("SerialComms.dataReceived()");
+//Debug.WriteLine("SerialComms.dataReceived()");
             //lock (_portLock)
             {
                 try
@@ -585,7 +584,8 @@ Debug.WriteLine("SerialComms.dataReceived()");
 
                 if (isPingResponse(incoming))
                 {
-                    Debug.WriteLine("SerialComms.responseDataReceived() - ping response");
+                    //Debug.WriteLine("SerialComms.responseDataReceived() - ping response");
+                    
                     //status is one of the Connected statuses: if not already thought to be writeable set it to read-only
                     if (_connectionStatus != ConnectionStatus.ConnectedWriteable)
                         notifyConnectionStatus(ConnectionStatus.ConnectedReadOnly);
@@ -597,7 +597,8 @@ Debug.WriteLine("SerialComms.dataReceived()");
                 }
                 else if (isCheckWriteableResponse(incoming))
                 {
-                    Debug.WriteLine("SerialComms.responseDataReceived() - check writeable response");
+                    //Debug.WriteLine("SerialComms.responseDataReceived() - check writeable response");
+                    
                     //read-only response received?
                     //...only if there is no active upload/download
                     if (_commandQueue.TotalCommandCount == 0)
@@ -609,7 +610,8 @@ Debug.WriteLine("SerialComms.dataReceived()");
                 }
                 else if (isCheckFirmwareResponse(incoming))
                 {
-                    Debug.WriteLine("SerialComms.responseDataReceived() - check firmware response");
+                    //Debug.WriteLine("SerialComms.responseDataReceived() - check firmware response");
+                    
                     //panel responded to ping, so notify the version number and request its read-only status
                     //...only if there is no active upload/download
                     if (_commandQueue.TotalCommandCount == 0)
@@ -622,7 +624,8 @@ Debug.WriteLine("SerialComms.dataReceived()");
                 }
                 else if (isCheckProtocolResponse(incoming))
                 {
-Debug.WriteLine("SerialComms.responseDataReceived() - check protocol response");
+                    //Debug.WriteLine("SerialComms.responseDataReceived() - check protocol response");
+                    
                     //do this only if there is no active upload/download
                     if (_commandQueue.TotalCommandCount == 0)
                         NotifyDeviceProtocol?.Invoke(incoming);
@@ -651,7 +654,7 @@ Debug.WriteLine("SerialComms.responseDataReceived() - check protocol response");
                 }
                 else if (_commandQueue.TotalCommandCount > 0)
                 {
-Debug.WriteLine("SerialComms.responseDataReceived() - something...");
+//Debug.WriteLine("SerialComms.responseDataReceived() - something...");
                     var ok = false;
                     
                     notifyConnectionStatus(_connectionStatus);
@@ -659,7 +662,7 @@ Debug.WriteLine("SerialComms.responseDataReceived() - something...");
 
                     if (cmd is not null)
                     {
-Debug.WriteLine("SerialComms.responseDataReceived() - " + _commandQueue.CurrentSubqueueName + " - " + cmd.Index + ": " + ByteArrayProcessing.ByteArrayToHexString(cmd.CommandData));
+//Debug.WriteLine("SerialComms.responseDataReceived() - " + _commandQueue.CurrentSubqueueName + " - " + cmd.Index + ": " + ByteArrayProcessing.ByteArrayToHexString(cmd.CommandData));
                         var savedQueueId = _commandQueue.Id;
 
                         if (incoming is not null)
@@ -677,7 +680,7 @@ Debug.WriteLine("SerialComms.responseDataReceived() - " + _commandQueue.CurrentS
                             }));
                         }
 
-Debug.WriteLine("SerialComms.responseDataReceived() - ok=" + ok);
+//Debug.WriteLine("SerialComms.responseDataReceived() - ok=" + ok);
 
                         if (ok)
                         {
@@ -726,7 +729,7 @@ Debug.WriteLine("SerialComms.responseDataReceived() - ok=" + ok);
 
         private static byte[] readIncomingResponse(SerialPort port)
         {
-Debug.WriteLine("SerialComms.readIncomingResponse()");
+//Debug.WriteLine("SerialComms.readIncomingResponse()");
             try
             {
                 var timeout = DateTime.Now.AddMilliseconds(IncomingDataTimerPeriod);
@@ -798,7 +801,7 @@ Debug.WriteLine("SerialComms.readIncomingResponse()");
 
         private static async void listenerDataReceived(SerialPort port)
         {
-Debug.WriteLine("SerialComms.listenerDataReceived()");
+//Debug.WriteLine("SerialComms.listenerDataReceived()");
             try
             {
                 notifyConnectionStatus(ConnectionStatus.Listening);
@@ -825,7 +828,7 @@ Debug.WriteLine("SerialComms.listenerDataReceived()");
 
         private static byte[] readIncomingListenerData(SerialPort port)
         {
-Debug.WriteLine("SerialComms.readIncomingListenerData()");
+//Debug.WriteLine("SerialComms.readIncomingListenerData()");
             try
             {
                 var timeout = DateTime.Now.AddMilliseconds(IncomingDataTimerPeriod);

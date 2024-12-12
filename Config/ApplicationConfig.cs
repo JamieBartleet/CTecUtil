@@ -7,6 +7,7 @@ using System.IO.Ports;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Windows;
 using System.Windows.Media;
 using CTecUtil.IO;
@@ -16,7 +17,6 @@ namespace CTecUtil.Config
 {
     public abstract class ApplicationConfig
     {
-        //public static SupportedApps OwnerApp { get; set; } = SupportedApps.NotSet;
         protected static string productName => ApplicationConfigData.OwnerApp switch { SupportedApps.Quantec => "QuantecTools", SupportedApps.XFP => "XfpTools", _ => "ZfpTools" };
 
 
@@ -27,10 +27,10 @@ namespace CTecUtil.Config
         {
             ApplicationConfigData.OwnerApp = ownerApp;
             _initialised = true;
-            var productName = ApplicationConfigData.OwnerApp switch { SupportedApps.Quantec => "QuantecTools", SupportedApps.XFP => "XfpTools", _ => "ZfpTools" };
             Directory.CreateDirectory(AppDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), _companyName));
             _configFilePath = Path.Combine(AppDataFolder, productName + TextFile.JsonFileExt);
             readSettings();
+            InitTimer();
         }
 
 
@@ -55,15 +55,6 @@ namespace CTecUtil.Config
         protected abstract void readSettings();
 
 
-        public static void SaveSettings()
-        {
-            if (!_initialised)
-                notInitialisedError();
-
-            TextFile.SaveFile(JsonConvert.SerializeObject(_data, Formatting.Indented), _configFilePath);
-        }
-
-
         protected static void notInitialisedError()
         {
             MessageBox.Show("***Code error***\n\nThe CTecUtil.ApplicationConfig class has not been initialised.\nCall ApplicationConfig.InitConfigSettings(<ownerApp>).", _companyName + "App Error");
@@ -84,8 +75,7 @@ namespace CTecUtil.Config
         public void UpdateMainWindowParams(Window window, double scale, bool saveSettings = false)
         {
             Data.MainWindow = new(window, scale);
-            if (saveSettings)
-                SaveSettings();
+            Save = true;
         }
 
 
@@ -93,8 +83,7 @@ namespace CTecUtil.Config
         public void UpdateValidationWindowParams(Window window, double scale, bool saveSettings = false)
         {
             Data.ValidationWindow = new(window, scale);
-            if (saveSettings)
-                SaveSettings();
+            Save = true;
         }
 
 
@@ -105,8 +94,7 @@ namespace CTecUtil.Config
             @params.IsMaximised = window.WindowState == WindowState.Maximized;
             @params.Scale       = scale;
 
-            if (saveSettings)
-                SaveSettings();
+            Save = true; 
         }
 
 
@@ -119,7 +107,7 @@ namespace CTecUtil.Config
             MainWindow.IsMaximised = false;
             MainWindow.Location = new(x, y);
             MainWindow.Size = new(w, h);
-            SaveSettings();
+            Save = true;
         }
 
 
@@ -127,12 +115,43 @@ namespace CTecUtil.Config
         public static double MaxZoom = 1.25;
 
         public double ZoomStep                       => (MaxZoom - MinZoom) / 16;
-        public double ZoomLevel                      { get => Data.ZoomLevel;            set => Data.ZoomLevel = value; }
-        public string Culture                        { get => Data.CultureName;          set { Data.CultureName = value; SaveSettings(); } }
-        public string Protocol                       { get => Data.Protocol;             set { Data.Protocol = value; SaveSettings(); } }
-        public SerialPortSettings SerialPortSettings { get => Data.SerialPort;           set { Data.SerialPort = value; SaveSettings(); } }
+        public double ZoomLevel                      { get => Data.ZoomLevel;            set { Data.ZoomLevel = value; Save = true; } }
+        public string Culture                        { get => Data.CultureName;          set { Data.CultureName = value; Save = true; } }
+        public string Protocol                       { get => Data.Protocol;             set { Data.Protocol = value; Save = true; } }
+        public SerialPortSettings SerialPortSettings { get => Data.SerialPort;           set { Data.SerialPort = value; Save = true; } }
         private static string _serialPortName;
-        public static string SerialPortName          { get => _data.SerialPort.PortName; set { _data.SerialPort.PortName = value; SaveSettings(); } }
-        public RecentFilesList    RecentPanelFiles   { get => Data.RecentPanelFiles;     set { Data.RecentPanelFiles = value; SaveSettings(); } }
+        public static string SerialPortName          { get => _data.SerialPort.PortName; set { _data.SerialPort.PortName = value; Save = true; } }
+        public RecentFilesList    RecentPanelFiles   { get => Data.RecentPanelFiles;     set { Data.RecentPanelFiles = value; Save = true; } }
+
+
+        #region save with timer
+        internal static void InitTimer()
+        {
+            _updateTimer = new Timer() { Interval = 7500 };
+            _updateTimer.Elapsed += updateTimerTick;
+            _updateTimer.Start();
+        }
+
+        private static Timer _updateTimer;
+
+        public static bool Save { get; set; }
+
+        private static void updateTimerTick(object sender, EventArgs e)
+        {
+            if (Save)
+            {
+                saveSettings();
+                Save = false;
+            }
+        }
+
+        private static void saveSettings()
+        {
+            if (!_initialised)
+                notInitialisedError();
+
+            TextFile.SaveFile(JsonConvert.SerializeObject(_data, Formatting.Indented), _configFilePath);
+        }
+        #endregion
     }
 }
