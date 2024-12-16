@@ -29,6 +29,7 @@ namespace CTecUtil.Config
             _initialised = true;
             Directory.CreateDirectory(AppDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), _companyName));
             _configFilePath = Path.Combine(AppDataFolder, productName + TextFile.JsonFileExt);
+            checkFileExists();
             readSettings();
             InitTimer();
         }
@@ -52,6 +53,16 @@ namespace CTecUtil.Config
         /// <summary>Sends notification when the recent files list has changed</summary>
         public static RecentFileListChangeNotifier RecentFileListHasChanged;
 
+        protected void checkFileExists()
+        {
+            if (!new FileInfo(_configFilePath).Exists)
+            {                         
+                Data = newConfigDataData();
+                saveSettings();
+            }
+        }
+
+        protected abstract ApplicationConfigData newConfigDataData();
         protected abstract void readSettings();
 
 
@@ -145,7 +156,7 @@ namespace CTecUtil.Config
             }
         }
 
-        private static void saveSettings()
+        protected static void saveSettings()
         {
             if (!_initialised)
                 notInitialisedError();

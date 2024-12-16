@@ -11,18 +11,18 @@ namespace CTecUtil.Config
 {
     public class ApplicationConfigData
     {
-        public ApplicationConfigData() => RecentPanelFiles = new();
+        public ApplicationConfigData() { }
 
 
         public static SupportedApps OwnerApp { get; set; } = SupportedApps.NotSet;
 
 
         public string             CultureName      { get; set; } = "en-GB";
-        public WindowSizeParams   MainWindow       { get; set; }
-        public WindowSizeParams   ValidationWindow { get; set; }
+        public WindowSizeParams   MainWindow       { get; set; } = new();
+        public WindowSizeParams   ValidationWindow { get; set; } = new();
         public double             ZoomLevel        { get; set; } = 0.75;
         public SerialPortSettings SerialPort       { get; set; } = new();
         public string             Protocol         { get; set; } = "";
-        public RecentFilesList    RecentPanelFiles { get; set; }
+        public RecentFilesList    RecentPanelFiles { get; set; } = new();
     }
 }
