@@ -20,10 +20,11 @@ namespace CTecUtil
             {
                 Process currentProcess = Process.GetCurrentProcess();
 
-                //check wheter another instance is already running
+                //check whether another instance is already running
                 foreach (var p in Process.GetProcesses())
                     if (p.Id != currentProcess.Id)
-                        if (p.ProcessName.Equals(currentProcess.ProcessName))
+                        if (p.ProcessName.Equals(currentProcess.ProcessName)
+                         && (DateTime?)p.StartTime is not null)                 //<-- NB: under Win11 TWO processes are started on startup, the 'real' one has proper data attached
                             return true;
             }
             catch { }

@@ -138,7 +138,7 @@ namespace CTecUtil.Config
         #region save with timer
         internal static void InitTimer()
         {
-            _updateTimer = new Timer() { Interval = 7500 };
+            _updateTimer = new Timer() { Interval = 5000 };
             _updateTimer.Elapsed += updateTimerTick;
             _updateTimer.Start();
         }

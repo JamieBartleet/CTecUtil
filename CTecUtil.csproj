@@ -5,9 +5,9 @@
 	  <UseWPF>true</UseWPF>
 	  <UseWindowsForms>true</UseWindowsForms>
 	  <SourceRevisionId>Build=$([System.DateTime]::UtcNow.ToString("yyyy-MM-dd HH:mm:ss"))</SourceRevisionId>
-	  <AssemblyVersion>1.5.8</AssemblyVersion>
-	  <FileVersion>1.5.8</FileVersion>
-	  <Version>1.5.8</Version>
+	  <AssemblyVersion>1.5.9</AssemblyVersion>
+	  <FileVersion>1.5.9</FileVersion>
+	  <Version>1.5.9</Version>
 	  <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
 
