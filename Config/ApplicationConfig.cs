@@ -122,7 +122,7 @@ namespace CTecUtil.Config
         }
 
 
-        public static double MinZoom = 0.45;
+        public static double MinZoom = 0.6;
         public static double MaxZoom = 1.25;
 
         public double ZoomStep                       => (MaxZoom - MinZoom) / 16;
