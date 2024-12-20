@@ -19,7 +19,7 @@ namespace CTecUtil.Config
 
         /// <summary>Sends notification when the item list has changed</summary>
         [JsonIgnore]
-        public ApplicationConfig.RecentFileListChangeNotifier RecentFileListHasChanged;
+        public static ApplicationConfig.RecentFileListChangeNotifier RecentFileListHasChanged;
 
 
         /// <summary>The maximum number of items in the list</summary>
