@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.IO.Ports;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
@@ -23,7 +24,7 @@ namespace CTecUtil.Config
         /// <summary>
         /// Initialise the CTecUtil.ApplicationConfigBase class.
         /// </summary>
-        public void InitConfigSettings(SupportedApps ownerApp)
+        public virtual void InitConfigSettings(SupportedApps ownerApp, RecentFilesList.RecentFileListChangeNotifier recentFileListHasChanged)
         {
             ApplicationConfigData.OwnerApp = ownerApp;
             _initialised = true;
@@ -32,6 +33,7 @@ namespace CTecUtil.Config
             checkFileExists();
             readSettings();
             InitTimer();
+            RecentPanelFiles.RecentFileListHasChanged = recentFileListHasChanged;
         }
 
 
@@ -46,12 +48,8 @@ namespace CTecUtil.Config
         public static string AppDataFolder { get; set; }
 
 
-        /// <summary>Delegate to send notification when a recent files list has changed</summary>
-        public delegate void RecentFileListChangeNotifier();
-
-
         /// <summary>Sends notification when the recent files list has changed</summary>
-        public static RecentFileListChangeNotifier RecentFileListHasChanged;
+        //public static RecentFileListChangeNotifier RecentFileListHasChanged;
 
         protected void checkFileExists()
         {
@@ -161,7 +159,15 @@ namespace CTecUtil.Config
             if (!_initialised)
                 notInitialisedError();
 
-            TextFile.SaveFile(JsonConvert.SerializeObject(_data, Formatting.Indented), _configFilePath);
+            try
+            {
+                Application.Current.Dispatcher.Invoke(new Action(() => TextFile.SaveFile(JsonConvert.SerializeObject(_data, Formatting.Indented), _configFilePath)));
+                //TextFile.SaveFile(JsonConvert.SerializeObject(_data, Formatting.Indented), _configFilePath);
+            }
+            catch (Exception ex) 
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
         #endregion
     }

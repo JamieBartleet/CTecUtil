@@ -15,11 +15,14 @@ namespace CTecUtil.Config
         private const int _limit = 10;
         private int _maximum = _limit;
         private List<string> _items = new();
+        
 
+        /// <summary>Delegate to send notification when a recent files list has changed</summary>
+        public delegate void RecentFileListChangeNotifier();
 
         /// <summary>Sends notification when the item list has changed</summary>
         [JsonIgnore]
-        public static ApplicationConfig.RecentFileListChangeNotifier RecentFileListHasChanged;
+        public RecentFileListChangeNotifier RecentFileListHasChanged;
 
 
         /// <summary>The maximum number of items in the list</summary>
