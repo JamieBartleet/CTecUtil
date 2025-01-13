@@ -48,9 +48,6 @@ namespace CTecUtil.Config
         public static string AppDataFolder { get; set; }
 
 
-        /// <summary>Sends notification when the recent files list has changed</summary>
-        //public static RecentFileListChangeNotifier RecentFileListHasChanged;
-
         protected void checkFileExists()
         {
             if (!new FileInfo(_configFilePath).Exists)
@@ -77,6 +74,10 @@ namespace CTecUtil.Config
 
         /// <summary>Validation window's size and position.</summary>
         public WindowSizeParams ValidationWindow { get => Data.ValidationWindow; }
+
+
+        /// <summary>Log window's size and position.</summary>
+        public WindowSizeParams LogWindow { get => Data.LogWindow; }
 
 
         /// <summary>Save the main application window's size and position.</summary>
@@ -162,7 +163,6 @@ namespace CTecUtil.Config
             try
             {
                 Application.Current.Dispatcher.Invoke(new Action(() => TextFile.SaveFile(JsonConvert.SerializeObject(_data, Formatting.Indented), _configFilePath)));
-                //TextFile.SaveFile(JsonConvert.SerializeObject(_data, Formatting.Indented), _configFilePath);
             }
             catch (Exception ex) 
             {

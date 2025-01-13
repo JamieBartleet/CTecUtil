@@ -1,4 +1,6 @@
-﻿using System;
+﻿using CTecUtil.Config;
+using CTecUtil.UI;
+using System;
 using System.Collections.Generic;
 using System.IO.Ports;
 using System.Linq;
@@ -7,8 +9,6 @@ using System.Threading.Tasks;
 using System.Timers;
 using System.Windows;
 using System.Windows.Threading;
-using CTecUtil.Config;
-using CTecUtil.UI;
 
 namespace CTecUtil.IO
 {
@@ -402,8 +402,13 @@ namespace CTecUtil.IO
             //_transferInProgress = true;
             _queueWasCompleted = false;
 
+            CommsCommandLog = new(Cultures.Resources.Log_Comms_Comands);
+
             ShowProgressBarWindow(onStart, onEnd);
         }
+
+
+        public static Log CommsCommandLog { get; private set; }
 
 
         public static void CancelCommandQueue() => _commandQueue?.Clear();
@@ -672,10 +677,17 @@ Debug.WriteLine("SerialComms.SendData() #" + command.Tries + " " + ByteArrayProc
                             {
                                 if ((cmd = _commandQueue.Peek()) is not null)
                                 {
-                                    if (cmd.DataReceiver2 is not null)
-                                        ok = cmd.DataReceiver2?.Invoke(incoming, cmd.Index, cmd.Index2) == true;
-                                    else
-                                        ok = cmd.DataReceiver?.Invoke(incoming, cmd.Index) == true;
+                                    try
+                                    {
+                                        if (cmd.DataReceiver2 is not null)
+                                            ok = cmd.DataReceiver2?.Invoke(incoming, cmd.Index, cmd.Index2) == true;
+                                        else
+                                            ok = cmd.DataReceiver?.Invoke(incoming, cmd.Index) == true;
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        CommsCommandLog.WriteError(_commandQueue.Direction == Direction.Upload ? Cultures.Resources.Error_Uploading_Data : Cultures.Resources.Error_Downloading_Data, ex);
+                                    }
                                 }
                             }));
                         }
@@ -1097,7 +1109,6 @@ Debug.WriteLine("SerialComms.getNewSerialPort()");
 
         private static void progressBarThread()
         {
-            var commsDirection      = _commandQueue.Direction;
             string currentCommsDesc = _commandQueue.SubqueueNames?.Count > 0 ? _commandQueue.SubqueueNames?[0] : "";
 
             var startTime = DateTime.Now;
@@ -1172,7 +1183,7 @@ Debug.WriteLine("progressBarThread() - start sending commands...");
 
             //if comms finishes rapidly the progressbar window may not have had time to be shown, so show a message
             if (DateTime.Now < startTime.AddMilliseconds(_completionMessageTime))
-                ShowMessage?.Invoke(string.Format(commsDirection == Direction.Upload ? Cultures.Resources.Comms_x_Upload_Complete : Cultures.Resources.Comms_x_Download_Complete, currentCommsDesc));
+                ShowMessage?.Invoke(string.Format(_commandQueue.Direction == Direction.Upload ? Cultures.Resources.Comms_x_Upload_Complete : Cultures.Resources.Comms_x_Download_Complete, currentCommsDesc));
         }
 
         #endregion

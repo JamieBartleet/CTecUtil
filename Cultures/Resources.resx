@@ -249,4 +249,7 @@
   <data name="PrintQueueStatus_WarmingUp" xml:space="preserve">
     <value>Warming up</value>
   </data>
+  <data name="Log_Comms_Comands" xml:space="preserve">
+    <value>Comms Commands</value>
+  </data>
 </root>

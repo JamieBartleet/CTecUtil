@@ -20,6 +20,7 @@ namespace CTecUtil.Config
         public string             CultureName      { get; set; } = "en-GB";
         public WindowSizeParams   MainWindow       { get; set; } = new();
         public WindowSizeParams   ValidationWindow { get; set; } = new();
+        public WindowSizeParams   LogWindow        { get; set; } = new();
         public double             ZoomLevel        { get; set; } = 0.75;
         public SerialPortSettings SerialPort       { get; set; } = new();
         public string             Protocol         { get; set; } = "";

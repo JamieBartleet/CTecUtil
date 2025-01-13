@@ -205,6 +205,15 @@ namespace CTecUtil.Cultures {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Comms Commands.
+        /// </summary>
+        public static string Log_Comms_Comands {
+            get {
+                return ResourceManager.GetString("Log_Comms_Comands", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
         public static string Option_Cancel {
