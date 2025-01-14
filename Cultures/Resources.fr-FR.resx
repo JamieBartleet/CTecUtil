@@ -252,4 +252,13 @@
   <data name="Log_Comms_Comands" xml:space="preserve">
     <value>Commandes de communication</value>
   </data>
+  <data name="Comms_Direction_Download" xml:space="preserve">
+    <value>Télécharger à partir de l’appareil</value>
+  </data>
+  <data name="Comms_Direction_Idle" xml:space="preserve">
+    <value>Inactive</value>
+  </data>
+  <data name="Comms_Direction_Upload" xml:space="preserve">
+    <value>Télécharger sur l’appareil</value>
+  </data>
 </root>

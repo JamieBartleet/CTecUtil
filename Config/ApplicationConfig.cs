@@ -44,6 +44,8 @@ namespace CTecUtil.Config
         protected const  string _companyName = "C-Tec";
         protected static bool   _initialised = false;
         protected static string _configFilePath;
+        private   static string _serialPortName;
+
 
         public static string AppDataFolder { get; set; }
 
@@ -97,6 +99,14 @@ namespace CTecUtil.Config
         }
 
 
+        /// <summary>Save the Validation window's size and position.</summary>
+        public void UpdateLogWindowParams(Window window, double scale, bool saveSettings = false)
+        {
+            Data.LogWindow = new(window, scale);
+            Save = true;
+        }
+
+
         protected void updateWindowParams(Window window, double scale, WindowSizeParams @params, bool saveSettings)
         {
             @params.Location    = new Point((int)window.Left, (int)window.Top);
@@ -129,7 +139,6 @@ namespace CTecUtil.Config
         public string Culture                        { get => Data.CultureName;          set { Data.CultureName = value; Save = true; } }
         public string Protocol                       { get => Data.Protocol;             set { Data.Protocol = value; Save = true; } }
         public SerialPortSettings SerialPortSettings { get => Data.SerialPort;           set { Data.SerialPort = value; Save = true; } }
-        private static string _serialPortName;
         public static string SerialPortName          { get => _data.SerialPort.PortName; set { _data.SerialPort.PortName = value; Save = true; } }
         public RecentFilesList    RecentPanelFiles   { get => Data.RecentPanelFiles;     set { Data.RecentPanelFiles = value; Save = true; } }
 

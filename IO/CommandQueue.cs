@@ -33,7 +33,7 @@ namespace CTecUtil.IO
 
 
         /// <summary>The comms direction of the current subqueue (Up/Down; or Idle if there is nothing queued)</summary>
-        internal SerialComms.Direction Direction { get => _subqueues.Count > 0 ? _subqueues.Peek()?.Direction ?? SerialComms.Direction.Idle : SerialComms.Direction.Idle; }
+        internal CommsDirection Direction { get => _subqueues.Count > 0 ? _subqueues.Peek()?.Direction ?? CommsDirection.Idle : CommsDirection.Idle; }
 
 
         /// <summary>

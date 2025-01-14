@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using CTecUtil.IO;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,39 +15,44 @@ namespace CTecUtil
     /// </summary>
     public class Log
     {
-        public Log(string name) => _name = name;
+        public Log(string logName, CommsDirection direction) { _logName = logName; _direction = direction; }
 
 
-        private string _name;
-        private List<string> _log = new();
+        private string _logName;
+        private CommsDirection _direction;
+        private List<LogEntry> _log = new();
         private int _errors = 0;
+
+
+        public string         LogName   => _logName;
+        public CommsDirection Direction => _direction;
+
 
         private static string logPrefix => DateTime.Now + " - ";
 
 
-        public void Write(string value) => _log.Add(logPrefix + value);
+        public void Add(string value) => _log.Add(new(value));
 
-
-
-        public void WriteError(string header, Exception exception)
+        public void AddError(string header, Exception exception)
         {
             _errors++;
-            _log.Add("****************");
-            _log.Add(logPrefix + header);
-            _log.Add(exception.StackTrace);
-            _log.Add(exception.ToString());
-            _log.Add("****************");
+            _log.Add(new(exception));
         }
 
 
         /// <summary>
         /// Reads the log data into a string
         /// </summary>
-        public string Read()
+        public string GetLog()
         {
             var result = new StringBuilder();
+
             foreach (var l in _log)
-                result.Append(l + "\n");
+            {
+                result.Append(string.Format("{0:yyyy-MM-dd HH:mm:ss.fff}", l.Time) + " - " + l.Text + "\n");
+                if (l.IsError)
+                    result.Append(l.StackTrace + "\n");
+            }
             return result.ToString();
         }
 

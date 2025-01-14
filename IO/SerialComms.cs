@@ -44,17 +44,17 @@ namespace CTecUtil.IO
 
 
         /// <summary>Direction of the current data transfer, if any</summary>
-        public enum Direction
-        {
-            /// <summary>No data transfer in progress</summary>
-            Idle,
+        //public enum Direction
+        //{
+        //    /// <summary>No data transfer in progress</summary>
+        //    Idle,
             
-            /// <summary>Uploading to panel</summary>
-            Upload,
+        //    /// <summary>Uploading to panel</summary>
+        //    Upload,
         
-            /// <summary>Downloading from panel</summary>
-            Download
-        }
+        //    /// <summary>Downloading from panel</summary>
+        //    Download
+        //}
 
 
         /// <summary>Panel polling interval (ms)</summary>
@@ -375,7 +375,7 @@ namespace CTecUtil.IO
         /// </summary>
         /// <param name="direction">Comms direction (Up/Down).</param>
         /// <param name="name">Name of the command queue, to be displayed in the progress bar window.</param>
-        public static void AddNewCommandSubqueue(Direction direction, string name, SubqueueCompletedHandler onCompletion) => _commandQueue.AddSubqueue(new CommandSubqueue(direction, onCompletion) { Name = name });
+        public static void AddNewCommandSubqueue(CommsDirection direction, string name, SubqueueCompletedHandler onCompletion) => _commandQueue.AddSubqueue(new CommandSubqueue(direction, onCompletion) { Name = name });
 
 
         /// <summary>
@@ -402,7 +402,7 @@ namespace CTecUtil.IO
             //_transferInProgress = true;
             _queueWasCompleted = false;
 
-            CommsCommandLog = new(Cultures.Resources.Log_Comms_Comands);
+            CommsCommandLog = new(Cultures.Resources.Log_Comms_Comands, _commandQueue.Direction);
 
             ShowProgressBarWindow(onStart, onEnd);
         }
@@ -469,14 +469,14 @@ Debug.WriteLine("SerialComms.resendCommand()");
                     if (_lastException is not null)
                     {
                         if (_lastException is TimeoutException)
-                            error(_commandQueue.Direction == Direction.Upload ? Cultures.Resources.Error_Upload_Timeout : Cultures.Resources.Error_Download_Timeout, _lastException);
+                            error(_commandQueue.Direction == CommsDirection.Upload ? Cultures.Resources.Error_Upload_Timeout : Cultures.Resources.Error_Download_Timeout, _lastException);
                         else if (_lastException is FormatException)
                             error(Cultures.Resources.Error_Checksum_Fail, _lastException);
                         else
-                            error(_commandQueue.Direction == Direction.Upload ? Cultures.Resources.Error_Uploading_Data : Cultures.Resources.Error_Downloading_Data, _lastException);
+                            error(_commandQueue.Direction == CommsDirection.Upload ? Cultures.Resources.Error_Uploading_Data : Cultures.Resources.Error_Downloading_Data, _lastException);
                     }
                     else
-                        error(_commandQueue.Direction == Direction.Upload ? Cultures.Resources.Error_Upload_Retries : Cultures.Resources.Error_Download_Retries);
+                        error(_commandQueue.Direction == CommsDirection.Upload ? Cultures.Resources.Error_Upload_Retries : Cultures.Resources.Error_Download_Retries);
                 }
                 else
                 {
@@ -686,7 +686,7 @@ Debug.WriteLine("SerialComms.SendData() #" + command.Tries + " " + ByteArrayProc
                                     }
                                     catch (Exception ex)
                                     {
-                                        CommsCommandLog.WriteError(_commandQueue.Direction == Direction.Upload ? Cultures.Resources.Error_Uploading_Data : Cultures.Resources.Error_Downloading_Data, ex);
+                                        CommsCommandLog.AddError(_commandQueue.Direction == CommsDirection.Upload ? Cultures.Resources.Error_Uploading_Data : Cultures.Resources.Error_Downloading_Data, ex);
                                     }
                                 }
                             }));
@@ -1154,8 +1154,8 @@ Debug.WriteLine("progressBarThread() - start sending commands...");
                 {
                     Application.Current.Dispatcher.Invoke(new Action(() =>
                     {
-                        if (_commandQueue.Direction != Direction.Idle)
-                            error(_commandQueue.Direction == Direction.Upload ? Cultures.Resources.Error_Upload_Timeout : Cultures.Resources.Error_Download_Timeout, new TimeoutException("Timeout"));
+                        if (_commandQueue.Direction != CommsDirection.Idle)
+                            error(_commandQueue.Direction == CommsDirection.Upload ? Cultures.Resources.Error_Upload_Timeout : Cultures.Resources.Error_Download_Timeout, new TimeoutException("Timeout"));
 
                     }), DispatcherPriority.Send);
                     break;
@@ -1183,7 +1183,7 @@ Debug.WriteLine("progressBarThread() - start sending commands...");
 
             //if comms finishes rapidly the progressbar window may not have had time to be shown, so show a message
             if (DateTime.Now < startTime.AddMilliseconds(_completionMessageTime))
-                ShowMessage?.Invoke(string.Format(_commandQueue.Direction == Direction.Upload ? Cultures.Resources.Comms_x_Upload_Complete : Cultures.Resources.Comms_x_Download_Complete, currentCommsDesc));
+                ShowMessage?.Invoke(string.Format(_commandQueue.Direction == CommsDirection.Upload ? Cultures.Resources.Comms_x_Upload_Complete : Cultures.Resources.Comms_x_Download_Complete, currentCommsDesc));
         }
 
         #endregion

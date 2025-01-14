@@ -79,6 +79,33 @@ namespace CTecUtil.Cultures {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Download.
+        /// </summary>
+        public static string Comms_Direction_Download {
+            get {
+                return ResourceManager.GetString("Comms_Direction_Download", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Idle.
+        /// </summary>
+        public static string Comms_Direction_Idle {
+            get {
+                return ResourceManager.GetString("Comms_Direction_Idle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Upload.
+        /// </summary>
+        public static string Comms_Direction_Upload {
+            get {
+                return ResourceManager.GetString("Comms_Direction_Upload", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Disconnected.
         /// </summary>
         public static string Comms_Disconnected {

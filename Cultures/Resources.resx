@@ -252,4 +252,13 @@
   <data name="Log_Comms_Comands" xml:space="preserve">
     <value>Comms Commands</value>
   </data>
+  <data name="Comms_Direction_Download" xml:space="preserve">
+    <value>Download</value>
+  </data>
+  <data name="Comms_Direction_Idle" xml:space="preserve">
+    <value>Idle</value>
+  </data>
+  <data name="Comms_Direction_Upload" xml:space="preserve">
+    <value>Upload</value>
+  </data>
 </root>

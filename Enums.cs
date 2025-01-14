@@ -14,15 +14,17 @@ namespace CTecUtil
         Quantec,
     }
 
-    class Enums
+
+    /// <summary>Direction of the current data transfer, if any</summary>
+    public enum CommsDirection
     {
-        public static string SupportedAppsToString(SupportedApps app)
-         => app switch
-         {
-            SupportedApps.XFP     => "XfpTools",
-            SupportedApps.ZFP     => "ZfpTools",
-            SupportedApps.Quantec => "Quantec",
-            _                     => "Unknown C-Tec app",
-        };
+        /// <summary>No data transfer in progress</summary>
+        Idle,
+
+        /// <summary>Uploading to panel</summary>
+        Upload,
+
+        /// <summary>Downloading from panel</summary>
+        Download
     }
 }

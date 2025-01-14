@@ -17,7 +17,7 @@ namespace CTecUtil.IO
                 _commandQueue.Append(c);
         }
 
-        internal CommandSubqueue(SerialComms.Direction direction, SerialComms.SubqueueCompletedHandler onCompletion)
+        internal CommandSubqueue(CommsDirection direction, SerialComms.SubqueueCompletedHandler onCompletion)
         {
             Direction = direction;
             OnSubqueueComplete = onCompletion;
@@ -30,7 +30,7 @@ namespace CTecUtil.IO
 
         internal string Name { get; set; }
 
-        internal SerialComms.Direction Direction { get; set; }
+        internal CommsDirection Direction { get; set; }
 
 
         internal void Enqueue(Command command) { _commandQueue.Enqueue(command); InitialCommandsInQueue++; }
