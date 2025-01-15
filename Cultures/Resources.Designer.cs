@@ -61,6 +61,15 @@ namespace CTecUtil.Cultures {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cancelled by user.
+        /// </summary>
+        public static string Comms_Cancelled_By_User {
+            get {
+                return ResourceManager.GetString("Comms_Cancelled_By_User", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Connected - read-only.
         /// </summary>
         public static string Comms_Connected_ReadOnly {
@@ -232,11 +241,11 @@ namespace CTecUtil.Cultures {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Comms Commands.
+        ///   Looks up a localized string similar to No data.
         /// </summary>
-        public static string Log_Comms_Comands {
+        public static string No_Data {
             get {
-                return ResourceManager.GetString("Log_Comms_Comands", resourceCulture);
+                return ResourceManager.GetString("No_Data", resourceCulture);
             }
         }
         
@@ -489,6 +498,24 @@ namespace CTecUtil.Cultures {
         public static string PrintQueueStatus_WarmingUp {
             get {
                 return ResourceManager.GetString("PrintQueueStatus_WarmingUp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to RCV.
+        /// </summary>
+        public static string Receive_Abbr {
+            get {
+                return ResourceManager.GetString("Receive_Abbr", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SND.
+        /// </summary>
+        public static string Send_Abbr {
+            get {
+                return ResourceManager.GetString("Send_Abbr", resourceCulture);
             }
         }
     }

@@ -53,7 +53,7 @@
                 </Grid>
 
                 <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" x:Name="grdProgressSubQueue" Margin="0,5,0,0">
-                    <ProgressBar Name="pbProgressSubqueue" Height="10" Width="200" Value="0" Minimum="0" BorderBrush="{StaticResource Brush06}" Padding="2" Foreground="{StaticResource ProgressBar2Background}" BorderThickness="1.5"/>
+                    <ProgressBar Name="pbProgressSubqueue" Height="12" Width="200" Value="0" Minimum="0" BorderBrush="{StaticResource Brush06}" Padding="2" Foreground="{StaticResource ProgressBar2Background}" BorderThickness="1.5"/>
                     <TextBlock Name="txtProgressSubqueue" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="8" Margin="0"/>
                 </Grid>
 

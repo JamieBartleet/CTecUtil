@@ -43,20 +43,6 @@ namespace CTecUtil.IO
         }
 
 
-        /// <summary>Direction of the current data transfer, if any</summary>
-        //public enum Direction
-        //{
-        //    /// <summary>No data transfer in progress</summary>
-        //    Idle,
-            
-        //    /// <summary>Uploading to panel</summary>
-        //    Upload,
-        
-        //    /// <summary>Downloading from panel</summary>
-        //    Download
-        //}
-
-
         /// <summary>Panel polling interval (ms)</summary>
         public static int PingTimerPeriod         { get; set; } = 2000;
 
@@ -65,6 +51,9 @@ namespace CTecUtil.IO
         
         /// <summary>Wait timeout (ms) for a response to a sent command</summary>
         public static int ResponseTimerPeriod     { get; set; } = 5500;
+
+
+        private static string exceptionHeader() => _commandQueue?.Direction is null ? "" : _commandQueue?.Direction == CommsDirection.Upload ? Cultures.Resources.Error_Uploading_Data : Cultures.Resources.Error_Downloading_Data;
 
 
         public static List<string> GetPortNames()
@@ -367,7 +356,11 @@ namespace CTecUtil.IO
         /// </summary>
         /// <param name="operationName">Name of the process to be displayed in the progress bar window.<br/>
         /// E.g. 'Downloading from panel...'</param>
-        public static void InitCommandQueue(string operationName) => _commandQueue = new() { OperationDesc = operationName };
+        public static void InitCommandQueue(string operationName)
+        {
+            _commandQueue = new() { OperationDesc = operationName };
+            CommsCommandLog = new(operationName);
+        }
 
 
         /// <summary>
@@ -402,13 +395,14 @@ namespace CTecUtil.IO
             //_transferInProgress = true;
             _queueWasCompleted = false;
 
-            CommsCommandLog = new(Cultures.Resources.Log_Comms_Comands, _commandQueue.Direction);
+            if (CommsCommandLog is null)
+                CommsCommandLog = new("");
 
             ShowProgressBarWindow(onStart, onEnd);
         }
 
 
-        public static Log CommsCommandLog { get; private set; }
+        public static CommsLog CommsCommandLog { get; private set; }
 
 
         public static void CancelCommandQueue() => _commandQueue?.Clear();
@@ -533,6 +527,7 @@ Debug.WriteLine("SerialComms.SendData() #" + command.Tries + " " + ByteArrayProc
                 catch (Exception ex)
                 {
                     Debug.WriteLine("  **Exception** (SendData) " + ex.Message);
+                    //CommsCommandLog.AddException(exceptionHeader(), ex);
                 }
             }
         }
@@ -570,6 +565,7 @@ Debug.WriteLine("SerialComms.SendData() #" + command.Tries + " " + ByteArrayProc
                 catch (Exception ex)
                 {
                     Debug.WriteLine("  **Exception** (dataReceived) " + ex.Message);
+                    CommsCommandLog.AddException(exceptionHeader(), ex);
                 }
             }
         }
@@ -659,7 +655,6 @@ Debug.WriteLine("SerialComms.SendData() #" + command.Tries + " " + ByteArrayProc
                 }
                 else if (_commandQueue.TotalCommandCount > 0)
                 {
-//Debug.WriteLine("SerialComms.responseDataReceived() - something...");
                     var ok = false;
                     
                     notifyConnectionStatus(_connectionStatus);
@@ -667,7 +662,6 @@ Debug.WriteLine("SerialComms.SendData() #" + command.Tries + " " + ByteArrayProc
 
                     if (cmd is not null)
                     {
-//Debug.WriteLine("SerialComms.responseDataReceived() - " + _commandQueue.CurrentSubqueueName + " - " + cmd.Index + ": " + ByteArrayProcessing.ByteArrayToHexString(cmd.CommandData));
                         var savedQueueId = _commandQueue.Id;
 
                         if (incoming is not null)
@@ -679,6 +673,8 @@ Debug.WriteLine("SerialComms.SendData() #" + command.Tries + " " + ByteArrayProc
                                 {
                                     try
                                     {
+                                        CommsCommandLog.AddCommsData(incoming, CommsDirection.Download);
+
                                         if (cmd.DataReceiver2 is not null)
                                             ok = cmd.DataReceiver2?.Invoke(incoming, cmd.Index, cmd.Index2) == true;
                                         else
@@ -686,7 +682,7 @@ Debug.WriteLine("SerialComms.SendData() #" + command.Tries + " " + ByteArrayProc
                                     }
                                     catch (Exception ex)
                                     {
-                                        CommsCommandLog.AddError(_commandQueue.Direction == CommsDirection.Upload ? Cultures.Resources.Error_Uploading_Data : Cultures.Resources.Error_Downloading_Data, ex);
+                                        CommsCommandLog.AddException(exceptionHeader(), ex);
                                     }
                                 }
                             }));
@@ -721,23 +717,25 @@ Debug.WriteLine("SerialComms.SendData() #" + command.Tries + " " + ByteArrayProc
             {
                 //checksum fail
                 Debug.WriteLine("  **FormatException** (ResponseDataReceived) " + ex.Message);
+                CommsCommandLog.AddException(exceptionHeader(), ex);
                 _lastException = ex;
                 resendCommand();
             }
             catch (TimeoutException ex)
             {
                 Debug.WriteLine("  **TimeoutException** (ResponseDataReceived) " + ex.Message);
+                CommsCommandLog.AddException(exceptionHeader(), ex);
                 _lastException = ex;
                 resendCommand();
             }
             catch (Exception ex)
             {
                 Debug.WriteLine("  **Exception** (ResponseDataReceived) " + ex.Message);
+                CommsCommandLog.AddException(exceptionHeader(), ex);
                 _lastException = ex;
                 resendCommand();
             }
         }
-
 
         private static byte[] readIncomingResponse(SerialPort port)
         {
@@ -801,6 +799,7 @@ Debug.WriteLine("SerialComms.SendData() #" + command.Tries + " " + ByteArrayProc
             catch (Exception ex)
             {
                 Debug.WriteLine("  **Exception** (readIncomingResponse) " + ex.Message);
+                CommsCommandLog?.AddException(exceptionHeader(), ex);
                 _lastException = ex;
                 return null;
             }
@@ -832,6 +831,7 @@ Debug.WriteLine("SerialComms.SendData() #" + command.Tries + " " + ByteArrayProc
             catch (Exception ex)
             {
                 Debug.WriteLine("  **Exception** (ListenerDataReceived) " + ex.Message);
+                CommsCommandLog.AddException(exceptionHeader(), ex);
                 _lastException = ex;
                 resendCommand();
             }
@@ -862,6 +862,7 @@ Debug.WriteLine("SerialComms.SendData() #" + command.Tries + " " + ByteArrayProc
             catch (Exception ex)
             {
                 Debug.WriteLine("  **Exception** (readIncomingListenerData) " + ex.Message);
+                CommsCommandLog.AddException(exceptionHeader(), ex);
                 return null;
             }
             finally
@@ -934,7 +935,10 @@ Debug.WriteLine("SerialComms.SendData() #" + command.Tries + " " + ByteArrayProc
             CancelCommandQueue();
             notifyConnectionStatus(ConnectionStatus.Disconnected);
             if (showError)
+            {
+                CommsCommandLog.AddException(message, ex);
                 ShowErrorMessage2?.Invoke(message, ex?.Message);
+            }
         }
 
 
@@ -990,6 +994,7 @@ Debug.WriteLine("SerialComms.ClosePort()");
             catch (Exception ex)
             {
                 Debug.WriteLine("  **Exception** (ClosePort) " + ex.Message);
+                CommsCommandLog.AddException(exceptionHeader(), ex);
                 return false;
             }
         }
@@ -1123,7 +1128,7 @@ Debug.WriteLine("SerialComms.getNewSerialPort()");
                 _progressBarWindow.SubqueueCount          = _commandQueue.SubqueueCount;
                 _progressBarWindow.ProgressBarOverallMax  = _commandQueue.TotalCommandCount;
                 _progressBarWindow.ProgressBarSubqueueMax = _commandQueue.InitialCommandsInCurrentSubqueue;
-                _progressBarWindow.OnCancel               = CancelCommandQueue;
+                _progressBarWindow.OnCancel               = new(() => { CancelCommandQueue(); CommsCommandLog.AddText(Cultures.Resources.Comms_Cancelled_By_User); });
 
                 _progressBarWindow.Show(OwnerWindow);
 

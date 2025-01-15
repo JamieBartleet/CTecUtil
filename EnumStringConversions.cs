@@ -12,12 +12,13 @@
             };
 
 
-        public static string CommsDirectionToString(CommsDirection direction)
+        public static string CommsDirectionToString(CommsDirection? direction)
             => direction switch
             {
                 CommsDirection.Idle     => Cultures.Resources.Comms_Direction_Idle,
                 CommsDirection.Upload   => Cultures.Resources.Comms_Direction_Upload,
                 CommsDirection.Download => Cultures.Resources.Comms_Direction_Download,
+                _                       => "",
             };
     }
 }

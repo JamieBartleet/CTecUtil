@@ -249,9 +249,6 @@
   <data name="PrintQueueStatus_WarmingUp" xml:space="preserve">
     <value>Échauffement</value>
   </data>
-  <data name="Log_Comms_Comands" xml:space="preserve">
-    <value>Commandes de communication</value>
-  </data>
   <data name="Comms_Direction_Download" xml:space="preserve">
     <value>Télécharger à partir de l’appareil</value>
   </data>
@@ -260,5 +257,17 @@
   </data>
   <data name="Comms_Direction_Upload" xml:space="preserve">
     <value>Télécharger sur l’appareil</value>
+  </data>
+  <data name="Comms_Cancelled_By_User" xml:space="preserve">
+    <value>Annulé par l’utilisateur</value>
+  </data>
+  <data name="No_Data" xml:space="preserve">
+    <value>Pas de données</value>
+  </data>
+  <data name="Receive_Abbr" xml:space="preserve">
+    <value>RCV</value>
+  </data>
+  <data name="Send_Abbr" xml:space="preserve">
+    <value>ENV</value>
   </data>
 </root>

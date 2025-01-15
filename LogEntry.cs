@@ -1,19 +1,11 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System;
 
 namespace CTecUtil
 {
-    /// <summary>
-    /// Replicates WriteLine() and Write() functions from System.Diagnostics.Debug, prefixing the output with a timestamp.
-    /// </summary>
     public class LogEntry
     {
+        public LogEntry() { }
+
         public LogEntry(string text)
         {
             Time = DateTime.Now;
@@ -22,16 +14,18 @@ namespace CTecUtil
 
         public LogEntry(Exception ex)
         {
-            Time = DateTime.Now;
+            Time    = DateTime.Now;
             Text    = ex.Message;
             IsError = true;
-            StackTrace = ex.StackTrace;
+            ExceptionType = ex.GetType();
+            StackTrace    = ex.StackTrace;
         }
 
 
         public DateTime Time { get; set; }
         public string   Text { get; set; }
         public bool     IsError { get; set; }
+        public Type     ExceptionType { get; set; }
         public string   StackTrace { get; set; }
     }
 }
