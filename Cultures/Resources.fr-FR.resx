@@ -270,4 +270,7 @@
   <data name="Send_Abbr" xml:space="preserve">
     <value>ENV</value>
   </data>
+  <data name="Comms_Ended" xml:space="preserve">
+    <value>** Fin **</value>
+  </data>
 </root>

@@ -1186,6 +1186,8 @@ Debug.WriteLine("progressBarThread() - start sending commands...");
                 _onEndProgress?.Invoke(_queueWasCompleted);
             }), DispatcherPriority.Normal);
 
+            CommsCommandLog.AddText(Cultures.Resources.Comms_Ended, true);
+
             //if comms finishes rapidly the progressbar window may not have had time to be shown, so show a message
             if (DateTime.Now < startTime.AddMilliseconds(_completionMessageTime))
                 ShowMessage?.Invoke(string.Format(_commandQueue.Direction == CommsDirection.Upload ? Cultures.Resources.Comms_x_Upload_Complete : Cultures.Resources.Comms_x_Download_Complete, currentCommsDesc));

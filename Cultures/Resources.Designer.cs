@@ -124,6 +124,15 @@ namespace CTecUtil.Cultures {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ** End **.
+        /// </summary>
+        public static string Comms_Ended {
+            get {
+                return ResourceManager.GetString("Comms_Ended", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The panel&apos;s firmware version is not supported by this Programming Tool..
         /// </summary>
         public static string Comms_Firmware_Not_Supported {

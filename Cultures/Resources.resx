@@ -270,4 +270,7 @@
   <data name="Send_Abbr" xml:space="preserve">
     <value>SND</value>
   </data>
+  <data name="Comms_Ended" xml:space="preserve">
+    <value>** End **</value>
+  </data>
 </root>

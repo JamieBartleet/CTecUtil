@@ -6,19 +6,21 @@ namespace CTecUtil
     {
         public LogEntry() { }
 
-        public LogEntry(string text)
+        public LogEntry(string text, bool logTime = false)
         {
-            Time = DateTime.Now;
             Text = text;
+            if (LogTime = logTime)
+                Time = DateTime.Now;
         }
 
         public LogEntry(Exception ex)
         {
-            Time    = DateTime.Now;
-            Text    = ex.Message;
-            IsError = true;
+            Text          = ex.Message;
+            IsError       = true;
             ExceptionType = ex.GetType();
             StackTrace    = ex.StackTrace;
+            Time          = DateTime.Now;
+            LogTime       = true;
         }
 
 
@@ -27,5 +29,6 @@ namespace CTecUtil
         public bool     IsError { get; set; }
         public Type     ExceptionType { get; set; }
         public string   StackTrace { get; set; }
+        public bool     LogTime { get; set; }
     }
 }

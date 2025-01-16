@@ -17,17 +17,18 @@ namespace CTecUtil
 
         private string _logDesc;
         private List<CommsLogEntry> _log = new();
-        private int _exceptions = 0;
+        private int _exceptionCount = 0;
 
 
         public string LogDescription => _logDesc;
 
 
-        private static string timestamp(DateTime time) => string.Format("{0:yyyy-MM-dd HH:mm:ss.fff}", time);
+        private static string formattedTime(DateTime time) => string.Format("{0:yyyy-MM-dd HH:mm:ss.fff}", time);
+        private static string blankTime                => new string(' ', 23);
         private static string direction(CommsDirection? direction) => direction switch { CommsDirection.Upload => Cultures.Resources.Send_Abbr, CommsDirection.Download => Cultures.Resources.Receive_Abbr, _ => "" };
 
 
-        public void AddText(string value)                                => _log.Add(new(value));
+        public void AddText(string value, bool logTime = false)          => _log.Add(new(value, logTime));
         public void AddCommsData(byte[] value, CommsDirection direction) => _log.Add(new(ByteArrayProcessing.ByteArrayToHexString(value), direction));
         public void AddDownload(string value, CommsDirection direction)  => _log.Add(new(value, CTecUtil.CommsDirection.Download));
         public void AddUpload(string value, CommsDirection direction)    => _log.Add(new(value, CTecUtil.CommsDirection.Upload));
@@ -35,8 +36,9 @@ namespace CTecUtil
         
         public void AddException(string header, Exception exception)
         {
-            _exceptions++;
-            _log.Add(new(header));
+            _exceptionCount++;
+            _log.Add(new("\n"));
+            _log.Add(new(header, true));
             _log.Add(new(exception));
         }
 
@@ -48,23 +50,26 @@ namespace CTecUtil
         {
             var result = new StringBuilder();
 
-            if (_log.Count == 0)
-                return Cultures.Resources.No_Data;
-           
             foreach (var l in _log)
             {
-                result.Append(string.Format("{0}  {1,-4} {2}\n", timestamp(l.Time), direction(l.Direction), l.Text));
+                var timeStamp = l.LogTime ? formattedTime(l.Time) : blankTime;
 
                 if (l.IsError)
                 {
+                    result.Append(string.Format("{0}  {1,-4} {2}\n", timeStamp, direction(l.Direction), l.Text));
                     result.Append(l.ExceptionType.Name + "\n");
                     result.Append(l.StackTrace + "\n");
+                }
+                else
+                {
+                    result.Append(string.Format("{0}  {1,-4} {2}\n", timeStamp, direction(l.Direction), l.Text));
                 }
             }
             return result.ToString();
         }
 
 
-        public bool ContainsExceptions => _exceptions > 0;
+        public bool ContainsExceptions => _exceptionCount > 0;
+        public int ExceptionCount      => _exceptionCount;
     }
 }
