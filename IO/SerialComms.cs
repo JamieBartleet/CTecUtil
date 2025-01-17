@@ -799,7 +799,7 @@ Debug.WriteLine("SerialComms.SendData() #" + command.Tries + " " + ByteArrayProc
             catch (Exception ex)
             {
                 Debug.WriteLine("  **Exception** (readIncomingResponse) " + ex.Message);
-                CommsCommandLog?.AddException(exceptionHeader(), ex);
+                if (ex.Message != "") CommsCommandLog?.AddException(exceptionHeader(), ex);
                 _lastException = ex;
                 return null;
             }
@@ -936,7 +936,7 @@ Debug.WriteLine("SerialComms.SendData() #" + command.Tries + " " + ByteArrayProc
             notifyConnectionStatus(ConnectionStatus.Disconnected);
             if (showError)
             {
-                CommsCommandLog.AddException(message, ex);
+                CommsCommandLog.AddException(message, ex, true);
                 ShowErrorMessage2?.Invoke(message, ex?.Message);
             }
         }

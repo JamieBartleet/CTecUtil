@@ -17,6 +17,7 @@ namespace CTecUtil
 
         private string _logDesc;
         private List<CommsLogEntry> _log = new();
+        private bool _failed = false;
         private int _exceptionCount = 0;
 
 
@@ -34,9 +35,11 @@ namespace CTecUtil
         public void AddUpload(string value, CommsDirection direction)    => _log.Add(new(value, CTecUtil.CommsDirection.Upload));
 
         
-        public void AddException(string header, Exception exception)
+        public void AddException(string header, Exception exception, bool failed = false)
         {
             _exceptionCount++;
+            if (failed)
+                _failed = true;
             _log.Add(new("\n"));
             _log.Add(new(header, true));
             _log.Add(new(exception));
@@ -69,7 +72,8 @@ namespace CTecUtil
         }
 
 
+        public bool Failed             => _failed;
         public bool ContainsExceptions => _exceptionCount > 0;
-        public int ExceptionCount      => _exceptionCount;
+        public int  ExceptionCount     => _exceptionCount;
     }
 }
